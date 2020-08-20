@@ -1,3 +1,15 @@
+# ========== VSCode gitignore ===========
+
+.vscode
+
+
+# ========== Custom gitignore ===========
+
+temp/
+
+
+# ========== Python gitignore ===========
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

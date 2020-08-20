@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "pycln"
+version = "0.1.0"
+description = "CLI tool aims to clean up your Python files from all unused import."
+authors = ["Hadi Zaki Alqattan <alqattanhadizaki@gmail.com>"]
+repository = "https://github.com/hadizakialqattan/pycln"
+keywords = ["formatter", "linter", "quality-assurance", "tools", "cli"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Utilities"
+]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.scripts]
+pycln = "pycln.cli:app"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+typer = "^0.3.1"
+toml = "^0.10.1"
+pathspec = "^0.8.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
