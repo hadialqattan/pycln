@@ -11,6 +11,7 @@ from typing import Generator, Pattern, Set, Union
 from pathspec import PathSpec
 
 from . import regexu
+from .report import reporter
 
 # Constants.
 DOT = "."
@@ -46,20 +47,18 @@ IMPORTS_WITH_SIDE_EFFECTS = {"this", "antigravity", "rlcompleter"}
 def walk(
     path: Path, include: Pattern[str], exclude: Pattern[str], gitignore: PathSpec
 ) -> Generator:
-    """
-    Walk throw path sub-directories/files recursively.
-    
+    """Walk throw path sub-directories/files recursively.
+
     Behaves like `os.walk` with additional include/exclude regex.
 
     :param path: A path to start searching from.
     :param include: regex pattern to be included.
     :param exclude: regex pattern to be excluded.
     :param gitignore: gitignore PathSpec object.
-    :returns: generator of path, path dirs, path files, ignored paths.
+    :returns: generator of path, path dirs, path files.
     """
     dirs = []
     files = []
-    ignored = []
 
     is_included, is_excluded = regexu.is_included, regexu.is_excluded
 
@@ -69,17 +68,18 @@ def walk(
         # Skip symlinks.
         if entry.is_symlink():
             continue
-
+        
         name = entry.name if entry.is_file() else f"{entry.name}{FORWARD_SLASH}"
+        entry_path = os.path.join(path, name)
 
         # Compute exclusions.
         if is_excluded(name, exclude):
-            ignored.append(name)
+            reporter.ignored_path(entry_path, 'exclude')
             continue
 
         # Compute `.gitignore`.
         if gitignore.match_file(name):
-            ignored.append(name)
+            reporter.ignored_path(entry_path, 'gitignore')
             continue
 
         # Directories.
@@ -90,30 +90,31 @@ def walk(
         # Files.
         if is_included(name, include):
             files.append(name)
+        else:
+            reporter.ignored_path(entry_path, 'include')
 
-    yield path, dirs, files, ignored
+    yield path, dirs, files
 
     for dirname in dirs:
 
+        dir_path = os.path.join(path, dirname)
+
         # Compute exclusions.
         if is_excluded(dirname, exclude):
-            ignored.append(name)
+            reporter.ignored_path(dir_path, 'exclude')
             continue
 
         # Compute `.gitignore`.
         if gitignore.match_file(dirname):
-            ignored.append(name)
+            reporter.ignored_path(dir_path, 'gitignore')
             continue
 
-        new_path = os.path.join(path, dirname)
-
-        yield from walk(new_path, include, exclude, gitignore)
+        yield from walk(dir_path, include, exclude, gitignore)
 
 
 @lru_cache
 def get_standard_lib_paths() -> Set[Path]:
-    """
-    Get paths to Python standard library modules.
+    """Get paths to Python standard library modules.
 
     :returns: set of paths to Python standard library modules.
     """
@@ -142,8 +143,7 @@ def get_standard_lib_paths() -> Set[Path]:
 
 @lru_cache
 def get_third_party_lib_paths() -> Set[Path]:
-    """
-    Get paths to third party library modules.
+    """Get paths to third party library modules.
 
     :returns: set of paths to Third party library modules.
     """
@@ -168,8 +168,7 @@ def get_third_party_lib_paths() -> Set[Path]:
 
 @lru_cache
 def get_standard_lib_names() -> Set[str]:
-    """
-    Returns a set of Python standard library modules names.
+    """Returns a set of Python standard library modules names.
 
     :returns: a set of Python standard library modules names.
     """
@@ -192,10 +191,9 @@ def get_standard_lib_names() -> Set[str]:
 
 
 def get_local_import_path(source: Path, module_name: str) -> Union[str, None]:
-    """
-    Find the given module_name file.py/__init_.py path.
+    """Find the given local module_name file.py/__init_.py path.
     
-    WRITTEN FOR `ast.Import`.
+    Written FOR `ast.Import`.
 
     :param source: where module has imported.
     :param module_name: target module name.
@@ -218,10 +216,9 @@ def get_local_import_path(source: Path, module_name: str) -> Union[str, None]:
 def get_local_import_from_path(
     source: Path, module_name: str, from_module_name: str, level: int
 ) -> Union[str, None]:
-    """
-    Find the given module_name file.py/__init_.py path.
+    """Find the given local module_name file.py/__init_.py path.
 
-    WRITTEN FOR `ast.ImportFrom`
+    Written FOR `ast.ImportFrom`
 
     :param source: where module has imported.
     :param module_name: target module name.
@@ -231,7 +228,9 @@ def get_local_import_from_path(
     dirname = Path(os.path.dirname(source))
     leveled_dirnames = dirname.parts[: (level * -1) + 1] if level > 1 else dirname.parts
 
-    module_names = module_name.split(DOT) if not module_name == STAR else []
+    module_names = (
+        module_name.split(DOT) if not module_name == STAR and module_name else []
+    )
     from_module_names = from_module_name.split(DOT) if from_module_name else []
 
     # If it's a module.
@@ -259,29 +258,56 @@ def get_local_import_from_path(
 
 
 @lru_cache
+def get_import_path(source: Path, module_name: str):
+    """Find the given module_name file.py/__init__.py path.
+
+    Written for `ast.Import` nodes.
+
+    :param source: where module has imported.
+    :param module_name: target module name.
+    :returns: The given module_name file.py/__init_.py path, if found else None.
+    """
+    path = get_local_import_path(source, module_name)
+    if path:
+        return path
+
+    elif module_name in get_standard_lib_names():
+        for path in get_standard_lib_paths():
+            name = str(path.parts[-1]).split(DOT)[0]
+            if name == module_name:
+                return path
+
+    else:
+        for path in get_third_party_lib_paths():
+            name = str(path.parts[-1]).split(DOT)[0]
+            if name == module_name:
+                return path
+
+
+@lru_cache
 def get_import_from_path(
     source: Path, module_name: str, from_module_name: str, level: int
 ) -> Union[Path, None]:
-    """
-    Find the given module_name file.py/__init_.py path.
+    """Find the given module_name file.py/__init_.py path.
+
+    Written for `ast.ImportFrom` nodes.
 
     :param source: where module has imported.
     :param module_name: target module name.
     :param from_module_name: `from from_module_name import ...`.
     :param level: `ast.ImportFrom.level`.
+    :returns: The given module_name file.py/__init_.py path, if found else None.
     """
     if level > 0:
         return get_local_import_from_path(source, module_name, from_module_name, level)
 
     elif from_module_name in get_standard_lib_names():
-
         for path in get_standard_lib_paths():
             name = str(path.parts[-1]).split(DOT)[0]
             if name == from_module_name:
                 return path
 
     else:
-
         for path in get_third_party_lib_paths():
             name = str(path.parts[-1]).split(DOT)[0]
             if name == from_module_name:

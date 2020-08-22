@@ -18,9 +18,7 @@ EMPTY = ""
 @dataclass
 class Config:
 
-    """
-    Pycln configs dataclass.
-    """
+    """Pycln configs dataclass."""
 
     def __post_init__(self):
         self.check_path()
@@ -42,53 +40,45 @@ class Config:
 
     # This will be computed.
     sources: FrozenSet[Path] = frozenset()
-    ignored_paths: FrozenSet[Path] = frozenset()
 
-    def compute_sources(self) -> FrozenSet[Path]:
-        """
-        Compute sources to handle.
-        """
+    def compute_sources(self) -> None:
+        """Compute sources to handle them."""
         # Compute `.gitignore`.
         gitignore = regexu.get_gitignore(self.path if not self.no_gitignore else EMPTY)
 
         # Compute list of sources.
         sources = []
-        ignored_paths = []
         walk = pathu.walk(self.path, self.include, self.exclude, gitignore)
-        for root, _, files, ignored in walk:
+        for root, _, files in walk:
             sources.extend(map(partial(os.path.join, root), files))
-            ignored_paths.extend(map(partial(os.path.join, root), ignored_paths))
 
         if not sources:
             typer.secho(
                 "No Python files are present to be cleaned. Nothing to do 😴",
-                fg=typer.colors.BRIGHT_WHITE,
                 bold=True,
                 err=True,
             )
             raise typer.Exit()
 
         self.sources = frozenset(sources)
-        self.ignored_paths = frozenset(ignored_paths)
 
-    def check_path(self):
-        """
-        Validate `self.path`.
-        """
+    def check_path(self) -> None:
+        """Validate `self.path`."""
         if not self.path:
             typer.secho(
-                "No Path provided. Nothing to do 😴",
-                fg=typer.colors.BRIGHT_WHITE,
-                bold=True,
-                err=True,
+                "No Path provided. Nothing to do 😴", bold=True, err=True,
             )
-            raise typer.Exit()
+            raise typer.Exit(1)
 
         if not self.path.is_dir():
             typer.secho(
                 f"'{self.path}' is not a directory. Maybe it does not exist 😅",
-                fg=typer.colors.BRIGHT_WHITE,
                 bold=True,
                 err=True,
             )
-            raise typer.Exit()
+            raise typer.Exit(1)
+
+
+# To avoid reiniting or passing.
+# this should be changed at the `main` function.
+configs: Config = None

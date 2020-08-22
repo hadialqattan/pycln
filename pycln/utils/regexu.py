@@ -21,8 +21,7 @@ EXCLUDE_REGEX = r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|\.tox|\.venv
 
 
 def safe_compile(str_regex: str, type_: str) -> Pattern[str]:
-    """
-    Safely compile [--include, --exclude] options regex.
+    """Safely compile [--include, --exclude] options regex.
 
     :param str_regex: an str regex to be complied.
     :param type_: 'include' OR 'exclude'.
@@ -33,7 +32,7 @@ def safe_compile(str_regex: str, type_: str) -> Pattern[str]:
         return compiled
     except re.error:
         typer.secho(
-            f"Invalid regular expression for {type_} given: '{str_regex}'",
+            f"Invalid regular expression for {type_} given: {str_regex!r} ⛔",
             fg=typer.colors.RED,
             err=True,
         )
@@ -41,8 +40,7 @@ def safe_compile(str_regex: str, type_: str) -> Pattern[str]:
 
 
 def is_included(name: str, regex: Pattern[str]) -> bool:
-    """
-    Check if the file/directory name match include pattern.
+    """Check if the file/directory name match include pattern.
 
     :param name: file/directory name to check.
     :param regex: include regex pattern.
@@ -52,8 +50,7 @@ def is_included(name: str, regex: Pattern[str]) -> bool:
 
 
 def is_excluded(name: str, regex: Pattern[str]) -> bool:
-    """
-    Check if the file/directory name match exclude pattern.
+    """Check if the file/directory name match exclude pattern.
 
     :param name: file/directory name to check.
     :param regex: exclude regex pattern.
@@ -64,8 +61,7 @@ def is_excluded(name: str, regex: Pattern[str]) -> bool:
 
 @lru_cache
 def get_gitignore(root: Path) -> PathSpec:
-    """
-    Return a PathSpec matching gitignore content if present.
+    """Return a PathSpec matching gitignore content if present.
 
     :param root: a path to search on.
     :returns: PathSpec matching gitignore content if present.
@@ -81,7 +77,5 @@ def get_gitignore(root: Path) -> PathSpec:
 
 
 def has_noqa(line: str) -> bool:
-    """
-    Check if the line has `# noqa` to skip.
-    """
+    """Check if the line has `# noqa` to skip."""
     return bool(re.search(NOQA_REGEX, line, re.IGNORECASE))

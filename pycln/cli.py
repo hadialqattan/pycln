@@ -1,16 +1,19 @@
 """
 Pycln CLI implementation.
 """
-import time
 from pathlib import Path
 
 import typer
 
 from . import __name__, version_callback
-from .utils import astu, config, regexu, report, refactor
+from .utils import regexu, refactor
+from .utils.config import initialize as j, Config
+from .utils.report import initialize as i, Report
 
 app = typer.Typer(name=__name__, add_completion=False)
 
+i()
+j()
 
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main(
@@ -86,7 +89,8 @@ def main(
         None, "--version", callback=version_callback, help="Show the version and exit.",
     ),
 ):
-    configs = config.Config(
+    global configs, reporter
+    configs = Config(
         path=path,
         include=include,
         exclude=exclude,
@@ -99,8 +103,9 @@ def main(
         expand_star_imports=expand_star_imports,
         no_gitignore=no_gitignore,
     )
-    reporter = report.Report(configs)
-
-    now = time.time()
-    refactor.Refactor(configs, reporter)
-    print("\nDelta:", time.time() - now)
+    reporter = Report()
+    refactor.Refactor()
+    # Print the report.
+    typer.echo(str(reporter))
+    # Set the correct exit code and exit.
+    typer.Exit(reporter.exit_code)

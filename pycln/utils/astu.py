@@ -3,9 +3,8 @@ Pycln AST utility.
 """
 import ast
 import os
-from copy import copy
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, unique
 from importlib.util import find_spec
 from pathlib import Path
 from typing import List, Set, Tuple, Union
@@ -17,13 +16,13 @@ from . import pathu, regexu
 # Constants.
 DOT = "."
 STAR = "*"
+EMPTY = ""
 
 
 @dataclass
 class ImportStats:
-    """
-    Import statements statistics.
-    """
+
+    """Import statements statistics."""
 
     import_: Set[ast.Import]
     from_: Set[ast.ImportFrom]
@@ -34,8 +33,7 @@ class ImportStats:
 
 class ImportAnalyzer(ast.NodeVisitor):
 
-    """
-    AST import statements analyzer.
+    """AST import statements analyzer.
 
     >>> import ast
     >>> with open("source.py", "r") as source:
@@ -46,7 +44,7 @@ class ImportAnalyzer(ast.NodeVisitor):
     >>> analyzer.reset_stats()
     """
 
-    def __init__(self, source: Path, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(ImportAnalyzer, self).__init__(*args, **kwargs)
         self.__stats = ImportStats(set(), set())
 
@@ -67,9 +65,8 @@ class ImportAnalyzer(ast.NodeVisitor):
 
 @dataclass
 class SourceStats:
-    """
-    Source code (`ast.Name` & `ast.Attribute`) statistics.
-    """
+
+    """Source code (`ast.Name` & `ast.Attribute`) statistics."""
 
     name_: Set[str]
     attr_: Set[str]
@@ -80,8 +77,7 @@ class SourceStats:
 
 class SourceAnalyzer(ast.NodeVisitor):
 
-    """
-    AST souce code objects analyzer.
+    """AST souce code objects analyzer.
 
     >>> import ast
     >>> with open("source.py", "r") as source:
@@ -113,8 +109,7 @@ class SourceAnalyzer(ast.NodeVisitor):
 
 class ImportablesAnalyzer(ast.NodeVisitor):
 
-    """
-    Get set of all importable names from given `ast.Module`.
+    """Get set of all importable names from given `ast.Module`.
 
     >>> import ast
     >>> source = "source.py"
@@ -203,6 +198,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         return self.__stats
 
 
+@unique
 class HasSideEffects(Enum):
     YES = 1
     MAYBE = 0.5
@@ -215,8 +211,7 @@ class HasSideEffects(Enum):
 
 class SideEffectsAnalyzer(ast.NodeVisitor):
 
-    """
-    Get all side effects nodes from given `ast.Module`.
+    """Get all side effects nodes from given `ast.Module`.
 
     >>> import ast
     >>> source = "source.py"
@@ -230,7 +225,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
 
     def __init__(self, *args, **kwargs):
         super(SideEffectsAnalyzer, self).__init__(*args, **kwargs)
-        self.__not_side_effect = Set[ast.Call]
+        self.__not_side_effect: Set[ast.Call] = set()
         self.__has_side_effects = HasSideEffects.NO
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
@@ -309,8 +304,11 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
 
 
 def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
-    """
-    Expand import star statement, replace the `*` with a list of ast.alias.
+    """Expand import star statement, replace the `*` with a list of ast.alias.
+    
+    :param node: an `ast.ImportFrom` node to has a '*' as `alias.name`.
+    :param source: where the node has imported.
+    :returns: expanded `ast.ImportFrom`.
     """
     module_path = pathu.get_import_from_path(source, STAR, node.module, node.level)
 
@@ -337,8 +335,7 @@ def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
 
 
 def remove_useless_passes(source_lines: List[str]) -> List[str]:
-    """
-    Remove any useless `pass`.
+    """Remove any useless `pass`.
 
     :param source_lines: source code lines to check.
     :returns: clean source lines.
@@ -347,12 +344,21 @@ def remove_useless_passes(source_lines: List[str]) -> List[str]:
 
     for parent in ast.walk(tree):
 
+        try:
+            if parent.__dict__.get("body", None):
+                body_len = len(parent.body)
+            else:
+                continue
+        except TypeError:
+            continue
+
         for child in ast.iter_child_nodes(parent):
 
             if isinstance(child, ast.Pass):
 
-                if len(parent.body) > 1:
-                    source_lines[child.lineno - 1] = None
+                if body_len > 1:
+                    body_len -= 1
+                    source_lines[child.lineno - 1] = EMPTY
 
     return source_lines
 
@@ -360,8 +366,7 @@ def remove_useless_passes(source_lines: List[str]) -> List[str]:
 def get_file_ast(
     source: Path, get_lines: bool = False, permissions: tuple = (os.R_OK, os.W_OK)
 ) -> Union[ast.Module, Tuple[ast.Module, List[str]]]:
-    """
-    Parse file AST.
+    """Parse source file AST.
 
     :param source: source to read.
     :param get_lines: if true the source file lines will be returned.
@@ -369,10 +374,10 @@ def get_file_ast(
     """
     for permission in permissions:
         if not os.access(source, permission):
-            if isinstance(os.R_OK):
-                raise PermissionError(13, source, "(READ)")
-            elif isinstance(os.W_OK):
-                raise PermissionError(13, source, "(WRITE)")
+            if permission is os.R_OK:
+                raise PermissionError(13, "Permission denied [READ]", source)
+            elif permission is os.W_OK:
+                raise PermissionError(13, "Permission denied [WRITE]", source)
 
     with open(source, "r") as sfile:
         lines = sfile.readlines() if get_lines else []
