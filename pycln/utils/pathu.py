@@ -6,17 +6,21 @@ import sys
 from distutils import sysconfig
 from functools import lru_cache
 from pathlib import Path
-from typing import Generator, Pattern, Set, Union
+from typing import Generator, List, Pattern, Set, Union
 
 from pathspec import PathSpec
 
 from . import regexu
-from .report import reporter
+from .report import Report
 
 # Constants.
 DOT = "."
 STAR = "*"
 DASH = "-"
+EMPTY = ""
+EXCLUDE = "exclude"
+INCLUDE = "include"
+GITIGNORE = "gitignore"
 UNDERSCORE = "_"
 FORWARD_SLASH = "/"
 PY_EXTENSION = ".py"
@@ -44,21 +48,24 @@ BIN_IMPORTS = {  # In case they are built into CPython.
 IMPORTS_WITH_SIDE_EFFECTS = {"this", "antigravity", "rlcompleter"}
 
 
-def walk(
-    path: Path, include: Pattern[str], exclude: Pattern[str], gitignore: PathSpec
+def yield_sources(
+    path: Path,
+    include: Pattern[str],
+    exclude: Pattern[str],
+    gitignore: PathSpec,
+    reporter: Report,
 ) -> Generator:
-    """Walk throw path sub-directories/files recursively.
-
-    Behaves like `os.walk` with additional include/exclude regex.
+    """Yields `.py` files paths to handle. Walk throw path sub-directories/files recursively.
 
     :param path: A path to start searching from.
     :param include: regex pattern to be included.
     :param exclude: regex pattern to be excluded.
     :param gitignore: gitignore PathSpec object.
-    :returns: generator of path, path dirs, path files.
+    :param reporter: a `report.Report` object.
+    :returns: generator of `.py` files paths.
     """
-    dirs = []
-    files = []
+    dirs: List[str] = []
+    files: List[str] = []
 
     is_included, is_excluded = regexu.is_included, regexu.is_excluded
 
@@ -68,18 +75,18 @@ def walk(
         # Skip symlinks.
         if entry.is_symlink():
             continue
-        
+
         name = entry.name if entry.is_file() else f"{entry.name}{FORWARD_SLASH}"
         entry_path = os.path.join(path, name)
 
         # Compute exclusions.
         if is_excluded(name, exclude):
-            reporter.ignored_path(entry_path, 'exclude')
+            reporter.ignored_path(entry_path, EXCLUDE)
             continue
 
         # Compute `.gitignore`.
         if gitignore.match_file(name):
-            reporter.ignored_path(entry_path, 'gitignore')
+            reporter.ignored_path(entry_path, GITIGNORE)
             continue
 
         # Directories.
@@ -91,9 +98,10 @@ def walk(
         if is_included(name, include):
             files.append(name)
         else:
-            reporter.ignored_path(entry_path, 'include')
+            reporter.ignored_path(entry_path, INCLUDE)
 
-    yield path, dirs, files
+    for name in files:
+        yield os.path.join(path, name)
 
     for dirname in dirs:
 
@@ -101,18 +109,18 @@ def walk(
 
         # Compute exclusions.
         if is_excluded(dirname, exclude):
-            reporter.ignored_path(dir_path, 'exclude')
+            reporter.ignored_path(dir_path, EXCLUDE)
             continue
 
         # Compute `.gitignore`.
         if gitignore.match_file(dirname):
-            reporter.ignored_path(dir_path, 'gitignore')
+            reporter.ignored_path(dir_path, GITIGNORE)
             continue
 
-        yield from walk(dir_path, include, exclude, gitignore)
+        yield from yield_sources(dir_path, include, exclude, gitignore, reporter)
 
 
-@lru_cache
+@lru_cache()
 def get_standard_lib_paths() -> Set[Path]:
     """Get paths to Python standard library modules.
 
@@ -141,7 +149,7 @@ def get_standard_lib_paths() -> Set[Path]:
     return paths
 
 
-@lru_cache
+@lru_cache()
 def get_third_party_lib_paths() -> Set[Path]:
     """Get paths to third party library modules.
 
@@ -166,7 +174,7 @@ def get_third_party_lib_paths() -> Set[Path]:
     return paths
 
 
-@lru_cache
+@lru_cache()
 def get_standard_lib_names() -> Set[str]:
     """Returns a set of Python standard library modules names.
 
@@ -257,7 +265,7 @@ def get_local_import_from_path(
         return path
 
 
-@lru_cache
+@lru_cache()
 def get_import_path(source: Path, module_name: str):
     """Find the given module_name file.py/__init__.py path.
 
@@ -284,7 +292,7 @@ def get_import_path(source: Path, module_name: str):
                 return path
 
 
-@lru_cache
+@lru_cache()
 def get_import_from_path(
     source: Path, module_name: str, from_module_name: str, level: int
 ) -> Union[Path, None]:

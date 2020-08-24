@@ -3,41 +3,47 @@ Pycln code refactoring utility.
 """
 import ast
 import os
-from pathlib import Path
 from copy import copy
-from typing import List, Union
-from difflib import unified_diff
+from pathlib import Path
+from typing import Generator, List, Union
 
 import typer
 
-from . import astu, regexu, pathu, ast2source as ast2s
-from .config import configs
-from .report import reporter
+from . import ast2source as ast2s, astu, pathu, regexu
+from .config import Config
+from .exceptions import (
+    ReadPermissionError,
+    UnexpandableImportStar,
+    UnparsableFile,
+    WritePermissionError,
+)
+from .report import Report
 
 # Constants.
 DOT = "."
 STAR = "*"
 EMPTY = ""
+SPACE = " "
 NEW_LINE = "\n"
 
 
 class Refactor:
 
-    """Refactor `configs.sources` codes."""
+    """Refactor `pathu.yield_sources` codes."""
 
-    def __init__(self):
+    def __init__(self, configs: Config, reporter: Report, sources: Generator):
+        self.configs = configs
+        self.reporter = reporter
+
         self.import_analyzer = astu.ImportAnalyzer()
         self.source_analyzer = astu.SourceAnalyzer()
         self.side_effects_analyzer = astu.SideEffectsAnalyzer()
 
-        for type_ in configs.ignored_paths:
-            for path in configs.ignored_paths[type_]:
-                reporter.ignored_path(path, type_)
-
         self.source_lines = []
         self.source_stats = astu.SourceStats(set(), set())
         self.import_stats = astu.ImportStats(set(), set())
-        for source in configs.sources:
+
+        for source in sources:
             self.analyze(source)
             new_source_lines = astu.remove_useless_passes(self.refactor(source))
             self.output(source, new_source_lines)
@@ -49,24 +55,18 @@ class Refactor:
         :param new_source_lines: the refactored source lines.
         """
         if new_source_lines != self.source_lines:
-            if configs.diff:
-                source = reporter.get_relpath(source)
-                diff_gen = unified_diff(
-                    self.source_lines,
-                    new_source_lines,
-                    fromfile=f"original/ {source}",
-                    tofile=f"fixed/ {source}",
-                    n=3,
-                    lineterm=NEW_LINE,
+            if self.configs.diff:
+                source = self.reporter.get_relpath(source)
+                self.reporter.colored_unified_diff(
+                    source, self.source_lines, new_source_lines
                 )
-                typer.echo(EMPTY.join([line for line in diff_gen]))
-            elif not configs.check:
+            elif not self.configs.check:
                 # Default.
                 with open(source, "w") as sfile:
                     sfile.writelines(new_source_lines)
-            reporter.changed_file(source)
+            self.reporter.changed_file(source)
         else:
-            reporter.unchanged_file(source)
+            self.reporter.unchanged_file(source)
 
     def analyze(self, source: Path) -> None:
         """Analyze the source code of the given source.
@@ -74,25 +74,28 @@ class Refactor:
         :param source: a source to analyze.
         """
         try:
-            tree, self.source_lines = astu.get_file_ast(source, True)
-        except PermissionError as err:
-            reporter.failure(err)
+            permissions = (
+                (os.R_OK, os.W_OK)
+                if not any([self.configs.check, self.configs.diff])
+                else (os.R_OK,)
+            )
+            tree, self.source_lines = astu.get_file_ast(source, True, permissions)
+        except (ReadPermissionError, UnparsableFile, WritePermissionError) as err:
+            self.reporter.failure(err)
             return None
 
         try:
-            # Visit.
+            # Analyze file imports.
             self.import_analyzer.visit(tree)
-            self.source_analyzer.visit(tree)
-
-            # Get stats.
             self.import_stats = self.import_analyzer.get_stats()
-            self.source_stats = self.source_analyzer.get_stats()
-
-            # Reset for the next source.
             self.import_analyzer.reset_stats()
+
+            # Analyze file source code.
+            self.source_analyzer.visit(tree)
+            self.source_stats = self.source_analyzer.get_stats()
             self.source_analyzer.reset_stats()
         except Exception as err:
-            reporter.failure(err, source)
+            self.reporter.failure(err, source)
 
     def refactor(self, source: Path) -> List[str]:
         """Refactor currect `self.source_lines`.
@@ -108,15 +111,22 @@ class Refactor:
 
                 # Skip any import that has `# noqa` comment on it's `node.lineno`.
                 if regexu.has_noqa(new_source_lines[node.lineno - 1]):
-                    reporter.ignored_import(source, node)
+                    self.reporter.ignored_import(source, node)
                     continue
 
                 # Expand import '*' before checking.
                 is_star_import = False
                 if isinstance(node, ast.ImportFrom):
                     if node.names[0].name == STAR:
-                        is_star_import = True
-                        node = astu.expand_import_star(node, source)
+                        try:
+                            is_star_import = True
+                            node = astu.expand_import_star(node, source)
+                        except UnexpandableImportStar as err:
+                            self.reporter.failure(err)
+                            self.reporter.ignored_import(
+                                source, node, is_star_import=True
+                            )
+                            continue
 
                 # Shallow copy only the importat parts.
                 clean_node = copy(node)
@@ -131,7 +141,8 @@ class Refactor:
                     if self.should_remove(source, node, alias):
                         has_used = False
                         clean_node.names.remove(alias)
-                        reporter.removed_import(source, node, alias)
+                        if not is_star_import:
+                            self.reporter.removed_import(source, node, alias)
 
                 if not has_used:
 
@@ -139,9 +150,13 @@ class Refactor:
                     if (
                         clean_node.names
                         and is_star_import
-                        and not configs.expand_star_imports
+                        and not self.configs.expand_star_imports
                     ):
                         clean_node.names = [ast.alias(name=STAR, asname=None)]
+                    elif is_star_import and not clean_node.names:
+                        self.reporter.removed_import(
+                            source, node, ast.alias(name=STAR, asname=None)
+                        )
 
                     # Rebuild and replace the import without the unused parts.
                     if isinstance(node, ast.Import):
@@ -174,7 +189,7 @@ class Refactor:
             [self.has_used(used_name), real_name in pathu.IMPORTS_WITH_SIDE_EFFECTS]
         ) and any(
             [
-                configs.all_,
+                self.configs.all_,
                 any(
                     [
                         real_name in pathu.get_standard_lib_names(),
@@ -218,8 +233,8 @@ class Refactor:
 
         try:
             tree = astu.get_file_ast(source, permissions=(os.R_OK,))
-        except PermissionError as err:
-            reporter.failure(err)
+        except (ReadPermissionError, UnparsableFile) as err:
+            self.reporter.failure(err)
             return astu.HasSideEffects.NOT_KNOWN
 
         try:
@@ -229,7 +244,7 @@ class Refactor:
             self.side_effects_analyzer.reset()
             return has_side_effects
         except Exception as err:
-            reporter.failure(err, source)
+            self.reporter.failure(err, source)
             return astu.HasSideEffects.NOT_KNOWN
 
     def insert_import(

@@ -11,4 +11,4 @@ __doc__ = pycln["description"]
 def version_callback(value: bool):
     if value:
         typer.echo(f"{__name__}, version {__version__}")
-        raise typer.Exit()
+        raise typer.Exit(0)

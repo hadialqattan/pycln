@@ -2,18 +2,18 @@
 Pycln CLI implementation.
 """
 from pathlib import Path
+from typing import Generator
 
 import typer
 
 from . import __name__, version_callback
-from .utils import regexu, refactor
-from .utils.config import initialize as j, Config
-from .utils.report import initialize as i, Report
+from .utils import config, pathu, refactor, regexu, report
+
+# Constants.
+EMPTY = ""
 
 app = typer.Typer(name=__name__, add_completion=False)
 
-i()
-j()
 
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main(
@@ -88,9 +88,8 @@ def main(
     version: bool = typer.Option(
         None, "--version", callback=version_callback, help="Show the version and exit.",
     ),
-):
-    global configs, reporter
-    configs = Config(
+) -> None:
+    configs = config.Config(
         path=path,
         include=include,
         exclude=exclude,
@@ -103,8 +102,14 @@ def main(
         expand_star_imports=expand_star_imports,
         no_gitignore=no_gitignore,
     )
-    reporter = Report()
-    refactor.Refactor()
+    reporter = report.Report(configs)
+    gitignore = regexu.get_gitignore(
+        configs.path if not configs.no_gitignore else EMPTY
+    )
+    sources: Generator = pathu.yield_sources(
+        configs.path, configs.include, configs.exclude, gitignore, reporter
+    )
+    refactor.Refactor(configs, reporter, sources)
     # Print the report.
     typer.echo(str(reporter))
     # Set the correct exit code and exit.

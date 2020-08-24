@@ -11,7 +11,13 @@ from typing import List, Set, Tuple, Union
 
 from _ast import AST
 
-from . import pathu, regexu
+from . import pathu
+from .exceptions import (
+    ReadPermissionError,
+    UnexpandableImportStar,
+    UnparsableFile,
+    WritePermissionError,
+)
 
 # Constants.
 DOT = "."
@@ -128,6 +134,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
         :param node: an `ast.ImportFrom` object.
         :returns: set of importables.
+        :raises ModuleNotFoundError: when we can't find the spec of the module and/or can't create the module.
         """
         level_dots = DOT * node.level
         spec = find_spec(node.module, level_dots if level_dots else None)
@@ -138,7 +145,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             if module:
                 return set(dir(module))
 
-        return set()
+        raise ModuleNotFoundError(name=node.module)
 
     def __init__(self, *args, **kwargs):
         super(ImportablesAnalyzer, self).__init__(*args, **kwargs)
@@ -153,13 +160,18 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom):
-        if node.names[0].name == STAR:
-            # Expand import star if possible.
-            node = expand_import_star(node, self.source)
-        for alias in node.names:
-            name = alias.asname if alias.asname else alias.name
-            self.__stats.add(name)
-        self.generic_visit(node)
+        try:
+            if node.names[0].name == STAR:
+                # Expand import star if possible.
+                node = expand_import_star(node, self.source)
+            for alias in node.names:
+                name = alias.asname if alias.asname else alias.name
+                self.__stats.add(name)
+        except UnexpandableImportStar:
+            # * We shouldn't do anything because it's not importable.
+            pass
+        finally:
+            self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         self.__stats.add(node.name)
@@ -309,27 +321,31 @@ def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
     :param node: an `ast.ImportFrom` node to has a '*' as `alias.name`.
     :param source: where the node has imported.
     :returns: expanded `ast.ImportFrom`.
+    :raises UnexpandableImportStar: when `ReadPermissionError` or `UnparsableFile` or `ModuleNotFoundError` raised.
     """
     module_path = pathu.get_import_from_path(source, STAR, node.module, node.level)
 
     importables: Set[str] = set()
 
-    if module_path:
-        # `get_file_ast` function may raise a PermissionError exception.
-        tree = get_file_ast(module_path, permissions=(os.R_OK))
-        analyzer = ImportablesAnalyzer()
-        analyzer.source = source
-        analyzer.visit(tree)
-        importables = analyzer.get_stats()
+    try:
+        if module_path:
+            tree = get_file_ast(module_path, permissions=(os.R_OK,))
 
-    else:
-        importables = ImportablesAnalyzer.handle_c_libs_importables(node)
+            analyzer = ImportablesAnalyzer()
+            analyzer.source = source
+            analyzer.visit(tree)
+            importables = analyzer.get_stats()
 
-    if importables:
-        # Create `ast.alias` for each name.
-        node.names.clear()
-        for name in importables:
-            node.names.append(ast.alias(name=name, asname=None))
+        else:
+            importables = ImportablesAnalyzer.handle_c_libs_importables(node)
+    except (ReadPermissionError, UnparsableFile, ModuleNotFoundError) as err:
+        msg = err.msg if err.msg else "module not found!"
+        raise UnexpandableImportStar(source, node.lineno, node.col_offset, msg)
+
+    # Create `ast.alias` for each name.
+    node.names.clear()
+    for name in importables:
+        node.names.append(ast.alias(name=name, asname=None))
 
     return node
 
@@ -340,7 +356,7 @@ def remove_useless_passes(source_lines: List[str]) -> List[str]:
     :param source_lines: source code lines to check.
     :returns: clean source lines.
     """
-    tree = ast.parse("".join(source_lines))
+    tree = ast.parse(EMPTY.join(source_lines))
 
     for parent in ast.walk(tree):
 
@@ -370,18 +386,32 @@ def get_file_ast(
 
     :param source: source to read.
     :param get_lines: if true the source file lines will be returned.
-    :returns: source file AST.
+    :param permissions: tuple of permissions to check, supported permissions (os.R_OK, os.W_OK).
+    :returns: source file AST (`ast.Module`). Also source code lines if get_lines.
+    :raises ReadPermissionError: when `os.R_OK` in permissions and the source does not have read permission.
+    :raises WritePermissionError: when `os.W_OK` in permissions and the source does not have write permission.
+    :raises UnparsableFile: if the compiled source is invalid, or the source contains null bytes.
     """
+    # Check these permissions before openinig the file.
     for permission in permissions:
         if not os.access(source, permission):
             if permission is os.R_OK:
-                raise PermissionError(13, "Permission denied [READ]", source)
+                raise ReadPermissionError(13, "Permission denied [READ]", source)
             elif permission is os.W_OK:
-                raise PermissionError(13, "Permission denied [WRITE]", source)
+                raise WritePermissionError(13, "Permission denied [WRITE]", source)
 
     with open(source, "r") as sfile:
         lines = sfile.readlines() if get_lines else []
-        content = "".join(lines) if get_lines else sfile.read()
-        tree = ast.parse(content)
+        content = EMPTY.join(lines) if get_lines else sfile.read()
+
+    try:
+        try:
+            # Include type_comments ~> Python >=3.8 .
+            # For more information https://www.python.org/dev/peps/pep-0526/ .
+            tree = ast.parse(content, type_comments=True)
+        except TypeError:
+            tree = ast.parse(content)
+    except (SyntaxError, ValueError) as exception:
+        raise UnparsableFile(source, exception)
 
     return (tree, lines) if get_lines else tree

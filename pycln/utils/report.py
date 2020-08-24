@@ -1,20 +1,24 @@
 """
 Pycln report utility.
 """
-from dataclasses import dataclass
-from typing import Union
-from pathlib import Path
-from copy import copy
 import ast
 import os
+from copy import copy
+from dataclasses import dataclass
+from difflib import unified_diff
+from pathlib import Path
+from typing import List, Union
 
 import typer
 
-from . import config, ast2source as ast2s
-from .config import configs
+from . import ast2source as ast2s, config
 
 # Constants.
+AT = "@"
 DOT = "."
+STAR = "*"
+DASH = "-"
+PLUS = "+"
 EMPTY = ""
 SPACE = " "
 COLUMN = ":"
@@ -28,14 +32,16 @@ class Report:
 
     """Provide a Pycln report counters. Can be rendered with `str(report)`."""
 
+    configs: config.Config
+
     def get_relpath(self, path: Path) -> Path:
         """Get relative path from the given absolute path.
 
         :param path: an absolute path.
-        :returns: a relative path (relative to `configs.path`).
+        :returns: a relative path (relative to `self.configs.path`).
         """
         rel_path = os.path.join(
-            configs.path, os.path.relpath(path, configs.path)
+            self.configs.path, os.path.relpath(path, self.configs.path)
         )
         return (
             os.path.join(DOT_FSLSH, rel_path)
@@ -79,6 +85,35 @@ class Report:
             err=err,
         )
 
+    def colored_unified_diff(
+        self, source: str, original_lines: List[str], fixed_lines: List[str]
+    ):
+        """Writeout colored and normalized diff.
+
+        :param source: a file path.
+        :param original_lines: original source code lines.
+        :param fixed_lines: fixed source code lines.
+        """
+        diff_gen = unified_diff(
+            original_lines,
+            fixed_lines,
+            fromfile=f"original/ {source}",
+            tofile=f"fixed/ {source}",
+            n=3,
+            lineterm=NEW_LINE,
+        )
+        diff_str = EMPTY
+        for line in diff_gen:
+            if line.startswith(DASH):
+                line = typer.style(line, fg=typer.colors.RED)
+            elif line.startswith(PLUS):
+                line = typer.style(line, fg=typer.colors.GREEN)
+            elif line.startswith(AT):
+                line = typer.style(line, fg=typer.colors.CYAN)
+            diff_str += line
+        diff_str = diff_str.rstrip(NEW_LINE + SPACE) + NEW_LINE
+        typer.echo(diff_str)
+
     # Counters.
     __removed_imports: int = 0
 
@@ -94,7 +129,7 @@ class Report:
         :param node: remove import node.
         :param removed_alias: the removed `ast.alias` from the node.
         """
-        if not any([configs.diff, configs.quiet, configs.silence]):
+        if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
 
             abc_node = copy(node)
             abc_node.names = [removed_alias]
@@ -113,13 +148,13 @@ class Report:
                     str(abc_node.col_offset),
                 ]
             )
-            removed = "has removed" if not configs.check else "whould be removed"
+            removed = "has removed" if not self.configs.check else "whould be removed"
             self.secho(
                 f"{location} {statement!r} {removed}! 🔮", bold=False, isedit=True
             )
 
         self.__removed_imports += 1
-        self.__file_removed_imports += 1
+        self.__file_removed_imports += 1 if self.__file_removed_imports != -1 else 2
 
     __changed_files: int = 0
     __file_removed_imports: int = 0
@@ -129,8 +164,11 @@ class Report:
 
         :param source: the changed file path.
         """
-        if not any([configs.diff, configs.silence]):
-            removed = "has removed" if not configs.check else "whould be removed"
+        if (
+            not any([self.configs.diff, self.configs.silence])
+            and self.__file_removed_imports > 0
+        ):
+            removed = "has removed" if not self.configs.check else "whould be removed"
             s = "s" if self.__file_removed_imports > 1 else ""
             self.secho(
                 f"{self.get_relpath(source)} {self.__file_removed_imports} import{s} {removed}! 🚀",
@@ -148,7 +186,7 @@ class Report:
 
         :param source: the unchanged file path.
         """
-        if any([configs.verbose, configs.diff]):
+        if self.configs.verbose and self.__file_removed_imports != -1:
             self.secho(
                 f"{self.get_relpath(source)} looks good! ✨", bold=False, issuccess=True
             )
@@ -162,7 +200,7 @@ class Report:
         :param ignored_path: the ignored path.
         :param type_: ignore type, `exclude` or `enclude` or `gitignore`.
         """
-        if configs.verbose:
+        if self.configs.verbose:
             if type_ == "exclude":
                 type_ = "matches the --exclude regex"
             elif type_ == "gitignore":
@@ -180,26 +218,35 @@ class Report:
     __ignored_imports: int = 0
 
     def ignored_import(
-        self, source: Path, node: Union[ast.Import, ast.ImportFrom]
+        self,
+        source: Path,
+        node: Union[ast.Import, ast.ImportFrom],
+        is_star_import: bool = False,
     ) -> None:
         """Increment the counter for ignored imports. Write a message to stderr.
 
         :param source: where the import has ignored.
         :param node: the ignored import node.
+        :param is_star_import: set to true if it's a '*' import.
         """
-        if configs.verbose:
+        if self.configs.verbose:
             if isinstance(node, ast.Import):
                 statement = ast2s.rebuild_import(node)
 
             elif isinstance(node, ast.ImportFrom):
-                statement = ast2s.rebuild_import_from(node, None).replace(
-                    NEW_LINE, EMPTY
-                )
+                statement = ast2s.rebuild_import_from(node, None)
 
                 if isinstance(statement, list):
                     statement = statement[0] + f" {DOT*3}"
+
+            statement = statement.replace(NEW_LINE, EMPTY).lstrip(SPACE)
+            location = f"{self.get_relpath(source)}:{node.lineno}:{node.col_offset}"
+            reason = "`# noqa`" if not is_star_import else f"cannot expand the {STAR!r}"
             self.secho(
-                f"{statement} has ignored! ⚠️", bold=False, err=True, iswarning=True
+                f"{location} {statement!r} has ignored: {reason}! ⚠️",
+                bold=False,
+                err=True,
+                iswarning=True,
             )
         self.__ignored_imports += 1
 
@@ -211,12 +258,15 @@ class Report:
         :param message: a failure message.
         :param source: where the failure has appeared.
         """
-        if not configs.silence:
+        if not self.configs.silence:
             message = (
                 f"{self.get_relpath(source)} {message} ⛔" if source else f"{message} ⛔"
             )
             self.secho(message, bold=False, err=True, iserror=True)
         self.__failures += 1
+
+        if self.__file_removed_imports == 0:
+            self.__file_removed_imports = -1
 
     @property
     def exit_code(self) -> int:
@@ -227,7 +277,7 @@ class Report:
         if self.__failures:
             # Internal error.
             return 250
-        if self.__changed_files and configs.check:
+        if self.__changed_files and self.configs.check:
             # File(s) should be refactord.
             return 1
         # Everything is fine.
@@ -235,7 +285,15 @@ class Report:
 
     def __str__(self) -> str:
         """Render a counters report. can renders using `str(object)`"""
-        if any([configs.check, configs.diff]):
+        if not any([self.__changed_files, self.__unchanged_files]):
+            typer.secho(
+                "No Python files are present to be cleaned. Nothing to do 😴",
+                bold=True,
+                err=True,
+            )
+            raise typer.Exit(1)
+
+        if any([self.configs.check, self.configs.diff]):
             removed_imports = "would be removed"
             changed_files = "would be changed"
             unchanged_files = "would be left unchanged"
@@ -277,7 +335,7 @@ class Report:
                 typer.style(f"{self.__failures} file{s} {failures}", bold=False)
             )
 
-        if configs.verbose:
+        if self.configs.verbose:
             ignored_imports = "has ignored"
             ignored_paths = "has ignored"
 
@@ -301,7 +359,8 @@ class Report:
         prefix = (
             NEW_LINE
             if report
-            and any([configs.verbose, self.__removed_imports, self.__failures])
+            and not self.configs.diff
+            and any([self.configs.verbose, self.__removed_imports, self.__failures])
             else EMPTY
         )
         done_msg = typer.style(
@@ -314,8 +373,3 @@ class Report:
             bold=True,
         )
         return prefix + done_msg + COMMA_SP.join(report) + DOT
-
-
-# To avoid reiniting or passing.
-# this should be changed at the `main` function.
-reporter: Report = None

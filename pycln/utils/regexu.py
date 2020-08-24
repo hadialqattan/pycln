@@ -36,7 +36,7 @@ def safe_compile(str_regex: str, type_: str) -> Pattern[str]:
             fg=typer.colors.RED,
             err=True,
         )
-        raise typer.Exit()
+        raise typer.Exit(1)
 
 
 def is_included(name: str, regex: Pattern[str]) -> bool:
@@ -59,7 +59,7 @@ def is_excluded(name: str, regex: Pattern[str]) -> bool:
     return bool(regex.fullmatch(name))
 
 
-@lru_cache
+@lru_cache()
 def get_gitignore(root: Path) -> PathSpec:
     """Return a PathSpec matching gitignore content if present.
 
