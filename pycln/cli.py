@@ -44,7 +44,7 @@ def main(
         "--check",
         "-c",
         show_default=True,
-        help="Don't write the files back, just return the status. Return code 0 means nothing would change. Return code 1 means some files would be changed. Return code 500 means there was an internal error.",
+        help="Don't write the files back, just return the status. Return code 0 means nothing would change. Return code 1 means some files would be changed. Return code 250 means there was an internal error.",
     ),
     diff: bool = typer.Option(
         False,
@@ -58,7 +58,7 @@ def main(
         "--verbose",
         "-v",
         show_default=True,
-        help="Also emit messages to stdout about removed imports and to stderr about files that were not changed or were ignored due to `--exclude` or `.gitignore`.",
+        help="Also emit messages to stdout about removed/expanded imports and to stderr about files that were not changed and about files/imports that were ignored.",
     ),
     quiet: bool = typer.Option(
         False,

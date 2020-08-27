@@ -253,7 +253,7 @@ class Refactor:
             )
         else:
             module_source = pathu.get_import_path(self.source, module_name)
-            
+
         try:
             tree = astu.get_file_ast(module_source, permissions=(os.R_OK,))
         except (ReadPermissionError, UnparsableFile) as err:
