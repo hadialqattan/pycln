@@ -1,6 +1,6 @@
 # ========== VSCode gitignore ===========
 
-.vscode
+.vscode/
 
 
 # ========== Custom gitignore ===========

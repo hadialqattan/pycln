@@ -1,9 +1,9 @@
 """
 Pycln node utility.
 """
+import ast
 from dataclasses import dataclass
 from typing import List, Optional
-import ast
 
 
 @dataclass

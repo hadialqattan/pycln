@@ -101,7 +101,7 @@ def rebuild_import_from(
     # If the entire statement has removed.
     if names_len < 1:
         return f"{indentation}{PASS}{NEW_LINE}" if indentation else EMPTY
-        
+
     # Compute the base form.
     leveled_name = get_leveled_name(node.module, node.level)
     base = f"{indentation}{FROM}{SPACE}{leveled_name}{SPACE}{IMPORT}"

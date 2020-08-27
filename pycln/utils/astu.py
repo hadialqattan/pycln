@@ -2,23 +2,23 @@
 Pycln AST utility.
 """
 import ast
-import sys
 import os
+import sys
 from dataclasses import dataclass
 from enum import Enum, unique
+from functools import wraps
 from importlib.util import find_spec
 from pathlib import Path
-from typing import List, Set, Tuple, Union, Optional, cast, Callable, TypeVar, Any
-from functools import wraps
+from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, cast
 
 from _ast import AST
 
-from . import pathu, nodes, regexu, ast2source as ast2s
+from . import ast2source as ast2s, nodes, pathu, regexu
 from .exceptions import (
     ReadPermissionError,
-    WritePermissionError,
     UnexpandableImportStar,
     UnparsableFile,
+    WritePermissionError,
 )
 
 # Constants.
@@ -405,8 +405,7 @@ def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
         if module_path:
             tree = get_file_ast(module_path, permissions=(os.R_OK,))
 
-            analyzer = ImportablesAnalyzer()
-            analyzer.source = source
+            analyzer = ImportablesAnalyzer(source)
             analyzer.visit(tree)
             importables = analyzer.get_stats()
 

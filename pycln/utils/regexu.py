@@ -87,7 +87,7 @@ def skip_import(line: str) -> bool:
 
 
 def skip_file(source: str) -> bool:
-    """Check if the source code has `# nopycln: file` to skip.
+    """Check if the source code has `nopycln: file` comment to skip.
     
     :param source: string source code to check.
     :returns: True if it matches else False.

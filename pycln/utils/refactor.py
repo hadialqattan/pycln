@@ -5,11 +5,9 @@ import ast
 import os
 from copy import copy
 from pathlib import Path
-from typing import Generator, List, Union, Tuple
+from typing import List, Tuple, Union
 
-import typer
-
-from . import ast2source as ast2s, astu, pathu, regexu, nodes
+from . import ast2source as ast2s, astu, nodes, pathu, regexu
 from .config import Config
 from .exceptions import (
     ReadPermissionError,
@@ -94,11 +92,11 @@ class Refactor:
             tree, original_lines, content = astu.get_file_ast(
                 self.source, True, permissions
             )
-            # Skip any file that has `# nopycln: file` comment.
+
             if regexu.skip_file(content):
                 self.reporter.ignored_path(self.source, NOPYCLN)
                 return None, None
-        except (ReadPermissionError, WritePermissionError, UnparsableFile):
+        except (ReadPermissionError, WritePermissionError, UnparsableFile) as err:
             self.reporter.failure(err)
         return tree, original_lines
 
@@ -137,19 +135,17 @@ class Refactor:
                     self.reporter.ignored_import(self.source, node)
                     continue
 
+                # Expand import '*' before checking.
+                node, is_star_import = self.expand_import_star(node)
+                if is_star_import is None:
+                    continue
+
                 # Shallow copy only the importat parts.
                 clean_node = copy(node)
                 clean_node.names = copy(node.names)
 
-                # Expand import '*' before checking.
-                clean_node, is_star_import = self.expand_import_star(clean_node)
-                if is_star_import is None:
-                    continue
-
                 has_changed = False
                 for alias in node.names:
-                    # Get the actual name.
-                    name = alias.asname if alias.asname else alias.name
                     if self.should_removed(node, alias):
                         has_changed = True
                         clean_node.names.remove(alias)
@@ -160,12 +156,14 @@ class Refactor:
 
                     # Return from module import '*' as before, if the --expand-star-imports has not specified.
                     if is_star_import:
-                        if clean_node.names and not self.configs.expand_star_imports:
-                            clean_node = node
+                        star_alias = ast.alias(name=STAR, asname=None)
+                        if clean_node.names:
+                            if not self.configs.expand_star_imports:
+                                clean_node.names = [star_alias]
+                            else:
+                                self.reporter.expanded_star(self.source, clean_node)
                         elif not clean_node.names:
-                            self.reporter.removed_import(
-                                source, node, ast.alias(name=STAR, asname=None)
-                            )
+                            self.reporter.removed_import(self.source, node, star_alias)
 
                     # Rebuild and replace the import without the unused parts.
                     rebuilt_import = self.rebuild_import(fixed_lines, clean_node)
@@ -230,7 +228,7 @@ class Refactor:
         :param name: a name to check.
         :returns: True if the name has used else False.
         """
-        name = namee.split(DOT) if DOT in name else name
+        name = name.split(DOT) if DOT in name else name
         if isinstance(name, str):
             # Handle imports like (import os, from os import path).
             return any([name in self.source_stats.name_])
@@ -267,7 +265,7 @@ class Refactor:
             analyzer.visit(tree)
             return analyzer.has_side_effects()
         except Exception as err:
-            self.reporter.failure(err, source)
+            self.reporter.failure(err, self.source)
             return astu.HasSideEffects.NOT_KNOWN
 
     def rebuild_import(
