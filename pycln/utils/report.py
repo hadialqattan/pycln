@@ -158,7 +158,9 @@ class Report:
 
     __expanded_stars: int = 0
 
-    def expanded_star(self, source: Path, node: Union[ast.ImportFrom, nodes.ImportFrom]) -> None:
+    def expanded_star(
+        self, source: Path, node: Union[ast.ImportFrom, nodes.ImportFrom]
+    ) -> None:
         """Increment the counter for expanded stars. Write a message to stdout.
         
         :param source: where the import has expanded.
@@ -167,17 +169,19 @@ class Report:
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
             abc_node = copy(node)
             abc_node.names = [ast.alias(name=STAR, asname=None)]
-            statement = ast2s.rebuild_import_from(abc_node, None).replace(NEW_LINE, EMPTY)
-            location = COLUMN.join(
-                [
-                    self.get_relpath(source),
-                    str(node.lineno),
-                    str(node.col_offset),
-                ]
+            statement = ast2s.rebuild_import_from(abc_node, None).replace(
+                NEW_LINE, EMPTY
             )
-            expanded = "has expanded" if not self.configs.check else "whould be expanded"
-            self.secho(f"{location} {statement!r} {expanded}! 🔗", bold=False, isedit=True)
-        
+            location = COLUMN.join(
+                [self.get_relpath(source), str(node.lineno), str(node.col_offset),]
+            )
+            expanded = (
+                "has expanded" if not self.configs.check else "whould be expanded"
+            )
+            self.secho(
+                f"{location} {statement!r} {expanded}! 🔗", bold=False, isedit=True
+            )
+
         self.__expanded_stars += 1
         self.__file_expanded_stars += 1 if self.__file_expanded_stars != -1 else 2
 
@@ -190,22 +194,29 @@ class Report:
 
         :param source: the changed file path.
         """
-        if (
-            not any([self.configs.diff, self.configs.silence])
-            and (self.__file_removed_imports > 0 or self.__file_expanded_stars > 0)
+        if not any([self.configs.diff, self.configs.silence]) and (
+            self.__file_removed_imports > 0 or self.__file_expanded_stars > 0
         ):
             file_report: List[str] = []
 
             if self.__file_removed_imports > 0:
-                removed = "has removed" if not self.configs.check else "whould be removed"
+                removed = (
+                    "has removed" if not self.configs.check else "whould be removed"
+                )
                 rs = "s" if self.__file_removed_imports > 1 else ""
-                file_report.append(f"{self.__file_removed_imports} import{rs} {removed}")
-            
+                file_report.append(
+                    f"{self.__file_removed_imports} import{rs} {removed}"
+                )
+
             if self.__file_expanded_stars > 0:
-                expanded = "has expanded" if not self.configs.check else "whould be expanded"
+                expanded = (
+                    "has expanded" if not self.configs.check else "whould be expanded"
+                )
                 es = "s" if self.__file_expanded_stars > 1 else ""
-                file_report.append(f"{self.__file_expanded_stars} import{es} {expanded}")
-            
+                file_report.append(
+                    f"{self.__file_expanded_stars} import{es} {expanded}"
+                )
+
             str_file_report = COMMA_SP.join(file_report)
             self.secho(
                 f"{self.get_relpath(source)} {str_file_report}! 🚀",
@@ -248,7 +259,8 @@ class Report:
             else:
                 sharp = "#"  # To avoid skiping this file.
                 type_ = f"do to `{sharp} nopycln: file` comment"
-            self.secho(f"{self.get_relpath(ignored_path)} has ignored: {type_}! ⚠️",
+            self.secho(
+                f"{self.get_relpath(ignored_path)} has ignored: {type_}! ⚠️",
                 bold=False,
                 err=True,
                 iswarning=True,
@@ -277,7 +289,11 @@ class Report:
                 i = statement.index(ast2s.IMPORT) + len(ast2s.IMPORT)
             else:
                 statement = ast2s.rebuild_import(node)
-                i = (statement.index(ast2s.COMMA) + 1) if ast2s.COMMA in statement else None
+                i = (
+                    (statement.index(ast2s.COMMA) + 1)
+                    if ast2s.COMMA in statement
+                    else None
+                )
             statement = statement[0:i] + f" {DOT * 3}"
 
             statement = statement.replace(NEW_LINE, EMPTY).lstrip(SPACE)
@@ -336,7 +352,7 @@ class Report:
         
         :returns: full counters report.
         """
-        if not any([self.__changed_files, self.__unchanged_files]):
+        if not any([self.__changed_files, self.__unchanged_files, self.__failures]):
             typer.secho(
                 (NEW_LINE if self.configs.verbose and self.__ignored_paths else EMPTY)
                 + "No Python files are present to be cleaned. Nothing to do 😴",
@@ -423,13 +439,24 @@ class Report:
             if (
                 (not self.configs.diff or (report and self.configs.verbose))
                 and report
-                and any([self.__removed_imports, self.__expanded_stars, self.configs.verbose, self.__failures])
+                and any(
+                    [
+                        self.__removed_imports,
+                        self.__expanded_stars,
+                        self.configs.verbose,
+                        self.__failures,
+                    ]
+                )
             )
             else EMPTY
         )
         done_msg = typer.style(
             (
-                ("All done! 💪 😎" if self.__removed_imports or self.__expanded_stars else "Looks good! ✨ 🍰 ✨")
+                (
+                    "All done! 💪 😎"
+                    if self.__removed_imports or self.__expanded_stars
+                    else "Looks good! ✨ 🍰 ✨"
+                )
                 if not self.__failures
                 else f"Oh no, there {'are errors' if self.__failures > 1 else 'is an error'}! 💔 ☹️"
             )

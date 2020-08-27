@@ -13,7 +13,7 @@ from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, ca
 
 from _ast import AST
 
-from . import ast2source as ast2s, nodes, pathu, regexu
+from . import ast2source as ast2s, nodes, pathu
 from .exceptions import (
     ReadPermissionError,
     UnexpandableImportStar,

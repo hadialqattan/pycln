@@ -265,6 +265,22 @@ def get_local_import_from_path(
         return path
 
 
+def get_module_path(paths: List[Path], module_name: str) -> Union[Path, None]:
+    """Get the `module_name` path from the given `paths`.
+
+    :param paths: a list of paths to search on.
+    :param module_name: an importable module name.
+    :returns: `module_name` path if exist else None.
+    """
+    for path in paths:
+        name = str(path.parts[-1]).split(DOT)[0]
+        if name == module_name:
+            if name.endswith(PY_EXTENSION):
+                return path
+            else:
+                return os.path.join(path, __INIT__)
+
+
 @lru_cache()
 def get_import_path(source: Path, module_name: str):
     """Find the given module_name file.py/__init__.py path.
@@ -280,16 +296,10 @@ def get_import_path(source: Path, module_name: str):
         return path
 
     elif module_name in get_standard_lib_names():
-        for path in get_standard_lib_paths():
-            name = str(path.parts[-1]).split(DOT)[0]
-            if name == module_name:
-                return path
+        return get_module_path(get_standard_lib_names(), module_name)
 
     else:
-        for path in get_third_party_lib_paths():
-            name = str(path.parts[-1]).split(DOT)[0]
-            if name == module_name:
-                return path
+        return get_module_path(get_third_party_lib_paths(), module_name)
 
 
 @lru_cache()
@@ -309,14 +319,8 @@ def get_import_from_path(
     if level > 0:
         return get_local_import_from_path(source, module_name, from_module_name, level)
 
-    elif from_module_name in get_standard_lib_names():
-        for path in get_standard_lib_paths():
-            name = str(path.parts[-1]).split(DOT)[0]
-            if name == from_module_name:
-                return path
+    elif module_name in get_standard_lib_names():
+        return get_module_path(get_standard_lib_names(), module_name)
 
     else:
-        for path in get_third_party_lib_paths():
-            name = str(path.parts[-1]).split(DOT)[0]
-            if name == from_module_name:
-                return path
+        return get_module_path(get_third_party_lib_paths(), module_name)

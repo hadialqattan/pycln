@@ -1,5 +1,4 @@
-from os import *
-from time import *
+from . import cli
 
 
 def function(a, b):

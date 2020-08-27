@@ -248,14 +248,14 @@ class Refactor:
         :returns: side effects status.
         """
         if hasattr(node, "level"):
-            pathu.get_import_from_path(
+            module_source = pathu.get_import_from_path(
                 self.source, module_name, node.module, node.level
             )
         else:
-            pathu.get_import_path(self.source, module_name)
-
+            module_source = pathu.get_import_path(self.source, module_name)
+            
         try:
-            tree = astu.get_file_ast(self.source, permissions=(os.R_OK,))
+            tree = astu.get_file_ast(module_source, permissions=(os.R_OK,))
         except (ReadPermissionError, UnparsableFile) as err:
             self.reporter.failure(err)
             return astu.HasSideEffects.NOT_KNOWN
