@@ -17,8 +17,8 @@ NEW_LINE = "\n"
 BACK_SLASH = "\\"
 COMMA_BS = f"{COMMA}{SPACE}{BACK_SLASH}"
 COMMA_SP = f"{COMMA}{SPACE}"
-LEFT_PAEENTHESIS = ")"
-RIGHT_PAEENTHESIS = "("
+LEFT_PARENTHESIS = ")"
+RIGHT_PARENTHESIS = "("
 
 
 def get_leveled_name(module_name: str, level: int) -> str:
@@ -60,7 +60,7 @@ def is_parentheses(import_from_line: str) -> Union[bool, None]:
     :param import_from_line: importFrom statement str line.
     :returns: importFrom type ('(' => True), ('\\' => False), else None.
     """
-    if RIGHT_PAEENTHESIS in import_from_line:
+    if RIGHT_PARENTHESIS in import_from_line:
         return True
     elif BACK_SLASH in import_from_line:
         return False
@@ -101,7 +101,7 @@ def rebuild_import_from(
     # If the entire statement has removed.
     if names_len < 1:
         return f"{indentation}{PASS}{NEW_LINE}" if indentation else EMPTY
-    ast.PyCF_TYPE_COMMENTS
+        
     # Compute the base form.
     leveled_name = get_leveled_name(node.module, node.level)
     base = f"{indentation}{FROM}{SPACE}{leveled_name}{SPACE}{IMPORT}"
@@ -139,9 +139,9 @@ def rebuild_import_from(
         # Return the rebuilt multiline ImportFrom based on the type.
         if is_parentheses:
             return [
-                f"{base}{SPACE}{RIGHT_PAEENTHESIS}{NEW_LINE}",
+                f"{base}{SPACE}{RIGHT_PARENTHESIS}{NEW_LINE}",
                 *names_list,
-                f"{LEFT_PAEENTHESIS}{NEW_LINE}",
+                f"{LEFT_PARENTHESIS}{NEW_LINE}",
             ]
         else:
             return [

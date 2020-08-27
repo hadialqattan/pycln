@@ -15,7 +15,8 @@ from pathspec.patterns import GitWildMatchPattern
 INCLUDE = "include"
 EXCLUDE = "exclude"
 GITIGNORE = ".gitignore"
-NOQA_REGEX = r"#.*noqa.*"
+SKIP_FILE_REGEX = r"# *(nopycln *: *file).*"
+SKIP_IMPORT_REGEX = r"# *((noqa *:*)|(nopycln *: *import)).*"
 INCLUDE_REGEX = r".*\.pyi?$"
 EXCLUDE_REGEX = r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|\.tox|\.venv|\.svn|buck-out|build|dist)/"
 
@@ -76,6 +77,19 @@ def get_gitignore(root: Path) -> PathSpec:
     return PathSpec.from_lines(GitWildMatchPattern, gitignore_lines)
 
 
-def has_noqa(line: str) -> bool:
-    """Check if the line has `# noqa` to skip."""
-    return bool(re.search(NOQA_REGEX, line, re.IGNORECASE))
+def skip_import(line: str) -> bool:
+    """Check if the lines has `# noqa` or `# nopycln: import` to skip.
+
+    :param line: a line to check.
+    :returns: True if it matches else False.
+    """
+    return bool(re.search(SKIP_IMPORT_REGEX, line, re.IGNORECASE))
+
+
+def skip_file(source: str) -> bool:
+    """Check if the source code has `# nopycln: file` to skip.
+    
+    :param source: string source code to check.
+    :returns: True if it matches else False.
+    """
+    return bool(re.search(SKIP_FILE_REGEX, source, re.IGNORECASE))

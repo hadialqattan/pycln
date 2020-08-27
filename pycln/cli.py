@@ -109,7 +109,8 @@ def main(
     sources: Generator = pathu.yield_sources(
         configs.path, configs.include, configs.exclude, gitignore, reporter
     )
-    refactor.Refactor(configs, reporter, sources)
+    for source in sources:
+        refactor.Refactor(source, configs, reporter)
     # Print the report.
     typer.echo(str(reporter))
     # Set the correct exit code and exit.

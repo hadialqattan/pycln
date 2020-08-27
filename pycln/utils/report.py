@@ -11,7 +11,7 @@ from typing import List, Union
 
 import typer
 
-from . import ast2source as ast2s, config
+from . import ast2source as ast2s, config, nodes
 
 # Constants.
 AT = "@"
@@ -58,7 +58,7 @@ class Report:
         issuccess: bool = False,
         iswarning: bool = False,
         iserror: bool = False,
-    ) -> str:
+    ) -> None:
         """Print a colored message.
 
         :param message: a string message.
@@ -87,13 +87,14 @@ class Report:
 
     def colored_unified_diff(
         self, source: str, original_lines: List[str], fixed_lines: List[str]
-    ):
+    ) -> None:
         """Writeout colored and normalized diff.
 
         :param source: a file path.
         :param original_lines: original source code lines.
         :param fixed_lines: fixed source code lines.
         """
+        fixed_lines = [line for line in fixed_lines if line != EMPTY]
         diff_gen = unified_diff(
             original_lines,
             fixed_lines,
@@ -120,13 +121,13 @@ class Report:
     def removed_import(
         self,
         source: Path,
-        node: Union[ast.Import, ast.ImportFrom],
+        node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
         removed_alias: ast.alias,
     ) -> None:
         """Increment the counter for removed importes. Write a message to stdout.
 
         :param source: where the import has removed.
-        :param node: remove import node.
+        :param node: removed import node.
         :param removed_alias: the removed `ast.alias` from the node.
         """
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
@@ -134,11 +135,10 @@ class Report:
             abc_node = copy(node)
             abc_node.names = [removed_alias]
 
-            if isinstance(abc_node, ast.Import):
-                statement = ast2s.rebuild_import(abc_node)
-
-            elif isinstance(abc_node, ast.ImportFrom):
+            if hasattr(abc_node, "level"):
                 statement = ast2s.rebuild_import_from(abc_node, None)
+            else:
+                statement = ast2s.rebuild_import(abc_node)
 
             statement = statement.replace(NEW_LINE, EMPTY).lstrip(SPACE)
             location = COLUMN.join(
@@ -198,15 +198,17 @@ class Report:
         """Increment the counter for ignored paths. Write a message to stderr.
 
         :param ignored_path: the ignored path.
-        :param type_: ignore type, `exclude` or `enclude` or `gitignore`.
+        :param type_: ignore type, `exclude` or `include` or `gitignore` or `nopycln`.
         """
         if self.configs.verbose:
             if type_ == "exclude":
                 type_ = "matches the --exclude regex"
             elif type_ == "gitignore":
                 type_ = "matches the .gitignore patterns"
-            else:
+            elif type_ == "include":
                 type_ = "does not match the --include regex"
+            else:
+                type_ = "do to `# nopycln: file` comment"
             self.secho(
                 f"{self.get_relpath(ignored_path)} has ignored: {type_}! ⚠️",
                 bold=False,
@@ -220,7 +222,7 @@ class Report:
     def ignored_import(
         self,
         source: Path,
-        node: Union[ast.Import, ast.ImportFrom],
+        node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
         is_star_import: bool = False,
     ) -> None:
         """Increment the counter for ignored imports. Write a message to stderr.
@@ -230,18 +232,20 @@ class Report:
         :param is_star_import: set to true if it's a '*' import.
         """
         if self.configs.verbose:
-            if isinstance(node, ast.Import):
-                statement = ast2s.rebuild_import(node)
-
-            elif isinstance(node, ast.ImportFrom):
+            if hasattr(node, "level"):
                 statement = ast2s.rebuild_import_from(node, None)
-
                 if isinstance(statement, list):
                     statement = statement[0] + f" {DOT*3}"
+            else:
+                statement = ast2s.rebuild_import(node)
 
             statement = statement.replace(NEW_LINE, EMPTY).lstrip(SPACE)
             location = f"{self.get_relpath(source)}:{node.lineno}:{node.col_offset}"
-            reason = "`# noqa`" if not is_star_import else f"cannot expand the {STAR!r}"
+            reason = (
+                "`# noqa` or `# nopycln: import`"
+                if not is_star_import
+                else f"cannot expand the {STAR!r}"
+            )
             self.secho(
                 f"{location} {statement!r} has ignored: {reason}! ⚠️",
                 bold=False,
@@ -287,7 +291,8 @@ class Report:
         """Render a counters report. can renders using `str(object)`"""
         if not any([self.__changed_files, self.__unchanged_files]):
             typer.secho(
-                "No Python files are present to be cleaned. Nothing to do 😴",
+                (NEW_LINE if self.configs.verbose and self.__ignored_paths else EMPTY)
+                + "No Python files are present to be cleaned. Nothing to do 😴",
                 bold=True,
                 err=True,
             )
@@ -358,9 +363,8 @@ class Report:
 
         prefix = (
             NEW_LINE
-            if report
-            and not self.configs.diff
-            and any([self.configs.verbose, self.__removed_imports, self.__failures])
+            if not self.configs.diff
+            and (report and any([self.__removed_imports, self.configs.verbose, self.__failures]))
             else EMPTY
         )
         done_msg = typer.style(

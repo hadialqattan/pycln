@@ -2,27 +2,49 @@
 Pycln AST utility.
 """
 import ast
+import sys
 import os
 from dataclasses import dataclass
 from enum import Enum, unique
 from importlib.util import find_spec
 from pathlib import Path
-from typing import List, Set, Tuple, Union
+from typing import List, Set, Tuple, Union, Optional, cast, Callable, TypeVar, Any
+from functools import wraps
 
 from _ast import AST
 
-from . import pathu
+from . import pathu, nodes, regexu, ast2source as ast2s
 from .exceptions import (
     ReadPermissionError,
+    WritePermissionError,
     UnexpandableImportStar,
     UnparsableFile,
-    WritePermissionError,
 )
 
 # Constants.
-DOT = "."
-STAR = "*"
+PY38_PLUS = sys.version_info >= (3, 8)
+LEFT_PARENTHESIS = ")"
+BACK_SLASH = "\\"
 EMPTY = ""
+STAR = "*"
+DOT = "."
+
+# Custom types.
+Function = TypeVar("Function", bound=Callable[..., Any])
+
+
+def recursive(func: Function) -> Function:
+    """decorator to make `ast.NodeVisitor` work recursive.
+    
+    :param func: `ast.NodeVisitor.visit_*` function.
+    """
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        func(self, *args, **kwargs)
+        self.generic_visit(*args)
+
+    return cast(Function, wrapper)
 
 
 @dataclass
@@ -30,43 +52,11 @@ class ImportStats:
 
     """Import statements statistics."""
 
-    import_: Set[ast.Import]
-    from_: Set[ast.ImportFrom]
+    import_: Set[Union[ast.Import, nodes.Import]]
+    from_: Set[Union[ast.ImportFrom, nodes.ImportFrom]]
 
     def __iter__(self):
         return iter([self.import_, self.from_])
-
-
-class ImportAnalyzer(ast.NodeVisitor):
-
-    """AST import statements analyzer.
-
-    >>> import ast
-    >>> with open("source.py", "r") as source:
-    >>>     tree = ast.parse(source.read())
-    >>> analyzer = ImportAnalyzer()
-    >>> analyzer.visit(tree)
-    >>> stats = analyzer.get_stats()
-    >>> analyzer.reset_stats()
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(ImportAnalyzer, self).__init__(*args, **kwargs)
-        self.__stats = ImportStats(set(), set())
-
-    def visit_Import(self, node: ast.Import):
-        self.__stats.import_.add(node)
-        self.generic_visit(node)
-
-    def visit_ImportFrom(self, node: ast.ImportFrom):
-        self.__stats.from_.add(node)
-        self.generic_visit(node)
-
-    def get_stats(self) -> ImportStats:
-        return self.__stats
-
-    def reset_stats(self):
-        self.__stats = ImportStats(set(), set())
 
 
 @dataclass
@@ -83,34 +73,123 @@ class SourceStats:
 
 class SourceAnalyzer(ast.NodeVisitor):
 
-    """AST souce code objects analyzer.
+    """AST source code analyzer.
 
-    >>> import ast
-    >>> with open("source.py", "r") as source:
-    >>>     tree = ast.parse(source.read())
-    >>> analyzer = SourceAnalyzer()
-    >>> analyzer.visit(tree)
-    >>> stats = analyzer.get_stats()
-    >>> analyzer.reset_stats()
+    Python >= 3.8:
+        >>> import ast
+        >>> source = "source.py"
+        >>> with open(source, "r") as sourcef:
+        >>>     tree = ast.parse(sourcef.read())
+        >>> analyzer = SourceAnalyzer()
+        >>> analyzer.visit(tree)
+        >>> source_stats, import_stats = analyzer.get_stats()
+    
+    Python < 3.8:
+        >>> import ast
+        >>> source = "source.py"
+        >>> with open(source, "r") as sourcef:
+        >>>     source_lines = sourcef.readlines()
+        >>>     tree = ast.parse("".join(source_lines))
+        >>> analyzer = SourceAnalyzer(source_lines)
+        >>> analyzer.visit(tree)
+        >>> source_stats, import_stats = analyzer.get_stats()
+
+    :param source_lines: source code as string lines, required only when Python < 3.8.
+    :raises ValueError: when Python < 3.8 and no source code lines provided.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, source_lines: Optional[List[str]] = None, *args, **kwargs):
         super(SourceAnalyzer, self).__init__(*args, **kwargs)
-        self.__stats = SourceStats(set(), set())
 
+        if not any([PY38_PLUS, source_lines]):
+            # Bad class usage.
+            raise ValueError("Please provide source lines for Python < 3.8.")
+        else:
+            self.__lines = source_lines
+
+        self.__import_stats = ImportStats(set(), set())
+        self.__source_stats = SourceStats(set(), set())
+
+    @recursive
+    def visit_Import(self, node: ast.Import):
+        py38_node = self.__get_py38_node(node)
+        self.__import_stats.import_.add(py38_node)
+
+    @recursive
+    def visit_ImportFrom(self, node: ast.ImportFrom):
+        py38_node = self.__get_py38_node(node)
+        self.__import_stats.import_.add(py38_node)
+
+    @recursive
     def visit_Name(self, node: ast.Name):
-        self.__stats.name_.add(node.id)
-        self.generic_visit(node)
+        self.__source_stats.name_.add(node.id)
 
+    @recursive
     def visit_Attribute(self, node: ast.Name):
-        self.__stats.attr_.add(node.attr)
-        self.generic_visit(node)
+        self.__source_stats.attr_.add(node.attr)
 
-    def get_stats(self) -> SourceStats:
-        return self.__stats
+    def __get_py38_node(
+        self, node: Union[ast.Import, ast.ImportFrom]
+    ) -> Union[nodes.Import, nodes.ImportFrom]:
+        """Convert any Python < 3.8 `ast.Import` or `ast.ImportFrom`
+        to `nodes.Import` or `nodes.ImportFrom` to support `end_lineno`.
 
-    def reset_stats(self):
-        self.__stats = SourceStats(set(), set())
+        :param node: an `ast.Import` or `ast.ImportFrom` node.
+        :returns: a `nodes.Import` or `nodes.ImportFrom` node.
+        """
+        if PY38_PLUS:
+            return node
+
+        import_line = self.__lines[node.lineno - 1]
+
+        if isinstance(node, ast.Import):
+            multiline = BACK_SLASH in import_line
+            py38_node = nodes.Import(
+                lineno=node.lineno,
+                col_offset=node.col_offset,
+                end_lineno=node.lineno + (1 if multiline else 0),
+                names=node.names,
+            )
+        else:
+            is_parentheses = ast2s.is_parentheses(import_line)
+            multiline = is_parentheses is not None
+            end_lineno = (
+                node.lineno
+                if not multiline
+                else self.__get_end_lineno(node.lineno, is_parentheses)
+            )
+            py38_node = nodes.ImportFrom(
+                lineno=node.lineno,
+                col_offset=node.col_offset,
+                end_lineno=end_lineno,
+                names=node.names,
+                module=node.module,
+                level=node.level,
+            )
+        return py38_node
+
+    def __get_end_lineno(self, lineno: int, is_parentheses: bool):
+        """Get `ast.ImportFrom` end lineno of the given lineno.
+
+        :param lineno: `ast.ImportFrom.lineno`.
+        :param is_parentheses: is the multiline notations are parentheses.
+        :returns: end_lineno.
+        """
+        lines_len = len(self.__lines)
+        for end_lineno in range(lineno, lines_len):
+            if is_parentheses:
+                if LEFT_PARENTHESIS in self.__lines[end_lineno]:
+                    return end_lineno + 1
+            else:
+                if BACK_SLASH not in self.__lines[end_lineno]:
+                    return end_lineno + 1
+
+    def get_stats(self) -> Tuple[ImportStats, SourceStats]:
+        """Get source analyzer results.
+
+        :returns: tuple of `ImportStats` and `SourceStats`.
+        """
+        return self.__source_stats, self.__import_stats
 
 
 class ImportablesAnalyzer(ast.NodeVisitor):
@@ -121,10 +200,11 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     >>> source = "source.py"
     >>> with open(source, "r") as sourcef:
     >>>     tree = ast.parse(sourcef.read())
-    >>> analyzer = ImportablesAnalyzer()
-    >>> analyzer.source = source
+    >>> analyzer = ImportablesAnalyzer(source)
     >>> analyzer.visit(tree)
-    >>> stats = analyzer.get_stats()
+    >>> importable_names = analyzer.get_stats()
+
+    :param source: a file path that belongs to the given `ast.Module`.
     """
 
     @staticmethod
@@ -147,33 +227,34 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
         raise ModuleNotFoundError(name=node.module)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, source: Path, *args, **kwargs):
         super(ImportablesAnalyzer, self).__init__(*args, **kwargs)
         self.__not_importables: Set[ast.Name] = set()
-        self.__stats = set()
-        self.source = None
+        self.__stats: Set[str] = set()
+        self.__source = source
 
+    @recursive
     def visit_Import(self, node: ast.Import):
         for alias in node.names:
             name = alias.asname if alias.asname else alias.name
             self.__stats.add(name)
-        self.generic_visit(node)
 
+    @recursive
     def visit_ImportFrom(self, node: ast.ImportFrom):
         try:
             if node.names[0].name == STAR:
                 # Expand import star if possible.
-                node = expand_import_star(node, self.source)
+                node = expand_import_star(node, self.__source)
             for alias in node.names:
                 name = alias.asname if alias.asname else alias.name
                 self.__stats.add(name)
         except UnexpandableImportStar:
             # * We shouldn't do anything because it's not importable.
             pass
-        finally:
-            self.generic_visit(node)
 
+    @recursive
     def visit_FunctionDef(self, node: ast.FunctionDef):
+        # Add function name as importable name.
         self.__stats.add(node.name)
 
         # Compute function not-importables.
@@ -184,9 +265,9 @@ class ImportablesAnalyzer(ast.NodeVisitor):
                 for target in node_.targets:
                     self.__not_importables.add(target)
 
-        self.generic_visit(node)
-
+    @recursive
     def visit_ClassDef(self, node: ast.ClassDef):
+        # Add class name as importable name.
         self.__stats.add(node.name)
 
         # Compute class not-importables.
@@ -197,14 +278,12 @@ class ImportablesAnalyzer(ast.NodeVisitor):
                 for target in node_.targets:
                     self.__not_importables.add(target)
 
-        self.generic_visit(node)
-
+    @recursive
     def visit_Name(self, node: ast.Name):
         if isinstance(node.ctx, ast.Store):
             # Except not-importables.
             if node not in self.__not_importables:
                 self.__stats.add(node.id)
-        self.generic_visit(node)
 
     def get_stats(self) -> Set[str]:
         return self.__stats
@@ -223,7 +302,7 @@ class HasSideEffects(Enum):
 
 class SideEffectsAnalyzer(ast.NodeVisitor):
 
-    """Get all side effects nodes from given `ast.Module`.
+    """Check if the given `ast.Module` has side effects or not.
 
     >>> import ast
     >>> source = "source.py"
@@ -231,8 +310,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
     >>>     tree = ast.parse(sourcef.read())
     >>> analyzer = SideEffectsAnalyzer()
     >>> analyzer.visit(tree)
-    >>> stats = analyzer.has_side_effects()
-    >>> analyzer.reset()
+    >>> has_side_effects = analyzer.has_side_effects()
     """
 
     def __init__(self, *args, **kwargs):
@@ -240,31 +318,28 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
         self.__not_side_effect: Set[ast.Call] = set()
         self.__has_side_effects = HasSideEffects.NO
 
+    @recursive
     def visit_FunctionDef(self, node: ast.FunctionDef):
         # Mark any call inside a function as not-side-effect.
         for node_ in ast.iter_child_nodes(node):
-
             if isinstance(node_, ast.Expr):
                 if isinstance(node_.value, ast.Call):
                     self.__not_side_effect.add(node_.value)
 
-        self.generic_visit(node)
-
+    @recursive
     def visit_ClassDef(self, node: ast.ClassDef):
         # Mark any call inside a class as not-side-effect.
         for node_ in ast.iter_child_nodes(node):
-
             if isinstance(node_, ast.Expr):
                 if isinstance(node_.value, ast.Call):
                     self.__not_side_effect.add(node_.value)
 
-        self.generic_visit(node)
-
+    @recursive
     def visit_Call(self, node: ast.Call):
         if node not in self.__not_side_effect:
             self.__has_side_effects = HasSideEffects.YES
-        self.generic_visit(node)
 
+    @recursive
     def visit_Import(self, node: ast.Import):
         for alias in node.names:
 
@@ -275,10 +350,13 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
                 self.__has_side_effects = HasSideEffects.YES
                 break
 
+            # [Here instead of doing that, we can make the analyzer
+            # works recursively inside each not known import.
             self.__has_side_effects = HasSideEffects.MAYBE
+            # I choosed this way because it's almost %100 we will end
+            # with a file that has side effects :-) ].
 
-        self.generic_visit(node)
-
+    @recursive
     def visit_ImportFrom(self, node: ast.ImportFrom):
         for alias in node.names:
 
@@ -289,23 +367,19 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
                 self.__has_side_effects = HasSideEffects.YES
                 break
 
+            # [Here instead of doing that, we can make the analyzer
+            # works recursively inside each not known import.
             self.__has_side_effects = HasSideEffects.MAYBE
-
-        self.generic_visit(node)
+            # I choosed this way because it's almost %100 we will end
+            # with a file that has side effects :-) ].
 
     def has_side_effects(self) -> HasSideEffects:
         return self.__has_side_effects
 
-    def reset(self):
-        self.__has_side_effects = HasSideEffects.NO
-
     def generic_visit(self, node):
-        """Called if no explicit visitor function exists for a node.
-        
-        (Override)
-        """
-        # Continue visiting if only if there's no know side effect.
-        if self.__has_side_effects != HasSideEffects.YES:
+        """Called if no explicit visitor function exists for a node (override)."""
+        # Continue visiting if only if there's no know side effects.
+        if self.__has_side_effects is HasSideEffects.NO:
             for field, value in ast.iter_fields(node):
                 if isinstance(value, list):
                     for item in value:
@@ -318,7 +392,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
 def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
     """Expand import star statement, replace the `*` with a list of ast.alias.
     
-    :param node: an `ast.ImportFrom` node to has a '*' as `alias.name`.
+    :param node: an `ast.ImportFrom` node that has a '*' as `alias.name`.
     :param source: where the node has imported.
     :returns: expanded `ast.ImportFrom`.
     :raises UnexpandableImportStar: when `ReadPermissionError` or `UnparsableFile` or `ModuleNotFoundError` raised.
@@ -369,9 +443,7 @@ def remove_useless_passes(source_lines: List[str]) -> List[str]:
             continue
 
         for child in ast.iter_child_nodes(parent):
-
             if isinstance(child, ast.Pass):
-
                 if body_len > 1:
                     body_len -= 1
                     source_lines[child.lineno - 1] = EMPTY
@@ -380,12 +452,12 @@ def remove_useless_passes(source_lines: List[str]) -> List[str]:
 
 
 def get_file_ast(
-    source: Path, get_lines: bool = False, permissions: tuple = (os.R_OK, os.W_OK)
+    source: Path, get_codes: bool = False, permissions: tuple = (os.R_OK, os.W_OK)
 ) -> Union[ast.Module, Tuple[ast.Module, List[str]]]:
     """Parse source file AST.
 
     :param source: source to read.
-    :param get_lines: if true the source file lines will be returned.
+    :param get_codes: if true the source file lines and the source code will be returned.
     :param permissions: tuple of permissions to check, supported permissions (os.R_OK, os.W_OK).
     :returns: source file AST (`ast.Module`). Also source code lines if get_lines.
     :raises ReadPermissionError: when `os.R_OK` in permissions and the source does not have read permission.
@@ -401,17 +473,17 @@ def get_file_ast(
                 raise WritePermissionError(13, "Permission denied [WRITE]", source)
 
     with open(source, "r") as sfile:
-        lines = sfile.readlines() if get_lines else []
-        content = EMPTY.join(lines) if get_lines else sfile.read()
+        lines = sfile.readlines() if get_codes else []
+        content = EMPTY.join(lines) if get_codes else sfile.read()
 
     try:
-        try:
-            # Include type_comments ~> Python >=3.8 .
+        if PY38_PLUS:
+            # Include type_comments when Python >=3.8.
             # For more information https://www.python.org/dev/peps/pep-0526/ .
             tree = ast.parse(content, type_comments=True)
-        except TypeError:
+        else:
             tree = ast.parse(content)
     except (SyntaxError, ValueError) as exception:
         raise UnparsableFile(source, exception)
 
-    return (tree, lines) if get_lines else tree
+    return (tree, lines, content) if get_codes else tree
