@@ -166,7 +166,7 @@ class Refactor:
                             self.reporter.removed_import(self.source, node, star_alias)
 
                     # Rebuild and replace the import without the unused parts.
-                    rebuilt_import = self.rebuild_import(fixed_lines, clean_node)
+                    rebuilt_import = self.rebuild_import(fixed_lines, clean_node, len(node.names))
                     if hasattr(clean_node, "level"):
                         self.insert_import_from(rebuilt_import, node, fixed_lines)
                     else:
@@ -274,16 +274,18 @@ class Refactor:
         self,
         source_lines: List[str],
         clean_node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
+        old_names_count: int
     ) -> Union[str, List[str]]:
         """Convert the given node to string source code.
 
         :param source_lines: `self.source` file lines.
         :param clean_node: a node to convert.
+        :param old_names_count: unmodified node names count.
         :returns: converted node
         """
         if hasattr(clean_node, "level"):
             is_parentheses = ast2s.is_parentheses(source_lines[clean_node.lineno - 1])
-            return ast2s.rebuild_import_from(clean_node, is_parentheses)
+            return ast2s.rebuild_import_from(clean_node, is_parentheses, old_names_count)
         else:
             return ast2s.rebuild_import(clean_node)
 
