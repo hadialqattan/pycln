@@ -45,7 +45,7 @@ class Report:
         )
         return (
             os.path.join(DOT_FSLSH, rel_path)
-            if not rel_path.startswith(DOT_FSLSH)
+            if not rel_path.startswith(DOT)
             else rel_path
         )
 
@@ -333,7 +333,7 @@ class Report:
     def exit_code(self) -> int:
         """Return an exit code.
         
-        :returns: an exit code.
+        :returns: an exit code (0, 1, 250).
         """
         # According to http://tldp.org/LDP/abs/html/exitcodes.html
         # exit codes 1 - 2, 126 - 165, and 255 have special meanings,
@@ -346,6 +346,40 @@ class Report:
             return 1
         # Everything is fine.
         return 0
+
+    @property
+    def report_prefix(self) -> str:
+        """Return the correct prefix.
+
+        :returns: NEW_LINE or EMPTY.
+        """
+        return (
+            NEW_LINE
+            if any(
+                [
+                    self.__changed_files,
+                    all(
+                        [
+                            self.configs.verbose,
+                            any([self.__ignored_paths, self.__ignored_imports]),
+                        ]
+                    ),
+                    all(
+                        [
+                            any(
+                                [
+                                    self.__failures,
+                                    self.__removed_imports,
+                                    self.__expanded_stars,
+                                ]
+                            ),
+                            not self.configs.quiet,
+                        ]
+                    ),
+                ]
+            )
+            else EMPTY
+        )
 
     def __str__(self) -> str:
         """Render a counters report. can renders using `str(object)`
@@ -434,22 +468,6 @@ class Report:
                     )
                 )
 
-        prefix = (
-            NEW_LINE
-            if (
-                (not self.configs.diff or (report and self.configs.verbose))
-                and report
-                and any(
-                    [
-                        self.__removed_imports,
-                        self.__expanded_stars,
-                        self.configs.verbose,
-                        self.__failures,
-                    ]
-                )
-            )
-            else EMPTY
-        )
         done_msg = typer.style(
             (
                 (
@@ -463,4 +481,4 @@ class Report:
             + NEW_LINE,
             bold=True,
         )
-        return prefix + done_msg + COMMA_SP.join(report) + DOT
+        return self.report_prefix + done_msg + COMMA_SP.join(report) + DOT

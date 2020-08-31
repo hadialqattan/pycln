@@ -6,7 +6,7 @@ import os
 import sys
 from dataclasses import dataclass
 from enum import Enum, unique
-from functools import wraps
+from functools import wraps, lru_cache
 from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, cast
@@ -208,16 +208,18 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     """
 
     @staticmethod
-    def handle_c_libs_importables(node: ast.ImportFrom) -> Set[str]:
+    @lru_cache()
+    def handle_c_libs_importables(module_name: str, level: int) -> Set[str]:
         """
         Handle libs written in C or built-in CPython.
 
-        :param node: an `ast.ImportFrom` object.
+        :param module_name: `ast.ImportFrom.module`.
+        :param level: `ast.ImportFrom.level`.
         :returns: set of importables.
         :raises ModuleNotFoundError: when we can't find the spec of the module and/or can't create the module.
         """
-        level_dots = DOT * node.level
-        spec = find_spec(node.module, level_dots if level_dots else None)
+        level_dots = DOT * level
+        spec = find_spec(module_name, level_dots if level_dots else None)
 
         if spec:
             module = spec.loader.create_module(spec)
@@ -225,7 +227,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             if module:
                 return set(dir(module))
 
-        raise ModuleNotFoundError(name=node.module)
+        raise ModuleNotFoundError(name=module_name)
 
     def __init__(self, source: Path, *args, **kwargs):
         super(ImportablesAnalyzer, self).__init__(*args, **kwargs)
@@ -294,10 +296,11 @@ class HasSideEffects(Enum):
     YES = 1
     MAYBE = 0.5
     NO = 0
+    NOT_MODULE = -1
 
     # Just in case an exception has raised
     # while parsing a file.
-    NOT_KNOWN = -1
+    NOT_KNOWN = -2
 
 
 class SideEffectsAnalyzer(ast.NodeVisitor):
@@ -410,9 +413,11 @@ def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
             importables = analyzer.get_stats()
 
         else:
-            importables = ImportablesAnalyzer.handle_c_libs_importables(node)
+            importables = ImportablesAnalyzer.handle_c_libs_importables(
+                node.module, node.level
+            )
     except (ReadPermissionError, UnparsableFile, ModuleNotFoundError) as err:
-        msg = err.msg if err.msg else "module not found!"
+        msg = err if not isinstance(err, ModuleNotFoundError) else "module not found!"
         raise UnexpandableImportStar(source, node.lineno, node.col_offset, msg)
 
     # Create `ast.alias` for each name.

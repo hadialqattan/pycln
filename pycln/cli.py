@@ -58,14 +58,14 @@ def main(
         "--verbose",
         "-v",
         show_default=True,
-        help="Also emit messages to stdout about removed/expanded imports and to stderr about files that were not changed and about files/imports that were ignored.",
+        help="Also emit messages to stderr about files that were not changed and about files/imports that were ignored.",
     ),
     quiet: bool = typer.Option(
         False,
         "--quiet",
         "-q",
         show_default=True,
-        help="Don't emit non-error messages to stderr. Errors are still emitted; silence those with `-s, --silence` or with 2>/dev/null.",
+        help="Don't emit both removed/expanded imports and non-error messages to stderr. Errors are still emitted; silence those with `-s, --silence` or with 2>/dev/null.",
     ),
     silence: bool = typer.Option(
         False,
@@ -77,6 +77,7 @@ def main(
     expand_star_imports: bool = typer.Option(
         False,
         "--expand-star-imports",
+        "-x",
         help="Expand wildcard star imports. it works if only if the module is importable.",
     ),
     no_gitignore: bool = typer.Option(
@@ -112,6 +113,7 @@ def main(
     for source in sources:
         refactor.Refactor(source, configs, reporter)
     # Print the report.
-    typer.echo(str(reporter))
+    if not configs.silence:
+        typer.echo(str(reporter))
     # Set the correct exit code and exit.
     typer.Exit(reporter.exit_code)

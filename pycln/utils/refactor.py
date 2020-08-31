@@ -6,6 +6,7 @@ import os
 from copy import copy
 from pathlib import Path
 from typing import List, Tuple, Union
+from functools import lru_cache
 
 from . import ast2source as ast2s, astu, nodes, pathu, regexu
 from .config import Config
@@ -54,28 +55,27 @@ class Refactor:
             self.source_stats, self.import_stats = self.analyze(tree)
             if self.source_stats and self.import_stats:
 
-                fixed_lines = astu.remove_useless_passes(self.refactor())
-                if fixed_lines:
+                pre_fixed_lines = self.refactor()
+                if pre_fixed_lines != self.original_lines:
+                    fixed_lines = astu.remove_useless_passes(pre_fixed_lines)
                     self.output(fixed_lines)
+                else:
+                    self.reporter.unchanged_file(self.source)
 
     def output(self, fixed_lines: List[str]) -> None:
         """Output the given `fixed_lines`.
 
         :param fixed_lines: the refactored source lines.
         """
-        source = self.reporter.get_relpath(self.source)
-        if self.original_lines != fixed_lines:
-            if self.configs.diff:
-                self.reporter.colored_unified_diff(
-                    source, self.original_lines, fixed_lines
-                )
-            elif not self.configs.check:
-                # Default.
-                with open(source, "w") as sfile:
-                    sfile.writelines(fixed_lines)
-            self.reporter.changed_file(source)
-        else:
-            self.reporter.unchanged_file(source)
+        if self.configs.diff:
+            self.reporter.colored_unified_diff(
+                self.source, self.original_lines, fixed_lines
+            )
+        elif not self.configs.check:
+            # Default.
+            with open(self.source, "w") as sfile:
+                sfile.writelines(fixed_lines)
+        self.reporter.changed_file(self.source)
 
     def read_source(self) -> Union[Tuple[ast.Module, List[str]], Tuple[None, None]]:
         """Get `self.source` `ast.module` and source lines. `astu.get_file_ast` abstraction.
@@ -152,7 +152,7 @@ class Refactor:
                         if not is_star_import:
                             self.reporter.removed_import(self.source, node, alias)
 
-                if has_changed:
+                if has_changed or not clean_node.names:
 
                     # Return from module import '*' as before, if the --expand-star-imports has not specified.
                     if is_star_import:
@@ -207,20 +207,18 @@ class Refactor:
         """
         real_name = node.module if hasattr(node, "level") else alias.name
         used_name = alias.asname if alias.asname else alias.name
-        return not any(
-            [self.has_used(used_name), real_name in pathu.IMPORTS_WITH_SIDE_EFFECTS]
-        ) and any(
-            [
-                self.configs.all_,
-                any(
-                    [
-                        real_name in pathu.get_standard_lib_names(),
-                        self.has_side_effects(real_name, node)
-                        is astu.HasSideEffects.NO,
-                    ]
-                ),
-            ]
-        )
+        if (
+            not self.has_used(used_name)
+            and not real_name in pathu.IMPORTS_WITH_SIDE_EFFECTS
+        ):
+            if (
+                self.configs.all_
+                or real_name in pathu.get_standard_lib_names()
+                or self.has_side_effects(alias.name, node)
+                in (astu.HasSideEffects.NO, astu.HasSideEffects.NOT_MODULE)
+            ):
+                return True
+        return False
 
     def has_used(self, name: str) -> bool:
         """Check if the given import name has used.
@@ -238,6 +236,7 @@ class Refactor:
                 [name[-1] in set_ for set_ in self.source_stats]
             )
 
+    @lru_cache()
     def has_side_effects(
         self, module_name: str, node: Union[ast.Import, ast.ImportFrom]
     ) -> astu.HasSideEffects:
@@ -253,6 +252,9 @@ class Refactor:
             )
         else:
             module_source = pathu.get_import_path(self.source, module_name)
+
+        if not module_source:
+            return astu.HasSideEffects.NOT_MODULE
 
         try:
             tree = astu.get_file_ast(module_source, permissions=(os.R_OK,))

@@ -161,7 +161,7 @@ def get_third_party_lib_paths() -> Set[Path]:
         [
             path
             for path in sys.path
-            if Path(path).parts[-1] in [DIST_PACKAGES, SITE_PACKAGES]
+            if path and Path(path).parts[-1] in [DIST_PACKAGES, SITE_PACKAGES]
         ]
     )
 
@@ -207,18 +207,19 @@ def get_local_import_path(source: Path, module_name: str) -> Union[str, None]:
     :param module_name: target module name.
     :returns: a full `module_name/__init__.py` path.
     """
-    dirname = os.path.dirname(source)
+    dirnames = Path(os.path.dirname(source)).parts
     names = module_name.split(DOT)
 
-    # If it's a module.
-    path = os.path.join(dirname, *names, __INIT__)
-    if os.path.isfile(path):
-        return path
-
     # If it's a file.
-    path = os.path.join(dirname, *names[:-1], f"{names[-1]}{PY_EXTENSION}")
-    if os.path.isfile(path):
-        return path
+    for i in (None, -1, -2, -3):
+        path = os.path.join(*dirnames[:i], *names[:-1], f"{names[-1]}{PY_EXTENSION}")
+        if os.path.isfile(path):
+            return path
+
+        # If it's a module.
+        path = os.path.join(*dirnames[:i], *names, __INIT__)
+        if os.path.isfile(path):
+            return path
 
 
 def get_local_import_from_path(
@@ -241,28 +242,36 @@ def get_local_import_from_path(
     )
     from_module_names = from_module_name.split(DOT) if from_module_name else []
 
-    # If it's a module.
-    path = os.path.join(*leveled_dirnames, *from_module_names, *module_names, __INIT__,)
-    if os.path.isfile(path):
-        return path
+    for i in (None, -1, -2, -3):
+        # If it's a file.
+        if module_names:
+            path = os.path.join(
+                *leveled_dirnames[:i],
+                *from_module_names,
+                *module_names[:-1],
+                f"{module_names[-1]}{PY_EXTENSION}",
+            )
+        else:
+            # IMPORT STAR CASE.
+            path = os.path.join(
+                *leveled_dirnames[:i],
+                *from_module_names[:-1] if level > 0 else EMPTY,
+                f"{from_module_names[-1]}{PY_EXTENSION}",
+            )
+        if os.path.isfile(path):
+            return path
 
-    # If it's a file.
-    if module_names:
-        path = os.path.join(
-            *leveled_dirnames,
-            *from_module_names,
-            *module_names[:-1],
-            f"{module_names[-1]}{PY_EXTENSION}",
-        )
-    else:
-        # IMPORT STAR CASE.
-        path = os.path.join(
-            *leveled_dirnames,
-            *from_module_names[:-1],
-            f"{from_module_names[-1]}{PY_EXTENSION}",
-        )
-    if os.path.isfile(path):
-        return path
+        # If it's a module.
+        if module_names:
+            path = os.path.join(
+                *leveled_dirnames[:i], *from_module_names, *module_names, __INIT__,
+            )
+        else:
+            # IMPORT STAR CASE.
+            path = os.path.join(*leveled_dirnames[:i], *from_module_names, __INIT__,)
+
+        if os.path.isfile(path) and from_module_name.split(DOT)[0] in path:
+            return path
 
 
 def get_module_path(paths: List[Path], module_name: str) -> Union[Path, None]:
@@ -272,10 +281,11 @@ def get_module_path(paths: List[Path], module_name: str) -> Union[Path, None]:
     :param module_name: an importable module name.
     :returns: `module_name` path if exist else None.
     """
+    module_name = module_name.split(DOT)[0]
     for path in paths:
         name = str(path.parts[-1]).split(DOT)[0]
         if name == module_name:
-            if name.endswith(PY_EXTENSION):
+            if str(path).endswith(PY_EXTENSION):
                 return path
             else:
                 return os.path.join(path, __INIT__)
@@ -296,7 +306,7 @@ def get_import_path(source: Path, module_name: str):
         return path
 
     elif module_name in get_standard_lib_names():
-        return get_module_path(get_standard_lib_names(), module_name)
+        return get_module_path(get_standard_lib_paths(), module_name)
 
     else:
         return get_module_path(get_third_party_lib_paths(), module_name)
@@ -316,11 +326,15 @@ def get_import_from_path(
     :param level: `ast.ImportFrom.level`.
     :returns: The given module_name file.py/__init_.py path, if found else None.
     """
-    if level > 0:
-        return get_local_import_from_path(source, module_name, from_module_name, level)
+    path = get_local_import_from_path(source, module_name, from_module_name, level)
+    if path:
+        return path
 
-    elif module_name in get_standard_lib_names():
-        return get_module_path(get_standard_lib_names(), module_name)
+    if module_name == STAR:
+        module_name = from_module_name
+
+    if module_name in get_standard_lib_names():
+        return get_module_path(get_standard_lib_paths(), module_name)
 
     else:
         return get_module_path(get_third_party_lib_paths(), module_name)
