@@ -94,7 +94,7 @@ def rebuild_import(import_stmnt: str, used_names: Set[str]) -> List[str]:
 
     # Replace each removed import with a pass statement.
     if not fixed_import:
-        return f"{indentation}{PASS}{NEW_LINE}" if indentation else EMPTY
+        return [f"{indentation}{PASS}{NEW_LINE}" if indentation else EMPTY]
 
     # Reinsert the removed indentation/end new_line.
     fixed_import[0] = indentation + fixed_import[0] + NEW_LINE

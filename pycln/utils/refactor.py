@@ -52,12 +52,17 @@ class Refactor:
         tree, self.original_lines = self.read_source()
         if tree and self.original_lines:
 
-            self.source_stats, self.import_stats = self.analyze(tree)
+            self.source_stats, self.import_stats, self.names_to_skip = self.analyze(
+                tree
+            )
             if self.source_stats and self.import_stats:
 
+                self.removed_lines_count = 0
                 pre_fixed_lines = self.refactor()
                 if pre_fixed_lines != self.original_lines:
-                    fixed_lines = astu.remove_useless_passes(pre_fixed_lines)
+                    fixed_lines = astu.remove_useless_passes(
+                        pre_fixed_lines, self.removed_lines_count
+                    )
                     self.output(fixed_lines)
                 else:
                     self.reporter.unchanged_file(self.source)
@@ -107,19 +112,19 @@ class Refactor:
         """Analyze the source code of `self.source`.
 
         :param tree: a parsed `ast.Module`.
-        :returns: tuple of `astu.SourceStats` and `astu.ImportStats`.
+        :returns: tuple of `ImportStats`, `SourceStats` and set of names to skip.
         """
-        source_stats, import_stats = None, None
+        source_stats, import_stats, names_to_skip = None, None, None
         try:
             if astu.PY38_PLUS:
                 analyzer = astu.SourceAnalyzer()
             else:
                 analyzer = astu.SourceAnalyzer(self.original_lines)
             analyzer.visit(tree)
-            source_stats, import_stats = analyzer.get_stats()
+            source_stats, import_stats, names_to_skip = analyzer.get_stats()
         except Exception as err:
             self.reporter.failure(err, self.source)
-        return source_stats, import_stats
+        return source_stats, import_stats, names_to_skip
 
     def refactor(self) -> List[str]:
         """Remove all unused imports from `self.original_lines`.
@@ -144,7 +149,7 @@ class Refactor:
                 has_changed = False
                 used_names: Set[str] = set()
                 for alias in node.names:
-                    if self.should_removed(node, alias):
+                    if self.should_removed(node, alias, is_star_import):
                         has_changed = True
                         if not is_star_import:
                             self.reporter.removed_import(self.source, node, alias)
@@ -164,7 +169,9 @@ class Refactor:
                             self.reporter.removed_import(self.source, node, star_alias)
 
                     # Rebuild and replace the import without the unused parts.
-                    if not is_star_import or self.configs.expand_star_imports:
+                    if not used_names or (
+                        is_star_import and self.configs.expand_star_imports
+                    ):
                         import_stmnt = self.original_lines[
                             node.lineno - 1 : node.end_lineno
                         ]
@@ -198,18 +205,22 @@ class Refactor:
             return node, None
 
     def should_removed(
-        self, node: Union[ast.Import, ast.ImportFrom], alias: ast.alias
+        self,
+        node: Union[ast.Import, ast.ImportFrom],
+        alias: ast.alias,
+        is_star_import: bool,
     ) -> bool:
         """Check if the alias should be removed or not.
 
         :param node: an `ast.Import` or `ast.ImportFrom`.
         :param alias: an `ast.alias` node.
+        :param is_star_import: is it a '*' import.
         :returns: True if the alias should be removed else False.
         """
         real_name = node.module if hasattr(node, "level") else alias.name
         used_name = alias.asname if alias.asname else alias.name
         if (
-            not self.has_used(used_name)
+            not self.has_used(used_name, is_star_import)
             and not real_name in pathu.IMPORTS_WITH_SIDE_EFFECTS
         ):
             if (
@@ -221,14 +232,17 @@ class Refactor:
                 return True
         return False
 
-    def has_used(self, name: str) -> bool:
+    def has_used(self, name: str, is_star_import: bool) -> bool:
         """Check if the given import name has used.
 
         :param name: a name to check.
+        :param is_star_import: is it a '*' import.
         :returns: True if the name has used else False.
         """
         name = name.split(DOT) if DOT in name else name
         if isinstance(name, str):
+            if is_star_import and name in self.names_to_skip:
+                return False
             # Handle imports like (import os, from os import path).
             return any([name in self.source_stats.name_])
         else:
@@ -285,6 +299,8 @@ class Refactor:
         """
         # Insert the import statement.
         old_lineno = old_node.lineno - 1
+        if rebuilt_import[0] == EMPTY:
+            self.removed_lines_count += 1
         for line in rebuilt_import:
             source_lines[old_lineno] = line
             old_lineno += 1
@@ -295,4 +311,5 @@ class Refactor:
         lineno = old_node.lineno + new_len - 1
         for i in range(old_len - new_len):
             source_lines[lineno] = EMPTY
+            self.removed_lines_count += 1
             lineno += 1

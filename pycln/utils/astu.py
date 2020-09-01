@@ -23,12 +23,28 @@ from .exceptions import (
 
 # Constants.
 PY38_PLUS = sys.version_info >= (3, 8)
+IMPORT_EXCEPTIONS = {"ImportError", "ImportWarning", "ModuleNotFoundError"}
+NAMES_TO_SKIP = {
+    "__name__",
+    "__doc__",
+    "__package__",
+    "__loader__",
+    "__spec__",
+    "__build_class__",
+    "__import__",
+    "__all__",
+}
 RIGHT_PAEENTHESIS = "("
 LEFT_PARENTHESIS = ")"
 BACK_SLASH = "\\"
+__ALL__ = "__all__"
 EMPTY = ""
+NAMES = "names"
 STAR = "*"
+ELTS = "elts"
 DOT = "."
+ID = "id"
+
 
 # Custom types.
 Function = TypeVar("Function", bound=Callable[..., Any])
@@ -109,17 +125,21 @@ class SourceAnalyzer(ast.NodeVisitor):
             self.__lines = source_lines
 
         self.__import_stats = ImportStats(set(), set())
+        self.__imports_to_skip: Set[Union[ast.Import, ast.ImportFrom]] = set()
         self.__source_stats = SourceStats(set(), set())
+        self.__names_to_skip: Set[str] = set()
 
     @recursive
     def visit_Import(self, node: ast.Import):
-        py38_node = self.__get_py38_node(node)
-        self.__import_stats.import_.add(py38_node)
+        if node not in self.__imports_to_skip:
+            py38_node = self.__get_py38_node(node)
+            self.__import_stats.import_.add(py38_node)
 
     @recursive
     def visit_ImportFrom(self, node: ast.ImportFrom):
-        py38_node = self.__get_py38_node(node)
-        self.__import_stats.import_.add(py38_node)
+        if node not in self.__imports_to_skip:
+            py38_node = self.__get_py38_node(node)
+            self.__import_stats.import_.add(py38_node)
 
     @recursive
     def visit_Name(self, node: ast.Name):
@@ -128,6 +148,48 @@ class SourceAnalyzer(ast.NodeVisitor):
     @recursive
     def visit_Attribute(self, node: ast.Name):
         self.__source_stats.attr_.add(node.attr)
+
+    @recursive
+    def visit_Try(self, node: ast.Try):
+
+        is_skip_case = False
+
+        def add_imports_to_skip(body: ast.List) -> None:
+            """Add all try/except/else blocks body import children
+            to `self.__imports_to_skip`.
+
+            :param body: ast.List to iterate over.
+            """
+            for child in body:
+                if hasattr(child, NAMES):
+                    self.__imports_to_skip.add(child)
+
+        for handler in node.handlers:
+            if hasattr(handler.type, ELTS):
+                for name in handler.type.elts:
+                    if hasattr(name, ID) and name.id in IMPORT_EXCEPTIONS:
+                        is_skip_case = True
+                        break
+            elif hasattr(handler.type, ID):
+                if handler.type.id in IMPORT_EXCEPTIONS:
+                    is_skip_case = True
+            if is_skip_case:
+                add_imports_to_skip(handler.body)
+
+        if is_skip_case:
+            for body in (node.body, node.orelse):
+                add_imports_to_skip(body)
+
+    @recursive
+    def visit_Assign(self, node: ast.Assign):
+        # These names will be skipped on import `*` case.
+        if getattr(node.targets[0], ID, None) in NAMES_TO_SKIP:
+            self.__names_to_skip.add(node.targets[0].id)
+        if getattr(node.targets[0], ID, None) == __ALL__:
+            if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
+                for constant in node.value.elts:
+                    if isinstance(constant.value, str):
+                        self.__source_stats.name_.add(constant.value)
 
     def __get_py38_node(
         self, node: Union[ast.Import, ast.ImportFrom]
@@ -201,9 +263,9 @@ class SourceAnalyzer(ast.NodeVisitor):
     def get_stats(self) -> Tuple[ImportStats, SourceStats]:
         """Get source analyzer results.
 
-        :returns: tuple of `ImportStats` and `SourceStats`.
+        :returns: tuple of `ImportStats`, `SourceStats` and set of names to skip.
         """
-        return self.__source_stats, self.__import_stats
+        return self.__source_stats, self.__import_stats, self.__names_to_skip
 
 
 class ImportablesAnalyzer(ast.NodeVisitor):
@@ -442,10 +504,13 @@ def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
     return node
 
 
-def remove_useless_passes(source_lines: List[str]) -> List[str]:
+def remove_useless_passes(
+    source_lines: List[str], removed_lines_count: int
+) -> List[str]:
     """Remove any useless `pass`.
 
     :param source_lines: source code lines to check.
+    :param removed_lines_count: count of removed lines (EMPTY lines).
     :returns: clean source lines.
     """
     tree = ast.parse(EMPTY.join(source_lines))
@@ -464,7 +529,8 @@ def remove_useless_passes(source_lines: List[str]) -> List[str]:
             if isinstance(child, ast.Pass):
                 if body_len > 1:
                     body_len -= 1
-                    source_lines[child.lineno - 1] = EMPTY
+                    lineno = child.lineno + removed_lines_count - 1
+                    source_lines[lineno] = EMPTY
 
     return source_lines
 
