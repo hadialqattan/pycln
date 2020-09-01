@@ -11,17 +11,21 @@ from typing import List, Union
 
 import typer
 
-from . import ast2source as ast2s, config, nodes
+from . import config, nodes
 
 # Constants.
 AT = "@"
+AS = "as"
 DOT = "."
 STAR = "*"
 DASH = "-"
 PLUS = "+"
+FROM = "from"
 EMPTY = ""
 SPACE = " "
+COMMA = ","
 COLUMN = ":"
+IMPORT = "import"
 COMMA_SP = ", "
 NEW_LINE = "\n"
 DOT_FSLSH = "./"
@@ -115,6 +119,23 @@ class Report:
         diff_str = diff_str.rstrip(NEW_LINE + SPACE) + NEW_LINE
         typer.echo(diff_str)
 
+    def rebuild_report_import(
+        self,
+        node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
+        alias: ast.alias,
+    ) -> str:
+        str_alias = (
+            f"{alias.name}{SPACE}{AS}{SPACE}{alias.asname}"
+            if alias.asname
+            else alias.name
+        )
+        str_import = (
+            f"{FROM}{SPACE}{node.module}{SPACE}{IMPORT}"
+            if hasattr(node, "level")
+            else f"{IMPORT}{SPACE}"
+        )
+        return f"{str_import}{SPACE}{str_alias}"
+
     # Counters.
     __removed_imports: int = 0
 
@@ -132,20 +153,12 @@ class Report:
         """
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
 
-            abc_node = copy(node)
-            abc_node.names = [removed_alias]
-
-            if hasattr(abc_node, "level"):
-                statement = ast2s.rebuild_import_from(abc_node, None)
-            else:
-                statement = ast2s.rebuild_import(abc_node)
-
-            statement = statement.replace(NEW_LINE, EMPTY).lstrip(SPACE)
+            statement = self.rebuild_report_import(node, removed_alias)
             location = COLUMN.join(
                 [
                     self.get_relpath(source),
-                    str(abc_node.lineno),
-                    str(abc_node.col_offset),
+                    str(node.lineno),
+                    str(node.col_offset),
                 ]
             )
             removed = "has removed" if not self.configs.check else "whould be removed"
@@ -162,18 +175,20 @@ class Report:
         self, source: Path, node: Union[ast.ImportFrom, nodes.ImportFrom]
     ) -> None:
         """Increment the counter for expanded stars. Write a message to stdout.
-        
+
         :param source: where the import has expanded.
         :param node: the expanded node.
         """
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
-            abc_node = copy(node)
-            abc_node.names = [ast.alias(name=STAR, asname=None)]
-            statement = ast2s.rebuild_import_from(abc_node, None).replace(
-                NEW_LINE, EMPTY
+            statement = self.rebuild_report_import(
+                node, ast.alias(name=STAR, asname=None)
             )
             location = COLUMN.join(
-                [self.get_relpath(source), str(node.lineno), str(node.col_offset),]
+                [
+                    self.get_relpath(source),
+                    str(node.lineno),
+                    str(node.col_offset),
+                ]
             )
             expanded = (
                 "has expanded" if not self.configs.check else "whould be expanded"
@@ -282,21 +297,7 @@ class Report:
         :param is_star_import: set to true if it's a '*' import.
         """
         if self.configs.verbose:
-            if hasattr(node, "level"):
-                statement = ast2s.rebuild_import_from(node, True)
-                if isinstance(statement, list):
-                    statement = statement[0]
-                i = statement.index(ast2s.IMPORT) + len(ast2s.IMPORT)
-            else:
-                statement = ast2s.rebuild_import(node)
-                i = (
-                    (statement.index(ast2s.COMMA) + 1)
-                    if ast2s.COMMA in statement
-                    else None
-                )
-            statement = statement[0:i] + f" {DOT * 3}"
-
-            statement = statement.replace(NEW_LINE, EMPTY).lstrip(SPACE)
+            statement = self.rebuild_report_import(node, node.names[0]) + (DOT * 3)
             location = f"{self.get_relpath(source)}:{node.lineno}:{node.col_offset}"
             reason = (
                 "`# noqa` or `# nopycln: import`"
@@ -332,7 +333,7 @@ class Report:
     @property
     def exit_code(self) -> int:
         """Return an exit code.
-        
+
         :returns: an exit code (0, 1, 250).
         """
         # According to http://tldp.org/LDP/abs/html/exitcodes.html
@@ -383,7 +384,7 @@ class Report:
 
     def __str__(self) -> str:
         """Render a counters report. can renders using `str(object)`
-        
+
         :returns: full counters report.
         """
         if not any([self.__changed_files, self.__unchanged_files, self.__failures]):

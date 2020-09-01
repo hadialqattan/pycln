@@ -39,7 +39,9 @@ class Config:
         """Validate `self.path`."""
         if not self.path:
             typer.secho(
-                "No Path provided. Nothing to do 😴", bold=True, err=True,
+                "No Path provided. Nothing to do 😴",
+                bold=True,
+                err=True,
             )
             raise typer.Exit(1)
 

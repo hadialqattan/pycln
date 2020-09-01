@@ -13,7 +13,7 @@ from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, ca
 
 from _ast import AST
 
-from . import ast2source as ast2s, nodes, pathu
+from . import nodes, pathu
 from .exceptions import (
     ReadPermissionError,
     UnexpandableImportStar,
@@ -23,6 +23,7 @@ from .exceptions import (
 
 # Constants.
 PY38_PLUS = sys.version_info >= (3, 8)
+RIGHT_PAEENTHESIS = "("
 LEFT_PARENTHESIS = ")"
 BACK_SLASH = "\\"
 EMPTY = ""
@@ -35,7 +36,7 @@ Function = TypeVar("Function", bound=Callable[..., Any])
 
 def recursive(func: Function) -> Function:
     """decorator to make `ast.NodeVisitor` work recursive.
-    
+
     :param func: `ast.NodeVisitor.visit_*` function.
     """
 
@@ -83,7 +84,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         >>> analyzer = SourceAnalyzer()
         >>> analyzer.visit(tree)
         >>> source_stats, import_stats = analyzer.get_stats()
-    
+
     Python < 3.8:
         >>> import ast
         >>> source = "source.py"
@@ -151,7 +152,7 @@ class SourceAnalyzer(ast.NodeVisitor):
                 names=node.names,
             )
         else:
-            is_parentheses = ast2s.is_parentheses(import_line)
+            is_parentheses = self.__is_parentheses(import_line)
             multiline = is_parentheses is not None
             end_lineno = (
                 node.lineno
@@ -167,6 +168,19 @@ class SourceAnalyzer(ast.NodeVisitor):
                 level=node.level,
             )
         return py38_node
+
+    def __is_parentheses(import_from_line: str) -> Union[bool, None]:
+        """Return importFrom multi-line type.
+
+        :param import_from_line: importFrom statement str line.
+        :returns: importFrom type ('(' => True), ('\\' => False), else None.
+        """
+        if RIGHT_PAEENTHESIS in import_from_line:
+            return True
+        elif BACK_SLASH in import_from_line:
+            return False
+        else:
+            return None
 
     def __get_end_lineno(self, lineno: int, is_parentheses: bool):
         """Get `ast.ImportFrom` end lineno of the given lineno.
@@ -394,7 +408,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
 
 def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
     """Expand import star statement, replace the `*` with a list of ast.alias.
-    
+
     :param node: an `ast.ImportFrom` node that has a '*' as `alias.name`.
     :param source: where the node has imported.
     :returns: expanded `ast.ImportFrom`.

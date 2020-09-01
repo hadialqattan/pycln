@@ -5,10 +5,10 @@ import ast
 import os
 from copy import copy
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Set
 from functools import lru_cache
 
-from . import ast2source as ast2s, astu, nodes, pathu, regexu
+from . import cstu, astu, nodes, pathu, regexu
 from .config import Config
 from .exceptions import (
     ReadPermissionError,
@@ -38,7 +38,7 @@ class Refactor:
     ...     source
     ... )
     >>> print("Easy!")
-    
+
     :param source: a file path to handle.
     :param configs: `config.Config` instance.
     :param reporter: `report.Report` instance.
@@ -101,10 +101,11 @@ class Refactor:
         return tree, original_lines
 
     def analyze(
-        self, tree: ast.Module,
+        self,
+        tree: ast.Module,
     ) -> Union[Tuple[astu.SourceStats, astu.ImportStats], Tuple[None, None]]:
         """Analyze the source code of `self.source`.
-        
+
         :param tree: a parsed `ast.Module`.
         :returns: tuple of `astu.SourceStats` and `astu.ImportStats`.
         """
@@ -140,37 +141,37 @@ class Refactor:
                 if is_star_import is None:
                     continue
 
-                # Shallow copy only the importat parts.
-                clean_node = copy(node)
-                clean_node.names = copy(node.names)
-
                 has_changed = False
+                used_names: Set[str] = set()
                 for alias in node.names:
                     if self.should_removed(node, alias):
                         has_changed = True
-                        clean_node.names.remove(alias)
                         if not is_star_import:
                             self.reporter.removed_import(self.source, node, alias)
+                        continue
+                    used_names.add(alias.name)
 
-                if has_changed or not clean_node.names:
-
+                if has_changed or not used_names:
                     # Return from module import '*' as before, if the --expand-star-imports has not specified.
                     if is_star_import:
                         star_alias = ast.alias(name=STAR, asname=None)
-                        if clean_node.names:
+                        if node.names:
                             if not self.configs.expand_star_imports:
-                                clean_node.names = [star_alias]
+                                node.names = [star_alias]
                             else:
-                                self.reporter.expanded_star(self.source, clean_node)
-                        elif not clean_node.names:
+                                self.reporter.expanded_star(self.source, node)
+                        elif not node.names:
                             self.reporter.removed_import(self.source, node, star_alias)
 
                     # Rebuild and replace the import without the unused parts.
-                    rebuilt_import = self.rebuild_import(fixed_lines, clean_node, len(node.names))
-                    if hasattr(clean_node, "level"):
-                        self.insert_import_from(rebuilt_import, node, fixed_lines)
-                    else:
-                        self.insert_import(rebuilt_import, node, fixed_lines)
+                    if not is_star_import or self.configs.expand_star_imports:
+                        import_stmnt = self.original_lines[
+                            node.lineno - 1 : node.end_lineno
+                        ]
+                        rebuilt_import = cstu.rebuild_import(
+                            EMPTY.join(import_stmnt), used_names
+                        )
+                        self.insert_import(rebuilt_import, fixed_lines, node)
 
         return fixed_lines
 
@@ -270,79 +271,28 @@ class Refactor:
             self.reporter.failure(err, self.source)
             return astu.HasSideEffects.NOT_KNOWN
 
-    def rebuild_import(
-        self,
-        source_lines: List[str],
-        clean_node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
-        old_names_count: int
-    ) -> Union[str, List[str]]:
-        """Convert the given node to string source code.
-
-        :param source_lines: `self.source` file lines.
-        :param clean_node: a node to convert.
-        :param old_names_count: unmodified node names count.
-        :returns: converted node
-        """
-        if hasattr(clean_node, "level"):
-            is_parentheses = ast2s.is_parentheses(source_lines[clean_node.lineno - 1])
-            return ast2s.rebuild_import_from(clean_node, is_parentheses, old_names_count)
-        else:
-            return ast2s.rebuild_import(clean_node)
-
     def insert_import(
         self,
-        rebuilt_import: Union[str, None],
-        old_node: ast.Import,
+        rebuilt_import: List[str],
         source_lines: List[str],
-    ) -> List[str]:
-        """Insert rebuilt import statement into current source lines.
+        old_node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
+    ) -> None:
+        """Insert rebuilt import statement into `source_lines`.
 
         :param rebuilt_import: an import statement to insert.
-        :param old_node: an `ast.Import` object.
+        :param old_node: an unmodified node.
         :param source_lines: a list of source lines to modify.
-        :returns: fixed source lines.
         """
-        source_lines[old_node.lineno - 1] = rebuilt_import
-        # Replace each removed line with EMPTY constant.
-        if old_node.end_lineno - old_node.lineno:
-            source_lines[old_node.lineno] = EMPTY
-        return source_lines
-
-    def insert_import_from(
-        self,
-        rebuilt_import_from: Union[str, list, None],
-        old_node: ast.ImportFrom,
-        source_lines: List[str],
-    ) -> List[str]:
-        """Insert rebuilt importFrom statement into current source lines.
-
-        :param rebuilt_import_from: an importFrom statement to insert.
-        :param old_node: an `ast.ImportFrom` object.
-        :param source_lines: a list of source lines to modify.
-        :returns: fixed source lines.
-        """
+        # Insert the import statement.
         old_lineno = old_node.lineno - 1
-
-        if isinstance(rebuilt_import_from, str):
-            # Insert the single-line importFrom statement.
-            new_len = 1
-            source_lines[old_lineno] = rebuilt_import_from
-
-        elif isinstance(rebuilt_import_from, list):
-            # Insert the multi-line importFrom statement.
-            new_len = len(rebuilt_import_from)
-            for line in rebuilt_import_from:
-                source_lines[old_lineno] = line
-                old_lineno += 1
-
-        else:
-            new_len = 0
+        for line in rebuilt_import:
+            source_lines[old_lineno] = line
+            old_lineno += 1
 
         # Replace each removed line with EMPTY constant.
-        lineno = old_node.lineno + new_len - 1
+        new_len = len(rebuilt_import)
         old_len = old_node.end_lineno - old_node.lineno + 1
+        lineno = old_node.lineno + new_len - 1
         for i in range(old_len - new_len):
             source_lines[lineno] = EMPTY
             lineno += 1
-
-        return source_lines

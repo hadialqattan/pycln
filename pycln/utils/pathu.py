@@ -200,7 +200,7 @@ def get_standard_lib_names() -> Set[str]:
 
 def get_local_import_path(source: Path, module_name: str) -> Union[str, None]:
     """Find the given local module_name file.py/__init_.py path.
-    
+
     Written FOR `ast.Import`.
 
     :param source: where module has imported.
@@ -264,11 +264,18 @@ def get_local_import_from_path(
         # If it's a module.
         if module_names:
             path = os.path.join(
-                *leveled_dirnames[:i], *from_module_names, *module_names, __INIT__,
+                *leveled_dirnames[:i],
+                *from_module_names,
+                *module_names,
+                __INIT__,
             )
         else:
             # IMPORT STAR CASE.
-            path = os.path.join(*leveled_dirnames[:i], *from_module_names, __INIT__,)
+            path = os.path.join(
+                *leveled_dirnames[:i],
+                *from_module_names,
+                __INIT__,
+            )
 
         if os.path.isfile(path) and from_module_name.split(DOT)[0] in path:
             return path

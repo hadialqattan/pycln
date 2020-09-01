@@ -87,7 +87,10 @@ def main(
         help="Set to ignore `.gitignore` patterns. if present.",
     ),
     version: bool = typer.Option(
-        None, "--version", callback=version_callback, help="Show the version and exit.",
+        None,
+        "--version",
+        callback=version_callback,
+        help="Show the version and exit.",
     ),
 ) -> None:
     configs = config.Config(
