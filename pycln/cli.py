@@ -6,7 +6,7 @@ from typing import Generator
 
 import typer
 
-from . import __name__, version_callback
+from . import __doc__, __name__, version_callback
 from .utils import config, pathu, refactor, regexu, report
 
 # Constants.
@@ -17,7 +17,7 @@ app = typer.Typer(name=__name__, add_completion=False)
 
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main(
-    path: Path = typer.Argument(None, help="A path to start searching from."),
+    path: Path = typer.Argument(None, help="Directory or a file path."),
     include: str = typer.Option(
         regexu.INCLUDE_REGEX,
         "--include",
@@ -74,9 +74,9 @@ def main(
         show_default=True,
         help="Silence both stdout and stderr. it is not recommended.",
     ),
-    expand_star_imports: bool = typer.Option(
+    expand_stars: bool = typer.Option(
         False,
-        "--expand-star-imports",
+        "--expand-stars",
         "-x",
         help="Expand wildcard star imports. it works if only if the module is importable.",
     ),
@@ -103,16 +103,19 @@ def main(
         verbose=verbose,
         quiet=quiet,
         silence=silence,
-        expand_star_imports=expand_star_imports,
+        expand_stars=expand_stars,
         no_gitignore=no_gitignore,
     )
     reporter = report.Report(configs)
     gitignore = regexu.get_gitignore(
         configs.path if not configs.no_gitignore else EMPTY
     )
-    sources: Generator = pathu.yield_sources(
-        configs.path, configs.include, configs.exclude, gitignore, reporter
-    )
+    if path.is_file() and str(path).endswith(pathu.PY_EXTENSION):
+        sources = [path]
+    else:
+        sources: Generator = pathu.yield_sources(
+            configs.path, configs.include, configs.exclude, gitignore, reporter
+        )
     for source in sources:
         refactor.Refactor(source, configs, reporter)
     # Print the report.
@@ -120,3 +123,8 @@ def main(
         typer.echo(str(reporter))
     # Set the correct exit code and exit.
     typer.Exit(reporter.exit_code)
+
+
+# Override main function `__doc__`.
+# This `__doc__` has read from `pyproject.toml`.
+main.__doc__ = __doc__
