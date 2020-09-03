@@ -4,19 +4,39 @@ Pycln code refactoring utility.
 import ast
 import os
 from copy import copy
-from pathlib import Path
-from typing import List, Tuple, Union, Set
 from functools import lru_cache
+from importlib import import_module
+from pathlib import Path
+from typing import List, Set, Tuple, Union
 
-from . import cstu, astu, nodes, pathu, regexu
+from . import scan, py38_nodes, pathu, regexu
 from .config import Config
 from .exceptions import (
     ReadPermissionError,
     UnexpandableImportStar,
     UnparsableFile,
     WritePermissionError,
+    rebuild_libcst_parser_syntax_error_message,
 )
 from .report import Report
+
+
+class LazyLibCSTLoader:
+
+    """`transform.py` takes about '0.3s' to be loaded because of LibCST,
+    therefore I've created this class to load it only if necessary.
+    """
+
+    def __init__(self):
+        self._module = None
+
+    def __getattr__(self, name):
+        if self._module is None:
+            self._module = import_module(".transform", "pycln.utils")
+        return getattr(self._module, name)
+
+
+transform = LazyLibCSTLoader()
 
 # Constants.
 DOT = "."
@@ -25,6 +45,7 @@ EMPTY = ""
 SPACE = " "
 NOPYCLN = "nopycln"
 NEW_LINE = "\n"
+SEMICOLON = ";"
 
 
 class Refactor:
@@ -60,7 +81,7 @@ class Refactor:
                 self.removed_lines_count = 0
                 pre_fixed_lines = self.refactor()
                 if pre_fixed_lines != self.original_lines:
-                    fixed_lines = astu.remove_useless_passes(
+                    fixed_lines = scan.remove_useless_passes(
                         pre_fixed_lines, self.removed_lines_count
                     )
                     self.output(fixed_lines)
@@ -83,7 +104,7 @@ class Refactor:
         self.reporter.changed_file(self.source)
 
     def read_source(self) -> Union[Tuple[ast.Module, List[str]], Tuple[None, None]]:
-        """Get `self.source` `ast.module` and source lines. `astu.get_file_ast` abstraction.
+        """Get `self.source` `ast.module` and source lines. `scan.get_file_ast` abstraction.
 
         :returns: tuple of source file AST (`ast.Module`) and source code lines.
         """
@@ -94,7 +115,7 @@ class Refactor:
                 if not any([self.configs.check, self.configs.diff])
                 else (os.R_OK,)
             )
-            tree, original_lines, content = astu.get_file_ast(
+            tree, original_lines, content = scan.get_file_ast(
                 self.source, True, permissions
             )
 
@@ -108,7 +129,7 @@ class Refactor:
     def analyze(
         self,
         tree: ast.Module,
-    ) -> Union[Tuple[astu.SourceStats, astu.ImportStats], Tuple[None, None]]:
+    ) -> Union[Tuple[scan.SourceStats, scan.ImportStats], Tuple[None, None]]:
         """Analyze the source code of `self.source`.
 
         :param tree: a parsed `ast.Module`.
@@ -116,10 +137,7 @@ class Refactor:
         """
         source_stats, import_stats, names_to_skip = None, None, None
         try:
-            if astu.PY38_PLUS:
-                analyzer = astu.SourceAnalyzer()
-            else:
-                analyzer = astu.SourceAnalyzer(self.original_lines)
+            analyzer = scan.SourceAnalyzer(self.original_lines)
             analyzer.visit(tree)
             source_stats, import_stats, names_to_skip = analyzer.get_stats()
         except Exception as err:
@@ -161,7 +179,7 @@ class Refactor:
                     if is_star_import:
                         star_alias = ast.alias(name=STAR, asname=None)
                         if node.names:
-                            if not self.configs.expand_star_imports:
+                            if not self.configs.expand_stars:
                                 node.names = [star_alias]
                             else:
                                 self.reporter.expanded_star(self.source, node)
@@ -169,26 +187,47 @@ class Refactor:
                             self.reporter.removed_import(self.source, node, star_alias)
 
                     # Rebuild and replace the import without the unused parts.
-                    if not used_names or (
-                        is_star_import and self.configs.expand_star_imports
+                    if not is_star_import or (
+                        is_star_import and self.configs.expand_stars
                     ):
-                        import_stmnt = self.original_lines[
-                            node.lineno - 1 : node.end_lineno
-                        ]
-                        rebuilt_import = cstu.rebuild_import(
-                            EMPTY.join(import_stmnt), used_names
-                        )
-                        self.insert_import(rebuilt_import, fixed_lines, node)
+                        try:
+                            import_stmnt = self.original_lines[
+                                node.lineno - 1 : node.end_lineno
+                            ]
+                            print(node.__dict__)
+                            if node.col_offset != node.end_col_offset:
+                                if node.col_offset < node.end_col_offset:
+                                    s, e = node.col_offset, node.end_col_offset + 1
+                                    import_stmnt[-1] = import_stmnt[-1][s:e]
 
+                                else:
+                                    s, e = node.end_col_offset, None
+                                    import_stmnt[-1] = import_stmnt[-1][s:e].lstrip(
+                                        SPACE
+                                    )
+                            rebuilt_import = transform.rebuild_import(
+                                EMPTY.join(import_stmnt), used_names
+                            )
+                            print(rebuilt_import)
+                            self.insert_import(rebuilt_import, fixed_lines, node)
+                            print(EMPTY.join(fixed_lines))
+                        except transform.cst.ParserSyntaxError as err:
+                            src = self.reporter.get_relpath(self.source)
+                            msg = rebuild_libcst_parser_syntax_error_message(src, err)
+                            self.reporter.failure(msg)
+        exit()
         return fixed_lines
 
     def expand_import_star(
-        self, node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom]
+        self,
+        node: Union[
+            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
+        ],
     ) -> Tuple[
-        Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
+        Union[ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom],
         Union[bool, None],
     ]:
-        """Expand import star statement, `astu.expand_import_star` abstraction.
+        """Expand import star statement, `scan.expand_import_star` abstraction.
 
         :param node: an node that has a '*' as `alias.name`.
         :returns: expanded '*' import or the original node and True if it's star import.
@@ -197,7 +236,7 @@ class Refactor:
             is_star_import = False
             if node.names[0].name == STAR:
                 is_star_import = True
-                node = astu.expand_import_star(node, self.source)
+                node = scan.expand_import_star(node, self.source)
             return node, is_star_import
         except UnexpandableImportStar as err:
             self.reporter.failure(err)
@@ -227,7 +266,7 @@ class Refactor:
                 self.configs.all_
                 or real_name in pathu.get_standard_lib_names()
                 or self.has_side_effects(alias.name, node)
-                in (astu.HasSideEffects.NO, astu.HasSideEffects.NOT_MODULE)
+                in (scan.HasSideEffects.NO, scan.HasSideEffects.NOT_MODULE)
             ):
                 return True
         return False
@@ -244,17 +283,17 @@ class Refactor:
             if is_star_import and name in self.names_to_skip:
                 return False
             # Handle imports like (import os, from os import path).
-            return any([name in self.source_stats.name_])
+            return name in self.source_stats.name_
         else:
             # Handle imports like (import os.path, from os import path.join).
-            return all([i in self.source_stats.name_ for i in name[:-1]]) and any(
-                [name[-1] in set_ for set_ in self.source_stats]
+            return self.has_used(name[0], is_star_import) and all(
+                [name in self.source_stats.attr_ for name in name[1:]]
             )
 
     @lru_cache()
     def has_side_effects(
         self, module_name: str, node: Union[ast.Import, ast.ImportFrom]
-    ) -> astu.HasSideEffects:
+    ) -> scan.HasSideEffects:
         """Check if the given import file tree has side effects.
 
         :param module_name: `alias.name` to check.
@@ -269,27 +308,29 @@ class Refactor:
             module_source = pathu.get_import_path(self.source, module_name)
 
         if not module_source:
-            return astu.HasSideEffects.NOT_MODULE
+            return scan.HasSideEffects.NOT_MODULE
 
         try:
-            tree = astu.get_file_ast(module_source, permissions=(os.R_OK,))
+            tree = scan.get_file_ast(module_source, permissions=(os.R_OK,))
         except (ReadPermissionError, UnparsableFile) as err:
             self.reporter.failure(err)
-            return astu.HasSideEffects.NOT_KNOWN
+            return scan.HasSideEffects.NOT_KNOWN
 
         try:
-            analyzer = astu.SideEffectsAnalyzer()
+            analyzer = scan.SideEffectsAnalyzer()
             analyzer.visit(tree)
             return analyzer.has_side_effects()
         except Exception as err:
             self.reporter.failure(err, self.source)
-            return astu.HasSideEffects.NOT_KNOWN
+            return scan.HasSideEffects.NOT_KNOWN
 
     def insert_import(
         self,
         rebuilt_import: List[str],
         source_lines: List[str],
-        old_node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
+        old_node: Union[
+            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
+        ],
     ) -> None:
         """Insert rebuilt import statement into `source_lines`.
 
