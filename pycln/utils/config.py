@@ -32,7 +32,7 @@ class Config:
     verbose: bool = False
     quiet: bool = False
     silence: bool = False
-    expand_star_imports: bool = False
+    expand_stars: bool = False
     no_gitignore: bool = False
 
     def check_path(self) -> None:
@@ -45,9 +45,9 @@ class Config:
             )
             raise typer.Exit(1)
 
-        if not self.path.is_dir():
+        if not (self.path.is_dir() or self.path.is_file()):
             typer.secho(
-                f"'{self.path}' is not a directory. Maybe it does not exist 😅",
+                f"'{self.path}' is not a directory or a file. Maybe it does not exist 😅",
                 bold=True,
                 err=True,
             )
