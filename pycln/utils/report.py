@@ -3,7 +3,6 @@ Pycln report utility.
 """
 import ast
 import os
-from copy import copy
 from dataclasses import dataclass
 from difflib import unified_diff
 from pathlib import Path
@@ -11,7 +10,7 @@ from typing import List, Union
 
 import typer
 
-from . import config, nodes
+from . import config, py38_nodes
 
 # Constants.
 AT = "@"
@@ -29,6 +28,7 @@ IMPORT = "import"
 COMMA_SP = ", "
 NEW_LINE = "\n"
 DOT_FSLSH = "./"
+DDOT_FSLSH = "../"
 
 
 @dataclass
@@ -44,12 +44,15 @@ class Report:
         :param path: an absolute path.
         :returns: a relative path (relative to `self.configs.path`).
         """
-        rel_path = os.path.join(
-            self.configs.path, os.path.relpath(path, self.configs.path)
+        path = Path(path)
+        rel_path = (
+            os.path.join(self.configs.path, os.path.relpath(path, self.configs.path))
+            if not path.is_file()
+            else str(path)
         )
         return (
             os.path.join(DOT_FSLSH, rel_path)
-            if not rel_path.startswith(DOT)
+            if not rel_path.startswith((DOT_FSLSH, DDOT_FSLSH))
             else rel_path
         )
 
@@ -121,7 +124,9 @@ class Report:
 
     def rebuild_report_import(
         self,
-        node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
+        node: Union[
+            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
+        ],
         alias: ast.alias,
     ) -> str:
         str_alias = (
@@ -129,11 +134,12 @@ class Report:
             if alias.asname
             else alias.name
         )
-        str_import = (
-            f"{FROM}{SPACE}{node.module}{SPACE}{IMPORT}"
-            if hasattr(node, "level")
-            else f"{IMPORT}{SPACE}"
-        )
+        if hasattr(node, "level"):
+            level_dots = DOT * node.level
+            leveled_name = f"{level_dots}{node.module}" if node.module else level_dots
+            str_import = f"{FROM}{SPACE}{leveled_name}{SPACE}{IMPORT}"
+        else:
+            str_import = IMPORT
         return f"{str_import}{SPACE}{str_alias}"
 
     # Counters.
@@ -142,7 +148,9 @@ class Report:
     def removed_import(
         self,
         source: Path,
-        node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
+        node: Union[
+            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
+        ],
         removed_alias: ast.alias,
     ) -> None:
         """Increment the counter for removed importes. Write a message to stdout.
@@ -172,7 +180,7 @@ class Report:
     __expanded_stars: int = 0
 
     def expanded_star(
-        self, source: Path, node: Union[ast.ImportFrom, nodes.ImportFrom]
+        self, source: Path, node: Union[ast.ImportFrom, py38_nodes.ImportFrom]
     ) -> None:
         """Increment the counter for expanded stars. Write a message to stdout.
 
@@ -255,6 +263,9 @@ class Report:
                 f"{self.get_relpath(source)} looks good! ✨", bold=False, issuccess=True
             )
         self.__unchanged_files += 1
+        self.__file_removed_imports = 0
+        self.__file_expanded_stars = 0
+        self.__file_expanded_stars = 0
 
     __ignored_paths: int = 0
 
@@ -287,7 +298,9 @@ class Report:
     def ignored_import(
         self,
         source: Path,
-        node: Union[ast.Import, ast.ImportFrom, nodes.Import, nodes.ImportFrom],
+        node: Union[
+            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
+        ],
         is_star_import: bool = False,
     ) -> None:
         """Increment the counter for ignored imports. Write a message to stderr.
