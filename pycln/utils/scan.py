@@ -8,8 +8,20 @@ from dataclasses import dataclass
 from enum import Enum, unique
 from functools import lru_cache, wraps
 from importlib.util import find_spec
+from importlib import import_module
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, cast
+from typing import (
+    Any,
+    Callable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
+from tokenize import detect_encoding
 
 from . import py38_nodes, pathu
 from .exceptions import (
@@ -34,6 +46,7 @@ NAMES_TO_SKIP = {
 }
 RIGHT_PAEENTHESIS = "("
 LEFT_PARENTHESIS = ")"
+D_UNDERSCORES = "__"
 BACK_SLASH = "\\"
 SEMICOLON = ";"
 __ALL__ = "__all__"
@@ -122,7 +135,8 @@ class SourceAnalyzer(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom):
         if node not in self.__imports_to_skip:
             py38_node = self.__get_py38_node(node)
-            self.__import_stats.from_.add(py38_node)
+            if not str(py38_node.module).startswith(D_UNDERSCORES):
+                self.__import_stats.from_.add(py38_node)
 
     @recursive
     def visit_Name(self, node: ast.Name):
@@ -188,9 +202,6 @@ class SourceAnalyzer(ast.NodeVisitor):
         :returns: a `py38_nodes.Import` or `py38_nodes.ImportFrom` node.
         """
         if PY38_PLUS:
-            node.end_col_offset = self.__get_end_col_offset(
-                node.end_lineno, node.col_offset
-            )
             return node
 
         import_line = self.__lines[node.lineno - 1]
@@ -199,12 +210,10 @@ class SourceAnalyzer(ast.NodeVisitor):
 
         if isinstance(node, ast.Import):
             end_lineno = node.lineno + (1 if multiline else 0)
-            end_col_offset = self.__get_end_col_offset(end_lineno, node.col_offset)
             py38_node = py38_nodes.Import(
                 lineno=node.lineno,
                 col_offset=node.col_offset,
                 end_lineno=end_lineno,
-                end_col_offset=end_col_offset,
                 names=node.names,
             )
         else:
@@ -213,12 +222,10 @@ class SourceAnalyzer(ast.NodeVisitor):
                 if not multiline
                 else self.__get_end_lineno(node.lineno, is_parentheses)
             )
-            end_col_offset = self.__get_end_col_offset(end_lineno, node.col_offset)
             py38_node = py38_nodes.ImportFrom(
                 lineno=node.lineno,
                 col_offset=node.col_offset,
                 end_lineno=end_lineno,
-                end_col_offset=end_col_offset,
                 names=node.names,
                 module=node.module,
                 level=node.level,
@@ -253,22 +260,6 @@ class SourceAnalyzer(ast.NodeVisitor):
             else:
                 if BACK_SLASH not in self.__lines[end_lineno]:
                     return end_lineno + 1
-
-    def __get_end_col_offset(self, end_lineno: int, col_offset: int) -> int:
-        """Get `end_col_offset` of the given `end_lineno` and `con_offset`,
-        the result will not be correct only if there is a semicolon after the import.
-
-        :param end_lineno: calculated `end_lineno`.
-        :param col_offset: `ast.Import.col_offset` or `ast.ImportFrom.col_offset`.
-        :returns: end_col_offset.
-        """
-        try:
-            import_line = self.__lines[end_lineno - 1]
-            end_col_offset = import_line.index(SEMICOLON, col_offset)
-            if end_col_offset:
-                return end_col_offset
-        except ValueError:
-            return (col_offset - 1) if SEMICOLON in import_line else col_offset
 
     def get_stats(self) -> Tuple[ImportStats, SourceStats]:
         """Get source analyzer results.
@@ -308,8 +299,13 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         spec = find_spec(module_name, level_dots if level_dots else None)
 
         if spec:
+            # Module `__init__.py`.
             module = spec.loader.create_module(spec)
+            if module:
+                return set(dir(module))
 
+            # File `foo.py`.
+            module = import_module(module_name)
             if module:
                 return set(dir(module))
 
@@ -530,7 +526,11 @@ def expand_import_star(node: ast.ImportFrom, source: Path) -> ast.ImportFrom:
                 node.module, node.level
             )
     except (ReadPermissionError, UnparsableFile, ModuleNotFoundError) as err:
-        msg = err if not isinstance(err, ModuleNotFoundError) else "module not found!"
+        msg = (
+            err
+            if not isinstance(err, ModuleNotFoundError)
+            else f"{err.name!r} module not found!"
+        )
         raise UnexpandableImportStar(source, node.lineno, node.col_offset, msg)
 
     # Create `ast.alias` for each name.
@@ -573,11 +573,13 @@ def remove_useless_passes(
 
 
 def get_file_ast(
-    source: Path, get_codes: bool = False, permissions: tuple = (os.R_OK, os.W_OK)
+    source: Path,
+    get_codes: bool = False,
+    permissions: tuple = (os.R_OK, os.W_OK),
 ) -> Union[ast.Module, Tuple[ast.Module, List[str]]]:
     """Parse source file AST.
 
-    :param source: source to read.
+    :param source: file path to read.
     :param get_codes: if true the source file lines and the source code will be returned.
     :param permissions: tuple of permissions to check, supported permissions (os.R_OK, os.W_OK).
     :returns: source file AST (`ast.Module`). Also source code lines if get_lines.
@@ -592,22 +594,33 @@ def get_file_ast(
                 raise ReadPermissionError(13, "Permission denied [READ]", source)
             elif permission is os.W_OK:
                 raise WritePermissionError(13, "Permission denied [WRITE]", source)
-
     try:
-        with open(source, "r") as sfile:
-            lines = sfile.readlines() if get_codes else []
-            content = EMPTY.join(lines) if get_codes else sfile.read()
-    except UnicodeError as exception:
-        raise UnparsableFile(source, exception)
+        encoding = detect_file_encoding(source)
+        with open(source, "r", encoding=encoding) as source_r:
+            lines = source_r.readlines() if get_codes else []
+            content = EMPTY.join(lines) if get_codes else source_r.read()
 
-    try:
         if PY38_PLUS:
             # Include type_comments when Python >=3.8.
             # For more information https://www.python.org/dev/peps/pep-0526/ .
             tree = ast.parse(content)  # , type_comments=True)
         else:
             tree = ast.parse(content)
-    except (SyntaxError, ValueError) as exception:
+    except (SyntaxError, ValueError, UnicodeError) as exception:
         raise UnparsableFile(source, exception)
 
     return (tree, lines, content) if get_codes else tree
+
+
+def detect_file_encoding(source: Path) -> str:
+    """Detect file encoding.
+
+    :param source: file path to read.
+    :returns: file encoding.
+    :raises: UnparsableFile: if both a BOM and a cookie are present, but disagree.
+    """
+    try:
+        with open(source, "rb") as bin_r:
+            return detect_encoding(bin_r.readline)[0]
+    except SyntaxError as exception:
+        raise UnparsableFile(source, exception)

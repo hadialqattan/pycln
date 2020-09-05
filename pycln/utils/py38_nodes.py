@@ -13,16 +13,7 @@ class BaseImport:
 
     lineno: int
     col_offset: int
-
-    # Support end_lineno for Python < 3.8.
-    end_lineno: int
-
-    #: Support end_col_offset for Python < 3.8.
-    #:
-    #: Won't be calculated correctly only if threre is a semicolon on the same line.
-    #: ex:- `import os; import time; import foo`
-    end_col_offset: int
-
+    end_lineno: int  # Support end_lineno for Python < 3.8.
     names: List[ast.alias]
 
 

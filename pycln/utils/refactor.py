@@ -16,7 +16,8 @@ from .exceptions import (
     UnexpandableImportStar,
     UnparsableFile,
     WritePermissionError,
-    rebuild_libcst_parser_syntax_error_message,
+    UnsupportedCase,
+    libcst_parser_syntax_error_message,
 )
 from .report import Report
 
@@ -46,6 +47,7 @@ SPACE = " "
 NOPYCLN = "nopycln"
 NEW_LINE = "\n"
 SEMICOLON = ";"
+CHANGE_MARK = "\n_CHANGED_"
 
 
 class Refactor:
@@ -68,21 +70,23 @@ class Refactor:
     def __init__(self, source: Path, configs: Config, reporter: Report):
         self.configs = configs
         self.reporter = reporter
-        self.source = source
+        self.source = self.reporter.get_relpath(source)
 
         tree, self.original_lines = self.read_source()
         if tree and self.original_lines:
 
-            self.source_stats, self.import_stats, self.names_to_skip = self.analyze(
-                tree
-            )
+            (
+                self.source_stats,
+                self.import_stats,
+                self.names_to_skip,
+            ) = self.analyze(tree)
             if self.source_stats and self.import_stats:
 
-                self.removed_lines_count = 0
+                self.lines_count_delta = 0
                 pre_fixed_lines = self.refactor()
                 if pre_fixed_lines != self.original_lines:
                     fixed_lines = scan.remove_useless_passes(
-                        pre_fixed_lines, self.removed_lines_count
+                        pre_fixed_lines, self.lines_count_delta
                     )
                     self.output(fixed_lines)
                 else:
@@ -103,7 +107,9 @@ class Refactor:
                 sfile.writelines(fixed_lines)
         self.reporter.changed_file(self.source)
 
-    def read_source(self) -> Union[Tuple[ast.Module, List[str]], Tuple[None, None]]:
+    def read_source(
+        self,
+    ) -> Union[Tuple[ast.Module, List[str]], Tuple[None, None]]:
         """Get `self.source` `ast.module` and source lines. `scan.get_file_ast` abstraction.
 
         :returns: tuple of source file AST (`ast.Module`) and source code lines.
@@ -122,7 +128,11 @@ class Refactor:
             if regexu.skip_file(content):
                 self.reporter.ignored_path(self.source, NOPYCLN)
                 return None, None
-        except (ReadPermissionError, WritePermissionError, UnparsableFile) as err:
+        except (
+            ReadPermissionError,
+            WritePermissionError,
+            UnparsableFile,
+        ) as err:
             self.reporter.failure(err)
         return tree, original_lines
 
@@ -175,7 +185,7 @@ class Refactor:
                     used_names.add(alias.name)
 
                 if has_changed or not used_names:
-                    # Return from module import '*' as before, if the --expand-star-imports has not specified.
+                    # Return from module import '*' as before, if the --expand-stars/-x has not specified.
                     if is_star_import:
                         star_alias = ast.alias(name=STAR, asname=None)
                         if node.names:
@@ -186,45 +196,71 @@ class Refactor:
                         elif not node.names:
                             self.reporter.removed_import(self.source, node, star_alias)
 
-                    # Rebuild and replace the import without the unused parts.
-                    if not is_star_import or (
-                        is_star_import and self.configs.expand_stars
+                    # Rebuild and replace the import without any unused part.
+                    if (
+                        not self.configs.check
+                        and not is_star_import
+                        or (is_star_import and self.configs.expand_stars)
                     ):
-                        try:
-                            import_stmnt = self.original_lines[
-                                node.lineno - 1 : node.end_lineno
-                            ]
-                            print(node.__dict__)
-                            if node.col_offset != node.end_col_offset:
-                                if node.col_offset < node.end_col_offset:
-                                    s, e = node.col_offset, node.end_col_offset + 1
-                                    import_stmnt[-1] = import_stmnt[-1][s:e]
+                        fixed_lines = self.transform(node, used_names, fixed_lines)
 
-                                else:
-                                    s, e = node.end_col_offset, None
-                                    import_stmnt[-1] = import_stmnt[-1][s:e].lstrip(
-                                        SPACE
-                                    )
-                            rebuilt_import = transform.rebuild_import(
-                                EMPTY.join(import_stmnt), used_names
-                            )
-                            print(rebuilt_import)
-                            self.insert_import(rebuilt_import, fixed_lines, node)
-                            print(EMPTY.join(fixed_lines))
-                        except transform.cst.ParserSyntaxError as err:
-                            src = self.reporter.get_relpath(self.source)
-                            msg = rebuild_libcst_parser_syntax_error_message(src, err)
-                            self.reporter.failure(msg)
-        exit()
+                    # Mark as changed.
+                    if self.configs.check:
+                        fixed_lines.append(CHANGE_MARK)
         return fixed_lines
+
+    def transform(
+        self,
+        node: Union[
+            ast.Import,
+            ast.ImportFrom,
+            py38_nodes.Import,
+            py38_nodes.ImportFrom,
+        ],
+        used_names: Set[str],
+        source_lines: List[str],
+    ) -> List[str]:
+        """Rebuild and replace the import without any unused part.
+
+        :param node: an import statement node.
+        :param used_names: set of all used names.
+        :param source_lines: file source_lines to modify.
+        :returns: modified source lines (fixed lines).
+        """
+        try:
+            try:
+                import_stmnt = EMPTY.join(
+                    self.original_lines[node.lineno - 1 : node.end_lineno]
+                )
+                rebuilt_import = transform.rebuild_import(
+                    import_stmnt,
+                    used_names,
+                    self.source,
+                    (node.lineno, node.col_offset),
+                )
+                self.insert_import(rebuilt_import, source_lines, node)
+            except UnsupportedCase as msg:
+                self.reporter.failure(msg)
+        except transform.cst.ParserSyntaxError as err:
+            msg = libcst_parser_syntax_error_message(self.source, err)
+            self.reporter.failure(msg)
+        return source_lines
 
     def expand_import_star(
         self,
         node: Union[
-            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
+            ast.Import,
+            ast.ImportFrom,
+            py38_nodes.Import,
+            py38_nodes.ImportFrom,
         ],
     ) -> Tuple[
-        Union[ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom],
+        Union[
+            ast.Import,
+            ast.ImportFrom,
+            py38_nodes.Import,
+            py38_nodes.ImportFrom,
+        ],
         Union[bool, None],
     ]:
         """Expand import star statement, `scan.expand_import_star` abstraction.
@@ -329,7 +365,10 @@ class Refactor:
         rebuilt_import: List[str],
         source_lines: List[str],
         old_node: Union[
-            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
+            ast.Import,
+            ast.ImportFrom,
+            py38_nodes.Import,
+            py38_nodes.ImportFrom,
         ],
     ) -> None:
         """Insert rebuilt import statement into `source_lines`.
@@ -338,19 +377,26 @@ class Refactor:
         :param old_node: an unmodified node.
         :param source_lines: a list of source lines to modify.
         """
-        # Insert the import statement.
         old_lineno = old_node.lineno - 1
-        if rebuilt_import[0] == EMPTY:
-            self.removed_lines_count += 1
-        for line in rebuilt_import:
-            source_lines[old_lineno] = line
-            old_lineno += 1
-
-        # Replace each removed line with EMPTY constant.
         new_len = len(rebuilt_import)
         old_len = old_node.end_lineno - old_node.lineno + 1
-        lineno = old_node.lineno + new_len - 1
-        for i in range(old_len - new_len):
-            source_lines[lineno] = EMPTY
-            self.removed_lines_count += 1
-            lineno += 1
+        delta = old_len - new_len
+        self.lines_count_delta = delta
+
+        # Insert the import statement.
+        if rebuilt_import[0] == EMPTY:
+            self.lines_count_delta += 1
+
+        for i in range(len(rebuilt_import)):
+            if old_len == 1 and i != (len(rebuilt_import) - 2):
+                line = EMPTY.join(rebuilt_import[i:])
+                source_lines[old_lineno] = line
+                break
+            else:
+                source_lines[old_lineno] = rebuilt_import[i]
+            old_lineno += 1
+            old_len -= 1
+
+        for i in range(delta + 1):
+            source_lines[old_lineno] = EMPTY
+            old_lineno += 1

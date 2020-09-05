@@ -12,7 +12,7 @@ from .utils import config, pathu, refactor, regexu, report
 # Constants.
 EMPTY = ""
 
-app = typer.Typer(name=__name__, add_completion=False)
+app = typer.Typer(name=__name__, add_completion=True)
 
 
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
@@ -92,7 +92,14 @@ def main(
         callback=version_callback,
         help="Show the version and exit.",
     ),
-) -> None:
+):
+    # path = Path("../cpython/")
+    # path = Path("../cpython/Lib/importlib/util.py")
+    path = Path("./pycln/lib.py")
+    diff = True
+    expand_stars = True
+    all_ = True
+    exclude = "lib2to3/"
     configs = config.Config(
         path=path,
         include=include,

@@ -101,7 +101,7 @@ class Report:
         :param original_lines: original source code lines.
         :param fixed_lines: fixed source code lines.
         """
-        fixed_lines = [line for line in fixed_lines if line != EMPTY]
+        fixed_lines = EMPTY.join(fixed_lines).splitlines(True)
         diff_gen = unified_diff(
             original_lines,
             fixed_lines,

@@ -1,7 +1,7 @@
 """
 Pycln exceptions utility.
 """
-from typing import Union
+from typing import Union, Tuple
 
 # Constants.
 DOT = "."
@@ -43,7 +43,9 @@ class UnparsableFile(Exception):
     """Raises when the compiled source is invalid, or the source contains null bytes."""
 
     def __init__(
-        self, source: str, exception: Union[SyntaxError, ValueError, UnicodeDecodeError]
+        self,
+        source: str,
+        exception: Union[SyntaxError, ValueError, UnicodeDecodeError],
     ):
         type_ = type(exception)
 
@@ -53,13 +55,23 @@ class UnparsableFile(Exception):
             )
 
         if type_ == SyntaxError:
-            source = f"{source}:{exception.lineno}:{exception.offset}"
-            postfix = SPACE + f"{exception.text.replace(NEW_LINE, EMPTY).lstrip()!r}"
+            source = (
+                f"{source}:{exception.lineno}:{exception.offset}"
+                if exception.lineno
+                else source
+            )
+            postfix = (
+                SPACE + f"{exception.text.replace(NEW_LINE, EMPTY).lstrip()!r}"
+                if exception.text
+                else EMPTY
+            )
         elif type_ == ValueError:
             postfix = EMPTY
         elif type_ == UnicodeDecodeError:
-            encoding, object_ = exception.encoding, exception.object
             start, reason = exception.start, exception.reason
+            encoding, object_ = exception.encoding, exception.object
+            if len(object_) > 10:
+                object_ = object_[:11] + (DOT * 3)
             setattr(
                 exception,
                 "msg",
@@ -71,7 +83,19 @@ class UnparsableFile(Exception):
         super(UnparsableFile, self).__init__(message)
 
 
-def rebuild_libcst_parser_syntax_error_message(
+class UnsupportedCase(Exception):
+
+    """Raises when unsupported import case detected."""
+
+    def __init__(self, source: str, location: Tuple[int, int], msg: str):
+        lineno, col_offset = location
+        full_location = f"{source}:{lineno}:{col_offset}"
+        err_name = self.__class__.__name__
+        message = f"{full_location} {err_name}: {msg}"
+        super(UnsupportedCase, self).__init__(message)
+
+
+def libcst_parser_syntax_error_message(
     source: str, err: "libcst.ParserSyntaxError"
 ) -> str:
     """Rebuild `LibCST.ParserSyntaxError` message.
