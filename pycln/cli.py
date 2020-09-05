@@ -93,13 +93,6 @@ def main(
         help="Show the version and exit.",
     ),
 ):
-    # path = Path("../cpython/")
-    # path = Path("../cpython/Lib/importlib/util.py")
-    path = Path("./pycln/lib.py")
-    diff = True
-    expand_stars = True
-    all_ = True
-    exclude = "lib2to3/"
     configs = config.Config(
         path=path,
         include=include,

@@ -83,7 +83,7 @@ class Refactor:
             if self.source_stats and self.import_stats:
 
                 self.lines_count_delta = 0
-                pre_fixed_lines = self.refactor()
+                pre_fixed_lines = EMPTY.join(self.refactor()).splitlines(True)
                 if pre_fixed_lines != self.original_lines:
                     fixed_lines = scan.remove_useless_passes(
                         pre_fixed_lines, self.lines_count_delta
@@ -385,6 +385,7 @@ class Refactor:
 
         # Insert the import statement.
         if rebuilt_import[0] == EMPTY:
+            delta += 1
             self.lines_count_delta += 1
 
         for i in range(len(rebuilt_import)):
@@ -397,6 +398,6 @@ class Refactor:
             old_lineno += 1
             old_len -= 1
 
-        for i in range(delta + 1):
+        for i in range(delta):
             source_lines[old_lineno] = EMPTY
             old_lineno += 1

@@ -1,7 +1,7 @@
 """
 Pycln CST utility.
 """
-from typing import List, Set, Union, Tuple
+from typing import List, Set, Union, Tuple, Optional
 
 import libcst as cst
 
@@ -83,6 +83,14 @@ class ImportTransformer(cst.CSTTransformer):
             )
         )
 
+    def __get_alias_name(
+        self, node: Optional[Union[cst.Name, cst.Attribute]], name: str = ""
+    ) -> str:
+        if isinstance(node, cst.Name):
+            name += node.value
+            return name
+        return self.__get_alias_name(node.value) + DOT + node.attr.value
+
     def refactor_import_star(self, updated_node: cst.ImportFrom) -> cst.ImportFrom:
         """Add used import aliases to import star.
 
@@ -127,14 +135,15 @@ class ImportTransformer(cst.CSTTransformer):
         # Normal import.
         used_aliases: List[cst.ImportAlias] = []
         for alias in updated_node.names:
-            print(alias.name.value)
-            if alias.name.value in self.__used_names:
+            if self.__get_alias_name(alias.name) in self.__used_names:
                 used_aliases.append(alias)
         used_aliases[-1] = used_aliases[-1].with_changes(
             comma=cst.MaybeSentinel.DEFAULT
         )
-        rpar = self.__get_multiline_rpar(updated_node.rpar)
-        return updated_node.with_changes(names=used_aliases, rpar=rpar)
+        if hasattr(updated_node, "rpar") and updated_node.rpar:
+            rpar = self.__get_multiline_rpar(updated_node.rpar)
+            return updated_node.with_changes(names=used_aliases, rpar=rpar)
+        return updated_node.with_changes(names=used_aliases)
 
     def leave_Import(
         self, original_node: cst.Import, updated_node: cst.Import
@@ -174,6 +183,7 @@ def rebuild_import(
     stripped_stmnt = import_stmnt.lstrip(SPACE)
     indentation = SPACE * location[-1]
     multiline = stripped_stmnt.count(NEW_LINE) > 1
+    stripped_stmnt = stripped_stmnt.rstrip(NEW_LINE)
 
     # Remove unused aliases.
     import_transformer = ImportTransformer(used_names, indentation, multiline)
@@ -185,4 +195,5 @@ def rebuild_import(
         return [f"{indentation}{PASS}{NEW_LINE}" if indentation else EMPTY]
     # Reinsert the removed indentation.
     fixed_import[0] = indentation + fixed_import[0]
+    fixed_import[-1] = fixed_import[-1] + NEW_LINE
     return fixed_import
