@@ -118,7 +118,7 @@ def main(
             configs.path, configs.include, configs.exclude, gitignore, reporter
         )
     for source in sources:
-        session_maker.session(source)
+        session_maker.session(configs.get_relpath(source))
     # Print the report.
     typer.echo(str(reporter), nl=False)
     # Set the correct exit code and exit.

@@ -56,18 +56,16 @@ class Config:
             )
             raise typer.Exit(1)
 
-    def get_relpath(self, path: Union[Path, str]) -> Path:
-        """Get relative path from the given `path`.
+    def get_relpath(self, src: Union[Path, str]) -> str:
+        """Get relative path from the given `src`.
 
-        :param path: an absolute path.
+        :param src: an absolute path.
         :returns: a relative path (relative to `self.configs.path`).
         """
-        relpath, conf_path = Path(path), self.configs.path
-
+        relpath = Path(src)
         if not relpath.is_file():
-            os_relpath = os.path.relpath(relpath, conf_path)
-            relpath = os.path.join(conf_path, os_relpath)
-
+            os_relpath = os.path.relpath(relpath, self.path)
+            relpath = os.path.join(self.path, os_relpath)
         if not str(relpath).startswith((DOT_FSLSH, DDOT_FSLSH)):
-            relpath = (DOT_FSLSH, relpath)
-        return Path(relpath)
+            relpath = os.path.join(DOT_FSLSH, relpath)
+        return relpath

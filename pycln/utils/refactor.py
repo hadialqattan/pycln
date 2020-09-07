@@ -211,7 +211,7 @@ class Refactor:
                     node = self._preserve_import_star(node)
 
                 # Depends on `--expand-stars, -x` option.
-                if node.names[0] == STAR:
+                if node.names[0].name == STAR:
                     continue
 
                 # Depends on `--check, -c` option.

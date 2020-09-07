@@ -47,4 +47,4 @@ def safe_write(path: Union[Path, str], fixed_lines: List[str], encoding: str) ->
     if not os.access(path, os.W_OK):
         raise WritePermissionError(13, "Permission denied [WRITE]", path)
     with open(path, mode="w", encoding=encoding) as destination:
-        destination.writelines(source_lines)
+        destination.writelines(fixed_lines)
