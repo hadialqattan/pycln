@@ -17,23 +17,23 @@ EXCLUDE = "exclude"
 GITIGNORE = ".gitignore"
 SKIP_FILE_REGEX = r"# *(nopycln *: *file).*"
 SKIP_IMPORT_REGEX = r"# *((noqa *:*)|(nopycln *: *import)).*"
-INCLUDE_REGEX = r".*\.pyi?$"
+INCLUDE_REGEX = r".*\.py$"
 EXCLUDE_REGEX = r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|\.tox|\.venv|\.svn|buck-out|build|dist)/"
 
 
-def safe_compile(str_regex: str, type_: str) -> Pattern[str]:
+def safe_compile(pattern: str, type_: str) -> Pattern[str]:
     """Safely compile [--include, --exclude] options regex.
 
-    :param str_regex: an str regex to be complied.
+    :param pattern: an str regex to be complied.
     :param type_: 'include' OR 'exclude'.
     :returns: complied regex.
     """
     try:
-        compiled: Pattern[str] = re.compile(str_regex, re.IGNORECASE)
+        compiled: Pattern[str] = re.compile(pattern, re.IGNORECASE)
         return compiled
     except re.error:
         typer.secho(
-            f"Invalid regular expression for {type_} given: {str_regex!r} ⛔",
+            f"Invalid regular expression for {type_} given: {pattern!r} ⛔",
             fg=typer.colors.RED,
             err=True,
         )
@@ -62,19 +62,19 @@ def is_excluded(name: str, regex: Pattern[str]) -> bool:
 
 @lru_cache()
 def get_gitignore(root: Path) -> PathSpec:
-    """Return a PathSpec matching gitignore content if present.
+    """Return a PathSpec matching gitignore content, if present.
 
-    :param root: a path to search on.
-    :returns: PathSpec matching gitignore content if present.
+    :param root: root path to search for `.gitignore`.
+    :returns: PathSpec matching gitignore content, if present.
     """
-    gitignore_path = os.path.join(root, GITIGNORE)
-    gitignore_lines: List[str] = []
+    path = os.path.join(root, GITIGNORE)
+    lines: List[str] = []
 
-    if os.path.isfile(gitignore_path) and root:
-        with open(gitignore_path) as gitignore_file:
-            gitignore_lines = gitignore_file.readlines()
+    if os.path.isfile(path) and root:
+        with open(path) as ignore_file:
+            lines = ignore_file.readlines()
 
-    return PathSpec.from_lines(GitWildMatchPattern, gitignore_lines)
+    return PathSpec.from_lines(GitWildMatchPattern, lines)
 
 
 def skip_import(line: str) -> bool:
@@ -86,10 +86,10 @@ def skip_import(line: str) -> bool:
     return bool(re.search(SKIP_IMPORT_REGEX, line, re.IGNORECASE))
 
 
-def skip_file(source: str) -> bool:
-    """Check if the source code has `nopycln: file` comment to skip.
+def skip_file(src_code: str) -> bool:
+    """Check if the src_code code has `nopycln: file` comment to skip.
 
-    :param source: string source code to check.
+    :param src_code: string source code to check.
     :returns: True if it matches else False.
     """
-    return bool(re.search(SKIP_FILE_REGEX, source, re.IGNORECASE))
+    return bool(re.search(SKIP_FILE_REGEX, src_code, re.IGNORECASE))

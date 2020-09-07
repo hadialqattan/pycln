@@ -7,11 +7,13 @@ from copy import copy
 from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
-from typing import List, Set, Tuple, Union
+from typing import List, Set, Tuple, Union, Optional
 
-from . import scan, py38_nodes, pathu, regexu
+from . import scan, pathu, regexu, iou
+from .nodes import Import, ImportFrom
 from .config import Config
-from .exceptions import (
+from .report import Report
+from ._exceptions import (
     ReadPermissionError,
     UnexpandableImportStar,
     UnparsableFile,
@@ -19,7 +21,6 @@ from .exceptions import (
     UnsupportedCase,
     libcst_parser_syntax_error_message,
 )
-from .report import Report
 
 
 class LazyLibCSTLoader:
@@ -42,6 +43,7 @@ transform = LazyLibCSTLoader()
 # Constants.
 DOT = "."
 STAR = "*"
+CODE = "code"
 EMPTY = ""
 SPACE = " "
 NOPYCLN = "nopycln"
@@ -54,300 +56,330 @@ class Refactor:
 
     """Refactor the given source.
 
-    >>> source = "source.py"
-    >>> Refactor(
+    >>> refactor = Refactor(
     ...     configs,  # Should be created on the main function.
     ...     reporter,  # Should be created on the main function.
-    ...     source
     ... )
-    >>> print("Easy!")
+    >>> file_path = "./source.py"
+    >>> refactor.session(file_path)
 
-    :param source: a file path to handle.
     :param configs: `config.Config` instance.
     :param reporter: `report.Report` instance.
     """
 
-    def __init__(self, source: Path, configs: Config, reporter: Report):
+    def __init__(self, configs: Config, reporter: Report):
         self.configs = configs
         self.reporter = reporter
-        self.source = self.reporter.get_relpath(source)
+        # Resetables.
+        self._import_stats = None
+        self._source_stats = None
+        self._path = None
 
-        tree, self.original_lines = self.read_source()
-        if tree and self.original_lines:
+    def _reset(self) -> None:
+        self._import_stats = None
+        self._source_stats = None
+        self._path = None
 
-            (
-                self.source_stats,
-                self.import_stats,
-                self.names_to_skip,
-            ) = self.analyze(tree)
-            if self.source_stats and self.import_stats:
+    @staticmethod
+    def remove_useless_passes(source_lines: List[str]) -> List[str]:
+        """Remove any useless `pass`.
 
-                self.lines_count_delta = 0
-                pre_fixed_lines = EMPTY.join(self.refactor()).splitlines(True)
-                if pre_fixed_lines != self.original_lines:
-                    fixed_lines = scan.remove_useless_passes(
-                        pre_fixed_lines, self.lines_count_delta
-                    )
-                    self.output(fixed_lines)
+        :param source_lines: source code lines.
+        :returns: clean source code lines.
+        """
+        tree = ast.parse(EMPTY.join(source_lines))
+        for parent in ast.walk(tree):
+            try:
+                if parent.__dict__.get("body", None):
+                    body_len = len(parent.body)
                 else:
-                    self.reporter.unchanged_file(self.source)
+                    continue
+            except TypeError:
+                continue
+            for child in ast.iter_child_nodes(parent):
+                if isinstance(child, ast.Pass):
+                    if body_len > 1:
+                        body_len -= 1
+                        source_lines[child.lineno - 1] = EMPTY
+        return EMPTY.join(source_lines).splitlines(True)
 
-    def output(self, fixed_lines: List[str]) -> None:
-        """Output the given `fixed_lines`.
+    def session(self, path: Union[Path, str]) -> None:
+        """Refactoring session.
+
+        :param path: `.py` file to refactor.
+        """
+        self._path = path
+        try:
+            # Safly read the file.
+            permissions = (os.R_OK,)
+            if not self.configs.check and not self.configs.diff:
+                permissions = (os.R_OK, os.W_OK)
+            content, encoding = iou.safe_read(self._path, permissions)
+
+            # Skip any file that has `# nopycln: file`.
+            if regexu.skip_file(content):
+                self.reporter.ignored_path(self._path, NOPYCLN)
+                return
+
+            # Parse and analyze the `content` AST.
+            tree = scan.parse_ast(content, self._path)
+            original_lines = content.splitlines(True)
+            stats = self._analyze(tree, original_lines)
+            if not stats:
+                return
+            self._source_stats, self._import_stats = stats
+
+            # Refactor and output the `content`.
+            fixed_lines = self._refactor(original_lines).splitlines(True)
+            self._output(fixed_lines, original_lines, encoding)
+        except (ReadPermissionError, WritePermissionError, UnparsableFile) as err:
+            self.reporter.failure(err)
+        finally:
+            self._reset()
+
+    def _output(
+        self, fixed_lines: List[str], original_lines: List[str], encoding: str
+    ) -> None:
+        """
+        Output the given `fixed_lines`.
 
         :param fixed_lines: the refactored source lines.
+        :param original_lines: unmodified source lines.
+        :param encoding: file encoding.
         """
-        if self.configs.diff:
-            self.reporter.colored_unified_diff(
-                self.source, self.original_lines, fixed_lines
-            )
-        elif not self.configs.check:
-            # Default.
-            with open(self.source, "w") as sfile:
-                sfile.writelines(fixed_lines)
-        self.reporter.changed_file(self.source)
+        if fixed_lines == original_lines:
+            self.reporter.unchanged_file(self._path)
+        else:
+            self.reporter.changed_file(self._path)
+            if not self.configs.check:
+                fixed_lines = Refactor.remove_useless_passes(fixed_lines)
+                if self.configs.diff:
+                    self.reporter.colored_unified_diff(
+                        self._path, original_lines, fixed_lines
+                    )
+                else:
+                    iou.safe_write(self._path, fixed_lines, encoding)
 
-    def read_source(
-        self,
-    ) -> Union[Tuple[ast.Module, List[str]], Tuple[None, None]]:
-        """Get `self.source` `ast.module` and source lines. `scan.get_file_ast` abstraction.
-
-        :returns: tuple of source file AST (`ast.Module`) and source code lines.
-        """
-        tree, original_lines = None, None
-        try:
-            permissions = (
-                (os.R_OK, os.W_OK)
-                if not any([self.configs.check, self.configs.diff])
-                else (os.R_OK,)
-            )
-            tree, original_lines, content = scan.get_file_ast(
-                self.source, True, permissions
-            )
-
-            if regexu.skip_file(content):
-                self.reporter.ignored_path(self.source, NOPYCLN)
-                return None, None
-        except (
-            ReadPermissionError,
-            WritePermissionError,
-            UnparsableFile,
-        ) as err:
-            self.reporter.failure(err)
-        return tree, original_lines
-
-    def analyze(
-        self,
-        tree: ast.Module,
-    ) -> Union[Tuple[scan.SourceStats, scan.ImportStats], Tuple[None, None]]:
-        """Analyze the source code of `self.source`.
+    def _analyze(
+        self, tree: ast.Module, original_lines: List[str]
+    ) -> Optional[Tuple[scan.SourceStats, scan.ImportStats]]:
+        """Analyze the given `tree`.
 
         :param tree: a parsed `ast.Module`.
+        :param original_lines: code lines requiered for Python < 3.8.
         :returns: tuple of `ImportStats`, `SourceStats` and set of names to skip.
         """
-        source_stats, import_stats, names_to_skip = None, None, None
         try:
-            analyzer = scan.SourceAnalyzer(self.original_lines)
+            analyzer = scan.SourceAnalyzer(original_lines)
             analyzer.visit(tree)
-            source_stats, import_stats, names_to_skip = analyzer.get_stats()
+            source_stats, import_stats = analyzer.get_stats()
+            return source_stats, import_stats
         except Exception as err:
-            self.reporter.failure(err, self.source)
-        return source_stats, import_stats, names_to_skip
+            self.reporter.failure(err, self._path)
 
-    def refactor(self) -> List[str]:
-        """Remove all unused imports from `self.original_lines`.
+    def _refactor(self, original_lines: List[str]) -> str:
+        """Remove all unused imports from given `original_lines`.
 
-        :returns: refactored source code lines.
+        :param original_lines: unmodified lines.
+        :reutrns: fixed source code.
         """
-        fixed_lines = copy(self.original_lines)
-        for type_ in self.import_stats:
+        fixed_lines = copy(original_lines)
+        for type_ in self._import_stats:
 
             for node in type_:
 
-                # Skip any import that has `# noqa` or `# nopycln: import` comment on it's `node.lineno`.
-                if regexu.skip_import(fixed_lines[node.lineno - 1]):
-                    self.reporter.ignored_import(self.source, node)
+                # Skip any import that has `# noqa` or `# nopycln: import` comment.
+                lineno = node.location.start.line - 1
+                if regexu.skip_import(fixed_lines[lineno]):
+                    self.reporter.ignored_import(self._path, node)
                     continue
 
-                # Expand import '*' before checking.
-                node, is_star_import = self.expand_import_star(node)
-                if is_star_import is None:
+                # Expand any import '*' before checking.
+                node, is_star = self._expand_import_star(node)
+                if is_star is None:
                     continue
 
-                has_changed = False
-                used_names: Set[str] = set()
-                for alias in node.names:
-                    if self.should_removed(node, alias, is_star_import):
-                        has_changed = True
-                        if not is_star_import:
-                            self.reporter.removed_import(self.source, node, alias)
-                        continue
-                    used_names.add(alias.name)
+                # Get set of used names.
+                used_names = self._get_used_names(node, is_star)
 
-                if has_changed or not used_names:
-                    # Return from module import '*' as before, if the --expand-stars/-x has not specified.
-                    if is_star_import:
-                        star_alias = ast.alias(name=STAR, asname=None)
-                        if node.names:
-                            if not self.configs.expand_stars:
-                                node.names = [star_alias]
-                            else:
-                                self.reporter.expanded_star(self.source, node)
-                        elif not node.names:
-                            self.reporter.removed_import(self.source, node, star_alias)
+                # No alias has removed.
+                if len(used_names) == len(node.names):
+                    continue
 
-                    # Rebuild and replace the import without any unused part.
-                    if (
-                        not self.configs.check
-                        and not is_star_import
-                        or (is_star_import and self.configs.expand_stars)
-                    ):
-                        fixed_lines = self.transform(node, used_names, fixed_lines)
+                # Depends on `--expand-stars, -x` option.
+                if is_star:
+                    node = self._preserve_import_star(node)
 
-                    # Mark as changed.
-                    if self.configs.check:
-                        fixed_lines.append(CHANGE_MARK)
-        return fixed_lines
+                # Depends on `--expand-stars, -x` option.
+                if node.names[0] == STAR:
+                    continue
 
-    def transform(
+                # Depends on `--check, -c` option.
+                if self.configs.check:
+                    fixed_lines.append(CHANGE_MARK)
+                    continue
+
+                # Default and `--diff, -d` option.
+                fixed_lines = self._transform(
+                    node, used_names, original_lines, fixed_lines
+                )
+
+        return EMPTY.join(fixed_lines)
+
+    def _get_used_names(
+        self, node: Union[Import, ImportFrom], is_star: bool
+    ) -> Set[str]:
+        """Get set of used names base on given `node` and `self._source_stats`.
+
+        :param node: import node to names check.
+        :parma is_star: is '*' import node.
+        :returns: set of used names.
+        """
+        used_names: Set[str] = set()
+        for alias in node.names:
+            if self._should_remove(node, alias, is_star):
+                if not is_star:
+                    self.reporter.removed_import(self._path, node, alias)
+                continue
+            used_names.add(alias.name)
+        return used_names
+
+    def _preserve_import_star(self, node: ImportFrom) -> ImportFrom:
+        """Preserve import star alias if `--expand-stars/-x` has not specified.
+
+        :param node: expanded `ImportFrom` node.
+        :returns: preserved import star (`ImportFrom`).
+        """
+        star_alias = ast.alias(name=STAR, asname=None)
+        if node.names:
+            if not self.configs.expand_stars:
+                node.names = [star_alias]
+            else:
+                self.reporter.expanded_star(self._path, node)
+        else:
+            self.reporter.removed_import(self._path, node, star_alias)
+        return node
+
+    def _transform(
         self,
-        node: Union[
-            ast.Import,
-            ast.ImportFrom,
-            py38_nodes.Import,
-            py38_nodes.ImportFrom,
-        ],
+        node: Union[Import, ImportFrom],
         used_names: Set[str],
-        source_lines: List[str],
+        original_lines: List[str],
+        updated_lines: List[str],
     ) -> List[str]:
         """Rebuild and replace the import without any unused part.
 
         :param node: an import statement node.
         :param used_names: set of all used names.
-        :param source_lines: file source_lines to modify.
+        :param original_lines: file original code lines.
+        :param updated_lines: code lines to modify.
         :returns: modified source lines (fixed lines).
         """
         try:
             try:
-                import_stmnt = EMPTY.join(
-                    self.original_lines[node.lineno - 1 : node.end_lineno]
-                )
+                lineno = node.location.start.line
+                end_lineno = node.location.end.line
+                import_stmnt = EMPTY.join(original_lines[lineno - 1 : end_lineno])
                 rebuilt_import = transform.rebuild_import(
                     import_stmnt,
                     used_names,
-                    self.source,
-                    (node.lineno, node.col_offset),
+                    self._path,
+                    node.location,
                 )
-                self.insert_import(rebuilt_import, source_lines, node)
+                updated_lines = self._insert(rebuilt_import, updated_lines, node)
             except UnsupportedCase as msg:
                 self.reporter.failure(msg)
         except transform.cst.ParserSyntaxError as err:
-            msg = libcst_parser_syntax_error_message(self.source, err)
+            msg = libcst_parser_syntax_error_message(self._path, err)
             self.reporter.failure(msg)
-        return source_lines
+        return updated_lines
 
-    def expand_import_star(
-        self,
-        node: Union[
-            ast.Import,
-            ast.ImportFrom,
-            py38_nodes.Import,
-            py38_nodes.ImportFrom,
-        ],
-    ) -> Tuple[
-        Union[
-            ast.Import,
-            ast.ImportFrom,
-            py38_nodes.Import,
-            py38_nodes.ImportFrom,
-        ],
-        Union[bool, None],
-    ]:
+    def _expand_import_star(
+        self, node: ImportFrom
+    ) -> Tuple[ast.ImportFrom, Optional[bool]]:
         """Expand import star statement, `scan.expand_import_star` abstraction.
 
-        :param node: an node that has a '*' as `alias.name`.
+        :param node: `ImportFrom` that has a '*' as `alias.name`.
         :returns: expanded '*' import or the original node and True if it's star import.
         """
         try:
-            is_star_import = False
+            is_star = False
             if node.names[0].name == STAR:
-                is_star_import = True
-                node = scan.expand_import_star(node, self.source)
-            return node, is_star_import
+                is_star = True
+                node = scan.expand_import_star(node, self._path)
+            return node, is_star
         except UnexpandableImportStar as err:
             self.reporter.failure(err)
-            self.reporter.ignored_import(self.source, node, is_star_import=True)
+            self.reporter.ignored_import(self._path, node, is_star=True)
             return node, None
 
-    def should_removed(
-        self,
-        node: Union[ast.Import, ast.ImportFrom],
-        alias: ast.alias,
-        is_star_import: bool,
+    def _should_remove(
+        self, node: Union[Import, ImportFrom], alias: ast.alias, is_star: bool
     ) -> bool:
         """Check if the alias should be removed or not.
 
-        :param node: an `ast.Import` or `ast.ImportFrom`.
+        :param node: an `Import` or `ImportFrom`.
         :param alias: an `ast.alias` node.
-        :param is_star_import: is it a '*' import.
+        :param is_star: is it a '*' import.
         :returns: True if the alias should be removed else False.
         """
-        real_name = node.module if hasattr(node, "level") else alias.name
+        real_name = node.module if isinstance(node, ImportFrom) else alias.name
         used_name = alias.asname if alias.asname else alias.name
         if (
-            not self.has_used(used_name, is_star_import)
+            not self._has_used(used_name, is_star)
             and not real_name in pathu.IMPORTS_WITH_SIDE_EFFECTS
         ):
             if (
                 self.configs.all_
                 or real_name in pathu.get_standard_lib_names()
-                or self.has_side_effects(alias.name, node)
+                or self._has_side_effects(alias.name, node)
                 in (scan.HasSideEffects.NO, scan.HasSideEffects.NOT_MODULE)
             ):
                 return True
         return False
 
-    def has_used(self, name: str, is_star_import: bool) -> bool:
+    def _has_used(self, name: str, is_star: bool) -> bool:
         """Check if the given import name has used.
 
         :param name: a name to check.
-        :param is_star_import: is it a '*' import.
+        :param is_star: is it a '*' import.
         :returns: True if the name has used else False.
         """
         name = name.split(DOT) if DOT in name else name
         if isinstance(name, str):
-            if is_star_import and name in self.names_to_skip:
+            if is_star and name in self._source_stats.names_to_skip:
                 return False
             # Handle imports like (import os, from os import path).
-            return name in self.source_stats.name_
+            return name in self._source_stats.name_
         else:
             # Handle imports like (import os.path, from os import path.join).
-            return self.has_used(name[0], is_star_import) and all(
-                [name in self.source_stats.attr_ for name in name[1:]]
+            return self._has_used(name[0], is_star) and all(
+                [name in self._source_stats.attr_ for name in name[1:]]
             )
 
     @lru_cache()
-    def has_side_effects(
-        self, module_name: str, node: Union[ast.Import, ast.ImportFrom]
+    def _has_side_effects(
+        self, module: str, node: Union[Import, ImportFrom]
     ) -> scan.HasSideEffects:
         """Check if the given import file tree has side effects.
 
-        :param module_name: `alias.name` to check.
+        :param module: `alias.name` to check.
         :param node: an `ast.Import` or `ast.ImportFrom` node.
         :returns: side effects status.
         """
-        if hasattr(node, "level"):
+        if isinstance(node, ImportFrom):
             module_source = pathu.get_import_from_path(
-                self.source, module_name, node.module, node.level
+                self._path, module, node.module, node.level
             )
         else:
-            module_source = pathu.get_import_path(self.source, module_name)
+            module_source = pathu.get_import_path(self._path, module)
 
         if not module_source:
             return scan.HasSideEffects.NOT_MODULE
 
         try:
-            tree = scan.get_file_ast(module_source, permissions=(os.R_OK,))
+            code, _ = iou.safe_read(module_source, permissions=(os.R_OK,))
+            tree = scan.parse_ast(code, module_source)
         except (ReadPermissionError, UnparsableFile) as err:
             self.reporter.failure(err)
             return scan.HasSideEffects.NOT_KNOWN
@@ -357,47 +389,48 @@ class Refactor:
             analyzer.visit(tree)
             return analyzer.has_side_effects()
         except Exception as err:
-            self.reporter.failure(err, self.source)
+            self.reporter.failure(err, self._path)
             return scan.HasSideEffects.NOT_KNOWN
 
-    def insert_import(
+    def _insert(
         self,
         rebuilt_import: List[str],
-        source_lines: List[str],
-        old_node: Union[
-            ast.Import,
-            ast.ImportFrom,
-            py38_nodes.Import,
-            py38_nodes.ImportFrom,
-        ],
-    ) -> None:
-        """Insert rebuilt import statement into `source_lines`.
+        updated_lines: List[str],
+        node: Union[Import, ImportFrom],
+    ) -> List[str]:
+        """Insert (replace) rebuilt import statement into `updated_lines`.
 
-        :param rebuilt_import: an import statement to insert.
-        :param old_node: an unmodified node.
-        :param source_lines: a list of source lines to modify.
+        :param rebuilt_import: an import statement ot insert.
+        :param updated_lines: a list of source lines to modify.
+        :param node: unmodified node.
+        :returns: fixed list of lines.
         """
-        old_lineno = old_node.lineno - 1
-        new_len = len(rebuilt_import)
-        old_len = old_node.end_lineno - old_node.lineno + 1
-        delta = old_len - new_len
-        self.lines_count_delta = delta
+        # Shollow copy.
+        fixed_lines = updated_lines.copy()
 
-        # Insert the import statement.
+        # Determine old-new import delta.
+        new_len = len(rebuilt_import)
+        old_len = len(node.location)
+        delta = old_len - new_len
         if rebuilt_import[0] == EMPTY:
             delta += 1
-            self.lines_count_delta += 1
 
-        for i in range(len(rebuilt_import)):
-            if old_len == 1 and i != (len(rebuilt_import) - 2):
+        # Insert the rebuilt import statement.
+        index = node.location.start.line - 1
+        for i in range(new_len):
+            if old_len == 1 and i != (new_len - 3):
                 line = EMPTY.join(rebuilt_import[i:])
-                source_lines[old_lineno] = line
+                fixed_lines[index] = line
                 break
             else:
-                source_lines[old_lineno] = rebuilt_import[i]
-            old_lineno += 1
+                fixed_lines[index] = rebuilt_import[i]
+            index += 1
             old_len -= 1
 
-        for i in range(delta):
-            source_lines[old_lineno] = EMPTY
-            old_lineno += 1
+        # Replace each removed line with `EMPTY`.
+        if delta > 0:
+            for i in range(delta):
+                fixed_lines[index] = EMPTY
+                index += 1
+
+        return fixed_lines

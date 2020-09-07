@@ -1,7 +1,8 @@
 import toml
 import typer
 
-pycln = toml.load("./pyproject.toml")["tool"]["poetry"]
+PYPROJECT_PATH = "./pyproject.toml"
+pycln = toml.load(PYPROJECT_PATH)["tool"]["poetry"]
 
 __name__ = pycln["name"]
 __version__ = pycln["version"]

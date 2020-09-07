@@ -1,9 +1,10 @@
 """
-Pycln config utility.
+Pycln configuration management utility.
 """
+import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Pattern
+from typing import Pattern, Union
 
 import typer
 
@@ -11,6 +12,8 @@ from . import regexu
 
 # Constants.
 EMPTY = ""
+DOT_FSLSH = "./"
+DDOT_FSLSH = "../"
 
 
 @dataclass
@@ -19,7 +22,7 @@ class Config:
     """Pycln configs dataclass."""
 
     def __post_init__(self):
-        self.check_path()
+        self._check_path()
         self.include: Pattern[str] = regexu.safe_compile(self.include, regexu.INCLUDE)
         self.exclude: Pattern[str] = regexu.safe_compile(self.exclude, regexu.EXCLUDE)
 
@@ -35,7 +38,7 @@ class Config:
     expand_stars: bool = False
     no_gitignore: bool = False
 
-    def check_path(self) -> None:
+    def _check_path(self) -> None:
         """Validate `self.path`."""
         if not self.path:
             typer.secho(
@@ -52,3 +55,19 @@ class Config:
                 err=True,
             )
             raise typer.Exit(1)
+
+    def get_relpath(self, path: Union[Path, str]) -> Path:
+        """Get relative path from the given `path`.
+
+        :param path: an absolute path.
+        :returns: a relative path (relative to `self.configs.path`).
+        """
+        relpath, conf_path = Path(path), self.configs.path
+
+        if not relpath.is_file():
+            os_relpath = os.path.relpath(relpath, conf_path)
+            relpath = os.path.join(conf_path, os_relpath)
+
+        if not str(relpath).startswith((DOT_FSLSH, DDOT_FSLSH)):
+            relpath = (DOT_FSLSH, relpath)
+        return Path(relpath)

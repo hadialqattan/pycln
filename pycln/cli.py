@@ -107,20 +107,20 @@ def main(
         no_gitignore=no_gitignore,
     )
     reporter = report.Report(configs)
-    gitignore = regexu.get_gitignore(
-        configs.path if not configs.no_gitignore else EMPTY
-    )
+    session_maker = refactor.Refactor(configs, reporter)
     if path.is_file() and str(path).endswith(pathu.PY_EXTENSION):
         sources = [path]
     else:
+        gitignore = regexu.get_gitignore(
+            configs.path if not configs.no_gitignore else EMPTY
+        )
         sources: Generator = pathu.yield_sources(
             configs.path, configs.include, configs.exclude, gitignore, reporter
         )
     for source in sources:
-        refactor.Refactor(source, configs, reporter)
+        session_maker.session(source)
     # Print the report.
-    if not configs.silence:
-        typer.echo(str(reporter))
+    typer.echo(str(reporter), nl=False)
     # Set the correct exit code and exit.
     typer.Exit(reporter.exit_code)
 

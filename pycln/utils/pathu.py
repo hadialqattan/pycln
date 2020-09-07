@@ -1,12 +1,12 @@
 """
-Pycln path utils.
+Pycln path finding utility.
 """
 import os
 import sys
 from distutils import sysconfig
 from functools import lru_cache
 from pathlib import Path
-from typing import Generator, List, Pattern, Set, Union
+from typing import Generator, List, Pattern, Set, Optional
 
 from pathspec import PathSpec
 
@@ -55,7 +55,7 @@ def yield_sources(
     gitignore: PathSpec,
     reporter: Report,
 ) -> Generator:
-    """Yields `.py` files paths to handle. Walk throw path sub-directories/files recursively.
+    """Yields `.py` paths to handle. Walk throw path sub-directories/files recursively.
 
     :param path: A path to start searching from.
     :param include: regex pattern to be included.
@@ -101,7 +101,7 @@ def yield_sources(
             reporter.ignored_path(entry_path, INCLUDE)
 
     for name in files:
-        yield os.path.join(path, name)
+        yield Path(os.path.join(path, name))
 
     for dirname in dirs:
 
@@ -150,31 +150,6 @@ def get_standard_lib_paths() -> Set[Path]:
 
 
 @lru_cache()
-def get_third_party_lib_paths() -> Set[Path]:
-    """Get paths to third party library modules.
-
-    :returns: set of paths to Third party library modules.
-    """
-    paths: Set[Path] = set()
-
-    packages_paths: Set[str] = set(
-        [
-            path
-            for path in sys.path
-            if path and Path(path).parts[-1] in [DIST_PACKAGES, SITE_PACKAGES]
-        ]
-    )
-
-    for path in packages_paths:
-
-        for name in os.listdir(path):
-            if not name.startswith(UNDERSCORE) and not name.endswith(BIN_PY_EXTENSIONS):
-                paths.add(Path(os.path.join(path, name)))
-
-    return paths
-
-
-@lru_cache()
 def get_standard_lib_names() -> Set[str]:
     """Returns a set of Python standard library modules names.
 
@@ -198,150 +173,177 @@ def get_standard_lib_names() -> Set[str]:
     return (names - IMPORTS_WITH_SIDE_EFFECTS) | BIN_IMPORTS
 
 
-def get_local_import_path(source: Path, module_name: str) -> Union[str, None]:
-    """Find the given local module_name file.py/__init_.py path.
+@lru_cache()
+def get_third_party_lib_paths() -> Set[Path]:
+    """Get paths to third party library modules.
+
+    :returns: set of paths to third party library modules.
+    """
+    paths: Set[Path] = set()
+
+    packages_paths: Set[str] = set(
+        [
+            path
+            for path in sys.path
+            if path and Path(path).parts[-1] in [DIST_PACKAGES, SITE_PACKAGES]
+        ]
+    )
+
+    for path in packages_paths:
+
+        for name in os.listdir(path):
+            if not name.startswith(UNDERSCORE) and not name.endswith(BIN_PY_EXTENSIONS):
+                paths.add(Path(os.path.join(path, name)))
+
+    return paths
+
+
+def get_local_import_path(path: Path, module: str) -> Optional[str]:
+    """Find the given local module file.py/__init_.py path.
 
     Written FOR `ast.Import`.
 
-    :param source: where module has imported.
-    :param module_name: target module name.
-    :returns: a full `module_name/__init__.py` path.
+    :param path: where `module` has imported.
+    :param module: module name.
+    :returns: a full `module/__init__.py` path.
     """
-    dirnames = Path(os.path.dirname(source)).parts
-    names = module_name.split(DOT)
+    dirnames = Path(os.path.dirname(path)).parts
+    names = module.split(DOT)
 
-    # If it's a file.
+    # Test different levels.
     for i in (None, -1, -2, -3):
-        path = os.path.join(*dirnames[:i], *names[:-1], f"{names[-1]}{PY_EXTENSION}")
-        if os.path.isfile(path):
-            return path
+
+        # If it's a file.
+        fpath = os.path.join(*dirnames[:i], *names[:-1], f"{names[-1]}{PY_EXTENSION}")
+        if os.path.isfile(fpath):
+            return fpath
 
         # If it's a module.
-        path = os.path.join(*dirnames[:i], *names, __INIT__)
-        if os.path.isfile(path):
-            return path
+        mpath = os.path.join(*dirnames[:i], *names, __INIT__)
+        if os.path.isfile(mpath):
+            return mpath
 
 
 def get_local_import_from_path(
-    source: Path, module_name: str, from_module_name: str, level: int
-) -> Union[str, None]:
-    """Find the given local module_name file.py/__init_.py path.
+    path: Path, module: str, package: str, level: int
+) -> Optional[str]:
+    """Find the given local module file.py/__init_.py path.
 
-    Written FOR `ast.ImportFrom`
+    Written FOR `ast.ImportFrom`.
 
-    :param source: where module has imported.
-    :param module_name: target module name.
-    :param from_module_name: `from from_module_name import ...`.
+    :param path: where `module` has imported.
+    :param module: module name.
+    :param package: package name.
     :param level: `ast.ImportFrom.level`.
+    :returns: a full `module/__init__.py` path.
     """
-    dirname = Path(os.path.dirname(source))
-    leveled_dirnames = dirname.parts[: (level * -1) + 1] if level > 1 else dirname.parts
+    dirname = Path(os.path.dirname(path))
+    dirparts = dirname.parts[: (level * -1) + 1] if level > 1 else dirname.parts
+    modules = module.split(DOT) if module != STAR and module else []
+    packages = package.split(DOT) if package else []
 
-    module_names = (
-        module_name.split(DOT) if not module_name == STAR and module_name else []
-    )
-    from_module_names = from_module_name.split(DOT) if from_module_name else []
-
+    # Test different levels.
     for i in (None, -1, -2, -3):
+
         # If it's a file.
-        if module_names:
-            path = os.path.join(
-                *leveled_dirnames[:i],
-                *from_module_names,
-                *module_names[:-1],
-                f"{module_names[-1]}{PY_EXTENSION}",
+        if modules:
+            fpath = os.path.join(
+                *dirparts[:i],
+                *packages,
+                *modules[:-1],
+                f"{modules[-1]}{PY_EXTENSION}",
             )
         else:
             # IMPORT STAR CASE.
-            path = os.path.join(
-                *leveled_dirnames[:i],
-                *from_module_names[:-1] if level > 0 else EMPTY,
-                f"{from_module_names[-1]}{PY_EXTENSION}",
+            fpath = os.path.join(
+                *dirparts[:i],
+                *packages[:-1] if level > 0 else EMPTY,
+                f"{packages[-1]}{PY_EXTENSION}",
             )
-        if os.path.isfile(path):
-            return path
+        if os.path.isfile(fpath):
+            return fpath
 
         # If it's a module.
-        if module_names:
-            path = os.path.join(
-                *leveled_dirnames[:i],
-                *from_module_names,
-                *module_names,
+        if modules:
+            mpath = os.path.join(
+                *dirparts[:i],
+                *packages,
+                *modules,
                 __INIT__,
             )
         else:
             # IMPORT STAR CASE.
-            path = os.path.join(
-                *leveled_dirnames[:i],
-                *from_module_names,
+            mpath = os.path.join(
+                *dirparts[:i],
+                *packages,
                 __INIT__,
             )
 
-        if os.path.isfile(path) and from_module_name.split(DOT)[0] in path:
-            return path
+        if os.path.isfile(mpath) and package.split(DOT)[0] in mpath:
+            return mpath
 
 
-def get_module_path(paths: List[Path], module_name: str) -> Union[Path, None]:
-    """Get the `module_name` path from the given `paths`.
+def get_module_path(paths: List[Path], module: str) -> Optional[Path]:
+    """Get the `module` path from the given `paths`.
 
-    :param paths: a list of paths to search on.
-    :param module_name: an importable module name.
-    :returns: `module_name` path if exist else None.
+    :param paths: a list of paths to search.
+    :param module: module name.
+    :returns: `module` path if exist else None.
     """
-    module_name = module_name.split(DOT)[0]
+    module = module.split(DOT)[0]
     for path in paths:
         name = str(path.parts[-1]).split(DOT)[0]
-        if name == module_name:
+        if name == module:
             if str(path).endswith(PY_EXTENSION):
                 return path
             else:
-                return os.path.join(path, __INIT__)
+                return Path(os.path.join(path, __INIT__))
 
 
 @lru_cache()
-def get_import_path(source: Path, module_name: str):
-    """Find the given module_name file.py/__init__.py path.
+def get_import_path(path: Path, module: str) -> Optional[Path]:
+    """Find the given module file.py/__init__.py path.
 
     Written for `ast.Import` nodes.
 
-    :param source: where module has imported.
-    :param module_name: target module name.
-    :returns: The given module_name file.py/__init_.py path, if found else None.
+    :param path: where module has imported.
+    :param module: module name.
+    :returns: `module` file.py/__init_.py path, if found else None.
     """
-    path = get_local_import_path(source, module_name)
-    if path:
-        return path
+    mpath = get_local_import_path(path, module)
+    if mpath:
+        return mpath
 
-    elif module_name in get_standard_lib_names():
-        return get_module_path(get_standard_lib_paths(), module_name)
+    elif module in get_standard_lib_names():
+        return get_module_path(get_standard_lib_paths(), module)
 
     else:
-        return get_module_path(get_third_party_lib_paths(), module_name)
+        return get_module_path(get_third_party_lib_paths(), module)
 
 
 @lru_cache()
 def get_import_from_path(
-    source: Path, module_name: str, from_module_name: str, level: int
-) -> Union[Path, None]:
-    """Find the given module_name file.py/__init_.py path.
+    path: Path, module: str, package: str, level: int
+) -> Optional[Path]:
+    """Find the given module file.py/__init_.py path.
 
     Written for `ast.ImportFrom` nodes.
 
-    :param source: where module has imported.
-    :param module_name: target module name.
-    :param from_module_name: `from from_module_name import ...`.
+    :param path: where module has imported.
+    :param module: module name.
+    :param package: package name.
     :param level: `ast.ImportFrom.level`.
-    :returns: The given module_name file.py/__init_.py path, if found else None.
+    :returns: `module` file.py/__init_.py path, if found else None.
     """
-    path = get_local_import_from_path(source, module_name, from_module_name, level)
-    if path:
-        return path
+    mpath = get_local_import_from_path(path, module, package, level)
+    if mpath:
+        return mpath
 
-    if module_name == STAR:
-        module_name = from_module_name
+    if module == STAR:
+        module = package
 
-    if module_name in get_standard_lib_names():
-        return get_module_path(get_standard_lib_paths(), module_name)
+    if module in get_standard_lib_names():
+        return get_module_path(get_standard_lib_paths(), module)
 
     else:
-        return get_module_path(get_third_party_lib_paths(), module_name)
+        return get_module_path(get_third_party_lib_paths(), module)

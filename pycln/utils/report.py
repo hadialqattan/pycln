@@ -2,7 +2,6 @@
 Pycln report utility.
 """
 import ast
-import os
 from dataclasses import dataclass
 from difflib import unified_diff
 from pathlib import Path
@@ -10,7 +9,7 @@ from typing import List, Union
 
 import typer
 
-from . import config, py38_nodes
+from . import config, nodes
 
 # Constants.
 AT = "@"
@@ -27,8 +26,6 @@ COLUMN = ":"
 IMPORT = "import"
 COMMA_SP = ", "
 NEW_LINE = "\n"
-DOT_FSLSH = "./"
-DDOT_FSLSH = "../"
 
 
 @dataclass
@@ -36,28 +33,24 @@ class Report:
 
     """Provide a Pycln report counters. Can be rendered with `str(report)`."""
 
+    #: Configured instance.
     configs: config.Config
 
-    def get_relpath(self, path: Path) -> Path:
-        """Get relative path from the given absolute path.
+    @staticmethod
+    def get_location(path: Union[Path, str], location: nodes.NodeLocation) -> str:
+        """Create full location from `path` and node location.
 
-        :param path: an absolute path.
-        :returns: a relative path (relative to `self.configs.path`).
+        :param path: file path.
+        :param location: `nodes.NodeLocation`.
+        :returns: full location.
         """
-        path = Path(path)
-        rel_path = (
-            os.path.join(self.configs.path, os.path.relpath(path, self.configs.path))
-            if not path.is_file()
-            else str(path)
-        )
-        return (
-            os.path.join(DOT_FSLSH, rel_path)
-            if not rel_path.startswith((DOT_FSLSH, DDOT_FSLSH))
-            else rel_path
-        )
+        path = str(path)
+        start = location.start
+        line, col = str(start.line), str(start.col)
+        return COLUMN.join([path, line, col])
 
+    @staticmethod
     def secho(
-        self,
         message: str,
         bold: bool,
         err: bool = False,
@@ -92,20 +85,23 @@ class Report:
             err=err,
         )
 
+    @staticmethod
     def colored_unified_diff(
-        self, source: str, original_lines: List[str], fixed_lines: List[str]
+        path: Union[Path, str],
+        original_lines: List[str],
+        fixed_lines: List[str],
     ) -> None:
         """Writeout colored and normalized diff.
 
-        :param source: a file path.
-        :param original_lines: original source code lines.
-        :param fixed_lines: fixed source code lines.
+        :param path: a file path.
+        :param original_lines: original path code lines.
+        :param fixed_lines: fixed path code lines.
         """
         diff_gen = unified_diff(
             original_lines,
             fixed_lines,
-            fromfile=f"original/ {source}",
-            tofile=f"fixed/ {source}",
+            fromfile=f"original/ {path}",
+            tofile=f"fixed/ {path}",
             n=3,
             lineterm=NEW_LINE,
         )
@@ -121,158 +117,132 @@ class Report:
         diff_str = diff_str.rstrip(NEW_LINE + SPACE) + NEW_LINE
         typer.echo(diff_str)
 
+    @staticmethod
     def rebuild_report_import(
-        self,
-        node: Union[
-            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
-        ],
+        node: Union[nodes.Import, nodes.ImportFrom],
         alias: ast.alias,
     ) -> str:
+        """Rebuild import statement from AST for reporting purposes.
+
+        :param node: import node.
+        :param alias: `ast.alias` node.
+        """
         str_alias = (
             f"{alias.name}{SPACE}{AS}{SPACE}{alias.asname}"
             if alias.asname
             else alias.name
         )
-        if hasattr(node, "level"):
-            level_dots = DOT * node.level
-            leveled_name = f"{level_dots}{node.module}" if node.module else level_dots
-            str_import = f"{FROM}{SPACE}{leveled_name}{SPACE}{IMPORT}"
-        else:
-            str_import = IMPORT
+        str_import = (
+            f"{FROM}{SPACE}{node.relative_name}{SPACE}{IMPORT}"
+            if isinstance(node, nodes.ImportFrom)
+            else IMPORT
+        )
         return f"{str_import}{SPACE}{str_alias}"
 
-    # Counters.
-    __removed_imports: int = 0
+    #: Total removed import statements counter.
+    _removed_imports: int = 0
 
     def removed_import(
         self,
-        source: Path,
-        node: Union[
-            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
-        ],
+        path: Path,
+        node: Union[nodes.Import, nodes.ImportFrom],
         removed_alias: ast.alias,
     ) -> None:
-        """Increment the counter for removed importes. Write a message to stdout.
+        """Increment `self._removed_imports`. Write a message to stdout.
 
-        :param source: where the import has removed.
+        :param path: where the import has removed.
         :param node: removed import node.
         :param removed_alias: the removed `ast.alias` from the node.
         """
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
-
-            statement = self.rebuild_report_import(node, removed_alias)
-            location = COLUMN.join(
-                [
-                    self.get_relpath(source),
-                    str(node.lineno),
-                    str(node.col_offset),
-                ]
-            )
-            removed = "has removed" if not self.configs.check else "whould be removed"
-            self.secho(
+            location = Report.get_location(path, node.location)
+            statement = Report.rebuild_report_import(node, removed_alias)
+            removed = "whould be removed" if self.configs.check else "has removed"
+            Report.secho(
                 f"{location} {statement!r} {removed}! 🔮", bold=False, isedit=True
             )
 
-        self.__removed_imports += 1
-        self.__file_removed_imports += 1 if self.__file_removed_imports != -1 else 2
+        self._removed_imports += 1
+        self._file_removed_imports += 1 if self._file_removed_imports != -1 else 2
 
-    __expanded_stars: int = 0
+    #: Total expanded import statements counter.
+    _expanded_stars: int = 0
 
-    def expanded_star(
-        self, source: Path, node: Union[ast.ImportFrom, py38_nodes.ImportFrom]
-    ) -> None:
-        """Increment the counter for expanded stars. Write a message to stdout.
+    def expanded_star(self, path: Path, node: nodes.ImportFrom) -> None:
+        """Increment `self._expanded_stars`. Write a message to stdout.
 
-        :param source: where the import has expanded.
+        :param path: where the import has expanded.
         :param node: the expanded node.
         """
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
-            statement = self.rebuild_report_import(
-                node, ast.alias(name=STAR, asname=None)
-            )
-            location = COLUMN.join(
-                [
-                    self.get_relpath(source),
-                    str(node.lineno),
-                    str(node.col_offset),
-                ]
-            )
-            expanded = (
-                "has expanded" if not self.configs.check else "whould be expanded"
-            )
-            self.secho(
+            location = Report.get_location(path, node.location)
+            star_alias = ast.alias(name=STAR, asname=None)
+            statement = Report.rebuild_report_import(node, star_alias)
+            expanded = "whould be expanded" if self.configs.check else "has expanded"
+            Report.secho(
                 f"{location} {statement!r} {expanded}! 🔗", bold=False, isedit=True
             )
 
-        self.__expanded_stars += 1
-        self.__file_expanded_stars += 1 if self.__file_expanded_stars != -1 else 2
+        self._expanded_stars += 1
+        self._file_expanded_stars += 1 if self._file_expanded_stars != -1 else 2
 
-    __changed_files: int = 0
-    __file_removed_imports: int = 0
-    __file_expanded_stars: int = 0
+    #: Total changed files counter.
+    _changed_files: int = 0
 
-    def changed_file(self, source: Path) -> None:
-        """Increment the counter for changed files. Write a message to stdout.
+    #: These counters will be reseted for each file.
+    _file_removed_imports: int = 0
+    _file_expanded_stars: int = 0
 
-        :param source: the changed file path.
+    def changed_file(self, path: Path) -> None:
+        """Increment `self._changed_files`. Write a message to stdout.
+
+        :param path: the changed file path.
         """
-        if not any([self.configs.diff, self.configs.silence]) and (
-            self.__file_removed_imports > 0 or self.__file_expanded_stars > 0
-        ):
+        if not any([self.configs.diff, self.configs.silence]):
             file_report: List[str] = []
 
-            if self.__file_removed_imports > 0:
-                removed = (
-                    "has removed" if not self.configs.check else "whould be removed"
-                )
-                rs = "s" if self.__file_removed_imports > 1 else ""
-                file_report.append(
-                    f"{self.__file_removed_imports} import{rs} {removed}"
-                )
+            if self._file_removed_imports > 0:
+                removed = "whould be removed" if self.configs.check else "has removed"
+                s = "s" if self._file_removed_imports > 1 else ""
+                file_report.append(f"{self._file_removed_imports} import{s} {removed}")
 
-            if self.__file_expanded_stars > 0:
+            if self._file_expanded_stars > 0:
                 expanded = (
-                    "has expanded" if not self.configs.check else "whould be expanded"
+                    "whould be expanded" if self.configs.check else "has expanded"
                 )
-                es = "s" if self.__file_expanded_stars > 1 else ""
-                file_report.append(
-                    f"{self.__file_expanded_stars} import{es} {expanded}"
-                )
+                s = "s" if self._file_expanded_stars > 1 else ""
+                file_report.append(f"{self._file_expanded_stars} import{s} {expanded}")
 
             str_file_report = COMMA_SP.join(file_report)
-            self.secho(
-                f"{self.get_relpath(source)} {str_file_report}! 🚀",
-                bold=True,
-                isedit=True,
-            )
+            Report.secho(f"{path} {str_file_report}! 🚀", bold=True, isedit=True)
 
-        self.__changed_files += 1
-        self.__file_removed_imports = 0
-        self.__file_expanded_stars = 0
+        self._changed_files += 1
+        self._file_removed_imports = 0
+        self._file_expanded_stars = 0
 
-    __unchanged_files: int = 0
+    #: Total unchanged files counter.
+    _unchanged_files: int = 0
 
-    def unchanged_file(self, source: Path) -> None:
-        """Increment the counter for unchanged files. Write a message to stdout.
+    def unchanged_file(self, path: Path) -> None:
+        """Increment `self._unchanged_files`. Write a message to stdout.
 
-        :param source: the unchanged file path.
+        :param path: the unchanged file path.
         """
-        if self.configs.verbose and self.__file_removed_imports != -1:
-            self.secho(
-                f"{self.get_relpath(source)} looks good! ✨", bold=False, issuccess=True
-            )
-        self.__unchanged_files += 1
-        self.__file_removed_imports = 0
-        self.__file_expanded_stars = 0
-        self.__file_expanded_stars = 0
+        if self.configs.verbose and self._file_removed_imports != -1:
+            Report.secho(f"{path} looks good! ✨", bold=False, issuccess=True)
 
-    __ignored_paths: int = 0
+        self._unchanged_files += 1
+        self._file_removed_imports = 0
+        self._file_expanded_stars = 0
+
+    #: Total ignored paths counter.
+    _ignored_paths: int = 0
 
     def ignored_path(self, ignored_path: Path, type_: str) -> None:
-        """Increment the counter for ignored paths. Write a message to stderr.
+        """Increment `self._ignored_paths`. Write a message to stderr.
 
         :param ignored_path: the ignored path.
-        :param type_: ignore type, `exclude` or `include` or `gitignore` or `nopycln`.
+        :param type_: ignore type (`exclude`, `include`, `gitignore` or `nopycln`).
         """
         if self.configs.verbose:
             if type_ == "exclude":
@@ -284,63 +254,61 @@ class Report:
             else:
                 sharp = "#"  # To avoid skiping this file.
                 type_ = f"do to `{sharp} nopycln: file` comment"
-            self.secho(
-                f"{self.get_relpath(ignored_path)} has ignored: {type_}! ⚠️",
+            Report.secho(
+                f"{ignored_path} has ignored: {type_}! ⚠️",
                 bold=False,
                 err=True,
                 iswarning=True,
             )
-        self.__ignored_paths += 1
 
-    __ignored_imports: int = 0
+        self._ignored_paths += 1
+
+    #: Total ignored import statements counter.
+    _ignored_imports: int = 0
 
     def ignored_import(
         self,
-        source: Path,
-        node: Union[
-            ast.Import, ast.ImportFrom, py38_nodes.Import, py38_nodes.ImportFrom
-        ],
-        is_star_import: bool = False,
+        path: Path,
+        node: Union[nodes.Import, nodes.ImportFrom],
+        is_star: bool = False,
     ) -> None:
-        """Increment the counter for ignored imports. Write a message to stderr.
+        """Increment `self._ignored_imports`. Write a message to stderr.
 
-        :param source: where the import has ignored.
+        :param path: where the import has ignored.
         :param node: the ignored import node.
-        :param is_star_import: set to true if it's a '*' import.
+        :param is_star: set to true if it's a '*' import.
         """
         if self.configs.verbose:
-            statement = self.rebuild_report_import(node, node.names[0]) + (DOT * 3)
-            location = f"{self.get_relpath(source)}:{node.lineno}:{node.col_offset}"
+            location = Report.get_location(path, node.location)
+            statement = Report.rebuild_report_import(node, node.names[0]) + (DOT * 3)
             reason = (
                 "`# noqa` or `# nopycln: import`"
-                if not is_star_import
+                if not is_star
                 else f"cannot expand the {STAR!r}"
             )
-            self.secho(
+            Report.secho(
                 f"{location} {statement!r} has ignored: {reason}! ⚠️",
                 bold=False,
                 err=True,
                 iswarning=True,
             )
-        self.__ignored_imports += 1
+        self._ignored_imports += 1
 
-    __failures: int = 0
+    #: Total number of failures.
+    _failures: int = 0
 
-    def failure(self, message: str, source: Path = None) -> None:
-        """Increment the counter for failures counter. Write a message to stderr.
+    def failure(self, msg: str, path: Path = None) -> None:
+        """Increment `self._failures`. Write a msg to stderr.
 
-        :param message: a failure message.
-        :param source: where the failure has appeared.
+        :param msg: a failure msg.
+        :param path: where the failure has appeared.
         """
         if not self.configs.silence:
-            message = (
-                f"{self.get_relpath(source)} {message} ⛔" if source else f"{message} ⛔"
-            )
-            self.secho(message, bold=False, err=True, iserror=True)
-        self.__failures += 1
-
-        if self.__file_removed_imports == 0:
-            self.__file_removed_imports = -1
+            message = f"{path} {msg} ⛔" if path else f"{msg} ⛔"
+            Report.secho(message, bold=False, err=True, iserror=True)
+        if self._file_removed_imports == 0:
+            self._file_removed_imports = -1
+        self._failures += 1
 
     @property
     def exit_code(self) -> int:
@@ -351,10 +319,10 @@ class Report:
         # According to http://tldp.org/LDP/abs/html/exitcodes.html
         # exit codes 1 - 2, 126 - 165, and 255 have special meanings,
         # and should therefore be avoided for user-specified exit parameters
-        if self.__failures:
+        if self._failures:
             # Internal error.
             return 250
-        if self.__changed_files and self.configs.check:
+        if self._changed_files and self.configs.check:
             # File(s) should be refactord.
             return 1
         # Everything is fine.
@@ -364,26 +332,26 @@ class Report:
     def report_prefix(self) -> str:
         """Return the correct prefix.
 
-        :returns: NEW_LINE or EMPTY.
+        :returns: `NEW_LINE` or `EMPTY`.
         """
         return (
             NEW_LINE
             if any(
                 [
-                    self.__changed_files,
+                    self._changed_files,
                     all(
                         [
                             self.configs.verbose,
-                            any([self.__ignored_paths, self.__ignored_imports]),
+                            any([self._ignored_paths, self._ignored_imports]),
                         ]
                     ),
                     all(
                         [
                             any(
                                 [
-                                    self.__failures,
-                                    self.__removed_imports,
-                                    self.__expanded_stars,
+                                    self._failures,
+                                    self._removed_imports,
+                                    self._expanded_stars,
                                 ]
                             ),
                             not self.configs.quiet,
@@ -395,13 +363,18 @@ class Report:
         )
 
     def __str__(self) -> str:
-        """Render a counters report. can renders using `str(object)`
+        """Render a colored report of the current state.
 
-        :returns: full counters report.
+        Use `typer.unstyle` to remove colors.
+
+        :returns: a colored report of the current state.
         """
-        if not any([self.__changed_files, self.__unchanged_files, self.__failures]):
+        if self.configs.silence:
+            return EMPTY
+
+        if not any([self._changed_files, self._unchanged_files, self._failures]):
             typer.secho(
-                (NEW_LINE if self.configs.verbose and self.__ignored_paths else EMPTY)
+                (NEW_LINE if self.configs.verbose and self._ignored_paths else EMPTY)
                 + "No Python files are present to be cleaned. Nothing to do 😴",
                 bold=True,
                 err=True,
@@ -422,62 +395,67 @@ class Report:
 
         report = []
 
-        if self.__removed_imports:
-            s = "s" if self.__removed_imports > 1 else EMPTY
+        if self._removed_imports:
+            s = "s" if self._removed_imports > 1 else EMPTY
             report.append(
                 typer.style(
-                    f"{self.__removed_imports} import{s} {removed_imports}", bold=True
+                    f"{self._removed_imports} import{s} {removed_imports}",
+                    bold=True,
                 )
             )
 
-        if self.__expanded_stars:
-            s = "s" if self.__expanded_stars > 1 else EMPTY
+        if self._expanded_stars:
+            s = "s" if self._expanded_stars > 1 else EMPTY
             report.append(
                 typer.style(
-                    f"{self.__expanded_stars} import{s} {expanded_stars}", bold=True
+                    f"{self._expanded_stars} import{s} {expanded_stars}",
+                    bold=True,
                 )
             )
 
-        if self.__changed_files:
-            s = "s" if self.__changed_files > 1 else EMPTY
+        if self._changed_files:
+            s = "s" if self._changed_files > 1 else EMPTY
             report.append(
                 typer.style(
-                    f"{self.__changed_files} file{s} {changed_files}", bold=True
+                    f"{self._changed_files} file{s} {changed_files}",
+                    bold=True,
                 )
             )
 
-        if self.__unchanged_files:
-            s = "s" if self.__unchanged_files > 1 else EMPTY
+        if self._unchanged_files:
+            s = "s" if self._unchanged_files > 1 else EMPTY
             report.append(
                 typer.style(
-                    f"{self.__unchanged_files} file{s} {unchanged_files}", bold=False
+                    f"{self._unchanged_files} file{s} {unchanged_files}",
+                    bold=False,
                 )
             )
 
-        if self.__failures:
-            s = "s" if self.__failures > 1 else EMPTY
+        if self._failures:
+            s = "s" if self._failures > 1 else EMPTY
             report.append(
-                typer.style(f"{self.__failures} file{s} {failures}", bold=False)
+                typer.style(f"{self._failures} file{s} {failures}", bold=False)
             )
 
         if self.configs.verbose:
             ignored_imports = "has ignored"
             ignored_paths = "has ignored"
 
-            if self.__ignored_imports:
-                s = "s" if self.__ignored_imports > 1 else EMPTY
+            if self._ignored_imports:
+                s = "s" if self._ignored_imports > 1 else EMPTY
                 report.append(
                     typer.style(
-                        f"{self.__ignored_imports} import{s} {ignored_imports}",
+                        f"{self._ignored_imports} import{s} {ignored_imports}",
                         bold=False,
                     )
                 )
 
-            if self.__ignored_paths:
-                s = "s" if self.__ignored_paths > 1 else EMPTY
+            if self._ignored_paths:
+                s = "s" if self._ignored_paths > 1 else EMPTY
                 report.append(
                     typer.style(
-                        f"{self.__ignored_paths} path{s} {ignored_paths}", bold=False
+                        f"{self._ignored_paths} path{s} {ignored_paths}",
+                        bold=False,
                     )
                 )
 
@@ -485,13 +463,13 @@ class Report:
             (
                 (
                     "All done! 💪 😎"
-                    if self.__removed_imports or self.__expanded_stars
+                    if self._removed_imports or self._expanded_stars
                     else "Looks good! ✨ 🍰 ✨"
                 )
-                if not self.__failures
-                else f"Oh no, there {'are errors' if self.__failures > 1 else 'is an error'}! 💔 ☹️"
+                if not self._failures
+                else f"Oh no, there {'are errors' if self._failures > 1 else 'is an error'}! 💔 ☹️"
             )
             + NEW_LINE,
             bold=True,
         )
-        return self.report_prefix + done_msg + COMMA_SP.join(report) + DOT
+        return self.report_prefix + done_msg + COMMA_SP.join(report) + DOT + NEW_LINE
