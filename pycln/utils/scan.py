@@ -203,7 +203,37 @@ class SourceAnalyzer(ast.NodeVisitor):
                 add_imports_to_skip(body)
 
     @recursive
+    def visit_AnnAssign(self, node: ast.AnnAssign):
+        """Support string type annotations.
+
+        exp:- this code has no unused imports:
+            >>> from typing import List
+            >>> foo: "List[str]" = []
+        """
+        self._visit_string_type_annotation(node)
+
+    @recursive
+    def visit_arg(self, node: ast.arg):
+        """Support arg string type annotations.
+
+        exp:- this code has no unused imports:
+            >>> from typing import Tuple
+            >>> def foo(bar: "Tuple[str, int]"):
+                    pass
+        """
+        self._visit_string_type_annotation(node)
+
+    @recursive
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        # Support Python > 3.8 type comments.
+        if PY38_PLUS:
+            self._visit_type_comment(node)
+
+    @recursive
     def visit_Assign(self, node: ast.Assign):
+        # Support Python > 3.8 type comments.
+        if PY38_PLUS:
+            self._visit_type_comment(node)
         # These names will be skipped on import `*` case.
         if getattr(node.targets[0], ID, None) in NAMES_TO_SKIP:
             self._source_stats.names_to_skip.add(node.targets[0].id)
@@ -217,6 +247,49 @@ class SourceAnalyzer(ast.NodeVisitor):
                     else:
                         if isinstance(constant.s, str):
                             self._source_stats.name_.add(constant.s)
+
+    def _visit_type_comment(self, node: Union[ast.Assign, ast.FunctionDef]) -> None:
+        """Support Python > 3.8 type comments.
+
+        This feature is only available for python > 3.8.
+        PEP 526 -- Syntax for Variable Annotations.
+        For more information:
+            - https://www.python.org/dev/peps/pep-0526/
+            - https://docs.python.org/3.8/library/ast.html#ast.parse
+        """
+        if node.type_comment:
+            if isinstance(node, ast.Assign):
+                mode = "eval"
+            else:
+                mode = "func_type"
+            tree = parse_ast(node.type_comment, EMPTY, mode)
+            self._add_name_attr(tree)
+
+    def _visit_string_type_annotation(self, node: Union[ast.AnnAssign, ast.arg]):
+        """Support string type annotations.
+
+        exp:- this code has no unused imports:
+            >>> from typing import List, Tuple
+            >>> foo: "List[str]" = []
+            >>> def foobar(bar: "Tuple[str, int]"):
+            ...     pass
+        """
+        if isinstance(node.annotation, (ast.Constant, ast.Str)):
+            if PY38_PLUS:
+                value = node.annotation.value
+            else:
+                value = node.annotation.s
+            tree = parse_ast(value, EMPTY, mode="eval")
+            self._add_name_attr(tree)
+
+    def _add_name_attr(self, tree: ast.Module):
+        """Add any `node` `ast.Name` or `ast.Attribute` child to
+        `self._source_stats`."""
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name):
+                self._source_stats.name_.add(node.id)
+            elif isinstance(node, ast.Attribute):
+                self._source_stats.attr_.add(node.attr)
 
     def _get_py38_import_node(self, node: ast.Import) -> nodes.Import:
         """Convert any Python < 3.8 `ast.Import` to `nodes.Import` in order to
@@ -590,11 +663,14 @@ def expand_import_star(
     return node
 
 
-def parse_ast(source_code: str, path: Union[Path, str]) -> ast.Module:
+def parse_ast(
+    source_code: str, path: Union[Path, str], mode: str = "exec"
+) -> ast.Module:
     """Parse the given `source_code` AST.
 
     :param source_code: python source code.
     :param path: `source_code` file path.
+    :param mode: `ast.parse` mode.
     :returns: `ast.Module` (source code AST).
     :raises UnparsableFile: if the compiled source is invalid,
         or the source contains null bytes.
@@ -603,9 +679,9 @@ def parse_ast(source_code: str, path: Union[Path, str]) -> ast.Module:
         if PY38_PLUS:
             # Include type_comments when Python >=3.8.
             # For more information https://www.python.org/dev/peps/pep-0526/ .
-            tree = ast.parse(source_code)  # , type_comments=True)
+            tree = ast.parse(source_code, mode=mode, type_comments=True)
         else:
-            tree = ast.parse(source_code)
+            tree = ast.parse(source_code, mode=mode)
         return tree
     except (SyntaxError, ValueError, UnicodeError) as err:
         raise UnparsableFile(path, err)
