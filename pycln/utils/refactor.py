@@ -1,6 +1,4 @@
-"""
-Pycln code refactoring utility.
-"""
+"""Pycln code refactoring utility."""
 import ast
 import os
 from copy import copy
@@ -26,8 +24,7 @@ from ._exceptions import (
 class LazyLibCSTLoader:
 
     """`transform.py` takes about '0.3s' to be loaded because of LibCST,
-    therefore I've created this class to load it only if necessary.
-    """
+    therefore I've created this class to load it only if necessary."""
 
     def __init__(self):
         self._module = None
@@ -132,7 +129,11 @@ class Refactor:
             # Refactor and output the `content`.
             fixed_lines = self._refactor(original_lines).splitlines(True)
             self._output(fixed_lines, original_lines, encoding)
-        except (ReadPermissionError, WritePermissionError, UnparsableFile) as err:
+        except (
+            ReadPermissionError,
+            WritePermissionError,
+            UnparsableFile,
+        ) as err:
             self.reporter.failure(err)
         finally:
             self._reset()
@@ -140,8 +141,7 @@ class Refactor:
     def _output(
         self, fixed_lines: List[str], original_lines: List[str], encoding: str
     ) -> None:
-        """
-        Output the given `fixed_lines`.
+        """Output the given `fixed_lines`.
 
         :param fixed_lines: the refactored source lines.
         :param original_lines: unmodified source lines.
@@ -277,9 +277,9 @@ class Refactor:
         """
         try:
             try:
-                lineno = node.location.start.line
+                lineno = node.location.start.line - 1
                 end_lineno = node.location.end.line
-                import_stmnt = EMPTY.join(original_lines[lineno - 1 : end_lineno])
+                import_stmnt = EMPTY.join(original_lines[lineno:end_lineno])
                 rebuilt_import = transform.rebuild_import(
                     import_stmnt,
                     used_names,
@@ -327,7 +327,7 @@ class Refactor:
         used_name = alias.asname if alias.asname else alias.name
         if (
             not self._has_used(used_name, is_star)
-            and not real_name in pathu.IMPORTS_WITH_SIDE_EFFECTS
+            and real_name not in pathu.IMPORTS_WITH_SIDE_EFFECTS
         ):
             if (
                 self.configs.all_

@@ -1,12 +1,14 @@
-"""
-Pycln file IO utility.
-"""
+"""Pycln file IO utility."""
 import os
 import tokenize
 from pathlib import Path
 from typing import Union, Tuple, List
 
-from ._exceptions import ReadPermissionError, WritePermissionError, UnparsableFile
+from ._exceptions import (
+    ReadPermissionError,
+    WritePermissionError,
+    UnparsableFile,
+)
 
 
 def safe_read(
@@ -16,8 +18,10 @@ def safe_read(
 
     :param path: `.py` file path.
     :returns: decoded source code and file encoding.
-    :raises ReadPermissionError: when `os.R_OK` in permissions and the source does not have read permission.
-    :raises WritePermissionError: when `os.W_OK` in permissions and the source does not have write permission.
+    :raises ReadPermissionError: when `os.R_OK` in permissions
+        and the source does not have read permission.
+    :raises WritePermissionError: when `os.W_OK` in permissions
+        and the source does not have write permission.
     :raises UnparsableFile: If both a BOM and a cookie are present, but disagree.
     """
     # Check these permissions before openinig the file.
@@ -42,7 +46,8 @@ def safe_write(path: Union[Path, str], fixed_lines: List[str], encoding: str) ->
     :param path: `.py` file path.
     :param encoding: file encoding.
     :param fixed_lines: fixed source code lines.
-    :raises WritePermissionError: when `os.W_OK` in permissions and the source does not have write permission.
+    :raises WritePermissionError: when `os.W_OK` in permissions
+        and the source does not have write permission.
     """
     if not os.access(path, os.W_OK):
         raise WritePermissionError(13, "Permission denied [WRITE]", path)

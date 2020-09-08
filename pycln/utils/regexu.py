@@ -1,6 +1,4 @@
-"""
-Pycln regex utility.
-"""
+"""Pycln regex utility."""
 import os
 import re
 from functools import lru_cache
@@ -18,7 +16,10 @@ GITIGNORE = ".gitignore"
 SKIP_FILE_REGEX = r"# *(nopycln *: *file).*"
 SKIP_IMPORT_REGEX = r"# *((noqa *:*)|(nopycln *: *import)).*"
 INCLUDE_REGEX = r".*\.py$"
-EXCLUDE_REGEX = r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|\.tox|\.venv|\.svn|buck-out|build|dist)/"
+EXCLUDE_REGEX = (
+    r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|"
+    + r"\.tox|\.venv|\.svn|buck-out|build|dist)/"
+)
 
 
 def safe_compile(pattern: str, type_: str) -> Pattern[str]:

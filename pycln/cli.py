@@ -1,6 +1,4 @@
-"""
-Pycln CLI implementation.
-"""
+"""Pycln CLI implementation."""
 from pathlib import Path
 from typing import Generator
 
@@ -23,14 +21,26 @@ def main(
         "--include",
         "-i",
         show_default=True,
-        help="A regular expression that matches files and directories that should be included on recursive searches. An empty value means all files are included regardless of the name. Use forward slashes for directories on all platforms (Windows, too). Exclusions are calculated first, inclusions later.",
+        help=(
+            "A regular expression that matches files and directories"
+            " that should be included on recursive searches."
+            " An empty value means all files are included regardless of the name."
+            " Use forward slashes for directories on all platforms (Windows, too)."
+            " Exclusions are calculated first, inclusions later."
+        ),
     ),
     exclude: str = typer.Option(
         regexu.EXCLUDE_REGEX,
         "--exclude",
         "-e",
         show_default=True,
-        help="A regular expression that matches files and directories that should be exclude on recursive searches. An empty value means no paths are excluded. Use forward slashes for directories on all platforms (Windows, too). Exclusions are calculated first, inclusions later.",
+        help=(
+            "A regular expression that matches files and directories"
+            " that should be exclude on recursive searches."
+            " An empty value means no paths are excluded."
+            " Use forward slashes for directories on all platforms (Windows, too)."
+            " Exclusions are calculated first, inclusions later."
+        ),
     ),
     all_: bool = typer.Option(
         False,
@@ -44,7 +54,12 @@ def main(
         "--check",
         "-c",
         show_default=True,
-        help="Don't write the files back, just return the status. Return code 0 means nothing would change. Return code 1 means some files would be changed. Return code 250 means there was an internal error.",
+        help=(
+            "Don't write the files back, just return the status."
+            " Return code 0 means nothing would change."
+            " Return code 1 means some files would be changed."
+            " Return code 250 means there was an internal error."
+        ),
     ),
     diff: bool = typer.Option(
         False,
@@ -58,14 +73,21 @@ def main(
         "--verbose",
         "-v",
         show_default=True,
-        help="Also emit messages to stderr about files that were not changed and about files/imports that were ignored.",
+        help=(
+            "Also emit messages to stderr about files"
+            " that were not changed and about files/imports that were ignored."
+        ),
     ),
     quiet: bool = typer.Option(
         False,
         "--quiet",
         "-q",
         show_default=True,
-        help="Don't emit both removed/expanded imports and non-error messages to stderr. Errors are still emitted; silence those with `-s, --silence` or with 2>/dev/null.",
+        help=(
+            "Don't emit both removed/expanded imports and non-error messages to stderr."
+            " Errors are still emitted;"
+            " silence those with `-s, --silence` or with 2>/dev/null."
+        ),
     ),
     silence: bool = typer.Option(
         False,
@@ -78,7 +100,10 @@ def main(
         False,
         "--expand-stars",
         "-x",
-        help="Expand wildcard star imports. it works if only if the module is importable.",
+        help=(
+            "Expand wildcard star imports."
+            " it works if only if the module is importable."
+        ),
     ),
     no_gitignore: bool = typer.Option(
         False,

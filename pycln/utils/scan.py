@@ -1,6 +1,4 @@
-"""
-Pycln source code AST analysis utility.
-"""
+"""Pycln source code AST analysis utility."""
 import ast
 import os
 import sys
@@ -115,7 +113,8 @@ class SourceAnalyzer(ast.NodeVisitor):
     >>> analyzer.visit(tree)
     >>> source_stats, import_stats = analyzer.get_stats()
 
-    :param source_lines: source code as string lines, required only when Python < 3.8.
+    :param source_lines: source code as string lines,
+        required only when Python < 3.8.
     :raises ValueError: when Python < 3.8 and no source code lines provided.
     """
 
@@ -178,8 +177,8 @@ class SourceAnalyzer(ast.NodeVisitor):
         is_skip_case = False
 
         def add_imports_to_skip(body: ast.List) -> None:
-            """Add all try/except/else blocks body import children
-            to `self._imports_to_skip`.
+            """Add all try/except/else blocks body import children to
+            `self._imports_to_skip`.
 
             :param body: ast.List to iterate over.
             """
@@ -220,8 +219,8 @@ class SourceAnalyzer(ast.NodeVisitor):
                             self._source_stats.name_.add(constant.s)
 
     def _get_py38_import_node(self, node: ast.Import) -> nodes.Import:
-        """Convert any Python < 3.8 `ast.Import` to `nodes.Import`
-        in order to support `end_lineno`.
+        """Convert any Python < 3.8 `ast.Import` to `nodes.Import` in order to
+        support `end_lineno`.
 
         :param node: an `ast.Import` node.
         :returns: a `nodes.Import` node.
@@ -238,8 +237,8 @@ class SourceAnalyzer(ast.NodeVisitor):
         return nodes.Import(location=location, names=node.names)
 
     def _get_py38_import_from_node(self, node: ast.ImportFrom) -> nodes.ImportFrom:
-        """Convert any Python < 3.8 `ast.ImportFrom` to `nodes.ImportFrom`
-        in order to support `end_lineno`.
+        """Convert any Python < 3.8 `ast.ImportFrom` to `nodes.ImportFrom` in
+        order to support `end_lineno`.
 
         :param node: an `ast.ImportFrom` node.
         :returns: a `nodes.ImportFrom` node.
@@ -259,7 +258,10 @@ class SourceAnalyzer(ast.NodeVisitor):
         end = nodes.NodePosition(end_lineno)
         location = nodes.NodeLocation(start, end)
         return nodes.ImportFrom(
-            location=location, names=node.names, module=node.module, level=node.level
+            location=location,
+            names=node.names,
+            module=node.module,
+            level=node.level,
         )
 
     def _is_parentheses(self, import_from_line: str) -> Optional[bool]:
@@ -322,7 +324,8 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         :param module_name: `nodes/ast.ImportFrom.module`.
         :param level: `nodes/ast.ImportFrom.level`.
         :returns: set of importables.
-        :raises ModuleNotFoundError: when we can't find the spec of the `module_name` and/or can't create the module.
+        :raises ModuleNotFoundError: when we can't find the spec of the `module_name`
+            and/or can't create the module.
         """
         dots = DOT * level if level else None
         spec = find_spec(module_name, dots)
@@ -420,7 +423,8 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         return self._importables
 
     def generic_visit(self, node):
-        """Called if no explicit visitor function exists for a node (override)."""
+        """Called if no explicit visitor function exists for a node
+        (override)."""
         # Continue visiting if only if `__all__` has not overridden.
         if not self._has_all:
             for field, value in ast.iter_fields(node):
@@ -524,7 +528,8 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
         return self._has_side_effects
 
     def generic_visit(self, node):
-        """Called if no explicit visitor function exists for a node (override)."""
+        """Called if no explicit visitor function exists for a node
+        (override)."""
         # Continue visiting if only if there's no know side effects.
         if self._has_side_effects is HasSideEffects.NO:
             for field, value in ast.iter_fields(node):
@@ -544,7 +549,8 @@ def expand_import_star(
     :param node: `nodes/ast.ImportFrom` node that has a '*' as `alias.name`.
     :param path: where the node has imported.
     :returns: expanded `nodes/ast.ImportFrom` (same input node type).
-    :raises UnexpandableImportStar: when `ReadPermissionError`, `UnparsableFile` or `ModuleNotFoundError` raised.
+    :raises UnexpandableImportStar: when `ReadPermissionError`,
+        `UnparsableFile` or `ModuleNotFoundError` raised.
     """
     mpath = pathu.get_import_from_path(path, STAR, node.module, node.level)
 
@@ -590,7 +596,8 @@ def parse_ast(source_code: str, path: Union[Path, str]) -> ast.Module:
     :param source_code: python source code.
     :param path: `source_code` file path.
     :returns: `ast.Module` (source code AST).
-    :raises UnparsableFile: if the compiled source is invalid, or the source contains null bytes.
+    :raises UnparsableFile: if the compiled source is invalid,
+        or the source contains null bytes.
     """
     try:
         if PY38_PLUS:

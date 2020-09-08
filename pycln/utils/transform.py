@@ -1,6 +1,4 @@
-"""
-Pycln CST utility.
-"""
+"""Pycln CST utility."""
 from typing import List, Set, Union, Optional
 from pathlib import Path
 
@@ -36,7 +34,9 @@ class ImportTransformer(cst.CSTTransformer):
         self._location = location
         self._indentation = SPACE * location.start.col
 
-    def _multiline_parenthesized_whitespace(self, indent: str) -> cst.ParenthesizedWhitespace:
+    def _multiline_parenthesized_whitespace(
+        self, indent: str
+    ) -> cst.ParenthesizedWhitespace:
         """Get multiline parenthesized white space.
 
         :param indent: indentation of the last line.
@@ -67,7 +67,9 @@ class ImportTransformer(cst.CSTTransformer):
         :returns: multiline `cst.LeftParen`.
         """
         return cst.LeftParen(
-            whitespace_after=self._multiline_parenthesized_whitespace(self._indentation + SPACE4)
+            whitespace_after=self._multiline_parenthesized_whitespace(
+                self._indentation + SPACE4
+            )
         )
 
     def _multiline_rpar(self) -> cst.RightParen:
@@ -76,7 +78,9 @@ class ImportTransformer(cst.CSTTransformer):
         :returns: multiline `cst.RightParen`.
         """
         return cst.RightParen(
-            whitespace_before=self._multiline_parenthesized_whitespace(self._indentation)
+            whitespace_before=self._multiline_parenthesized_whitespace(
+                self._indentation
+            )
         )
 
     def _get_alias_name(

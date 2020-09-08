@@ -1,6 +1,4 @@
-"""
-Pycln custom exceptions utility.
-"""
+"""Pycln custom exceptions utility."""
 from typing import Union
 
 from .nodes import NodeLocation
@@ -43,10 +41,13 @@ class UnexpandableImportStar(Exception):
 
 class UnparsableFile(Exception):
 
-    """Raises when the compiled source code is invalid, or the source code contains null bytes."""
+    """Raises when the compiled source code is invalid, or the source code
+    contains null bytes."""
 
     def __init__(
-        self, path: str, err: Union[SyntaxError, ValueError, UnicodeDecodeError]
+        self,
+        path: str,
+        err: Union[SyntaxError, ValueError, UnicodeDecodeError],
     ):
         postfix = EMPTY
         type_ = type(err)
@@ -63,7 +64,10 @@ class UnparsableFile(Exception):
             encoding, object_ = err.encoding, err.object
             if len(object_) > 10:
                 object_ = object_[:11] + (DOT * 3)
-            msg = f"{encoding!r} codec can't decode {object_} in position {start}: {reason}"
+            msg = (
+                f"{encoding!r} codec can't decode {object_}"
+                + f" in position {start}: {reason}"
+            )
             setattr(err, "msg", msg)
 
         message = f"{path} {type_.__name__}: {err.msg}{postfix}"
@@ -79,7 +83,8 @@ class UnparsableFile(Exception):
         allowed_types = {SyntaxError, ValueError, UnicodeDecodeError}
         if type_ not in allowed_types:
             raise ValueError(
-                f"UnparsableFile exception only takes {allowed_types} as err parameter but {type_!r} where given."
+                f"UnparsableFile exception only takes {allowed_types}"
+                + f" as err parameter but {type_!r} where given."
             )
 
 
@@ -94,9 +99,7 @@ class UnsupportedCase(Exception):
         super(UnsupportedCase, self).__init__(message)
 
 
-def libcst_parser_syntax_error_message(
-    path: str, err: "libcst.ParserSyntaxError"  # noqa
-) -> str:
+def libcst_parser_syntax_error_message(path: str, err) -> str:
     """Refactor `LibCST.ParserSyntaxError` message.
 
     :param path: where the exception has occurred.

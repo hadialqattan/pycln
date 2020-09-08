@@ -1,3 +1,1 @@
-"""
-Pycln utils module.
-"""
+"""Pycln utils module."""

@@ -1,6 +1,4 @@
-"""
-Pycln path finding utility.
-"""
+"""Pycln path finding utility."""
 import os
 import sys
 from distutils import sysconfig
@@ -55,7 +53,8 @@ def yield_sources(
     gitignore: PathSpec,
     reporter: Report,
 ) -> Generator:
-    """Yields `.py` paths to handle. Walk throw path sub-directories/files recursively.
+    """Yields `.py` paths to handle. Walk throw path sub-directories/files
+    recursively.
 
     :param path: A path to start searching from.
     :param include: regex pattern to be included.

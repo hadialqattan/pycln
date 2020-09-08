@@ -1,6 +1,4 @@
-"""
-Pycln import statements nodes utility.
-"""
+"""Pycln import statements nodes utility."""
 import ast
 from dataclasses import dataclass
 from typing import List, Optional

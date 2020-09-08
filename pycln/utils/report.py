@@ -1,6 +1,4 @@
-"""
-Pycln report utility.
-"""
+"""Pycln report utility."""
 import ast
 from dataclasses import dataclass
 from difflib import unified_diff
@@ -31,7 +29,10 @@ NEW_LINE = "\n"
 @dataclass
 class Report:
 
-    """Provide a Pycln report counters. Can be rendered with `str(report)`."""
+    """Provide a Pycln report counters.
+
+    Can be rendered with `str(report)`.
+    """
 
     #: Configured instance.
     configs: config.Config
@@ -159,7 +160,9 @@ class Report:
             statement = Report.rebuild_report_import(node, removed_alias)
             removed = "whould be removed" if self.configs.check else "has removed"
             Report.secho(
-                f"{location} {statement!r} {removed}! 🔮", bold=False, isedit=True
+                f"{location} {statement!r} {removed}! 🔮",
+                bold=False,
+                isedit=True,
             )
 
         self._removed_imports += 1
@@ -180,7 +183,9 @@ class Report:
             statement = Report.rebuild_report_import(node, star_alias)
             expanded = "whould be expanded" if self.configs.check else "has expanded"
             Report.secho(
-                f"{location} {statement!r} {expanded}! 🔗", bold=False, isedit=True
+                f"{location} {statement!r} {expanded}! 🔗",
+                bold=False,
+                isedit=True,
             )
 
         self._expanded_stars += 1
@@ -459,17 +464,14 @@ class Report:
                     )
                 )
 
-        done_msg = typer.style(
-            (
-                (
-                    "All done! 💪 😎"
-                    if self._removed_imports or self._expanded_stars
-                    else "Looks good! ✨ 🍰 ✨"
-                )
-                if not self._failures
-                else f"Oh no, there {'are errors' if self._failures > 1 else 'is an error'}! 💔 ☹️"
-            )
-            + NEW_LINE,
-            bold=True,
-        )
-        return self.report_prefix + done_msg + COMMA_SP.join(report) + DOT + NEW_LINE
+        if not self._failures:
+            if self._removed_imports or self._expanded_stars:
+                done_msg = "All done! 💪 😎"
+            else:
+                done_msg = "Looks good! ✨ 🍰 ✨"
+        else:
+            s = "are errors" if self._failures > 1 else "is an error"
+            done_msg = f"Oh no, there {s}! 💔 ☹️"
+
+        sdone_msg = typer.style(done_msg + NEW_LINE, bold=True)
+        return self.report_prefix + sdone_msg + COMMA_SP.join(report) + DOT + NEW_LINE

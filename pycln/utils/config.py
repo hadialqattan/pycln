@@ -1,6 +1,4 @@
-"""
-Pycln configuration management utility.
-"""
+"""Pycln configuration management utility."""
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -50,7 +48,8 @@ class Config:
 
         if not (self.path.is_dir() or self.path.is_file()):
             typer.secho(
-                f"'{self.path}' is not a directory or a file. Maybe it does not exist 😅",
+                f"'{self.path}' is not a directory or a file."
+                + " Maybe it does not exist 😅",
                 bold=True,
                 err=True,
             )
