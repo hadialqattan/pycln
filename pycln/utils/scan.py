@@ -121,7 +121,7 @@ class SourceAnalyzer(ast.NodeVisitor):
 
     def __init__(self, source_lines: Optional[List[str]] = None, *args, **kwargs):
         super(SourceAnalyzer, self).__init__(*args, **kwargs)
-        if not (PY38_PLUS or source_lines):
+        if not PY38_PLUS and source_lines is None:
             # Bad class usage.
             raise ValueError("Please provide source lines for Python < 3.8.")
         self._lines = source_lines
@@ -546,16 +546,16 @@ def expand_import_star(
     :returns: expanded `nodes/ast.ImportFrom` (same input node type).
     :raises UnexpandableImportStar: when `ReadPermissionError`, `UnparsableFile` or `ModuleNotFoundError` raised.
     """
-    path = pathu.get_import_from_path(path, STAR, node.module, node.level)
+    mpath = pathu.get_import_from_path(path, STAR, node.module, node.level)
 
     importables: Set[str] = set()
 
     try:
-        if path:
-            content, _ = iou.safe_read(path, permissions=(os.R_OK,))
-            tree = parse_ast(content, path)
+        if mpath:
+            content, _ = iou.safe_read(mpath, permissions=(os.R_OK,))
+            tree = parse_ast(content, mpath)
 
-            analyzer = ImportablesAnalyzer(path)
+            analyzer = ImportablesAnalyzer(mpath)
             analyzer.visit(tree)
             importables = analyzer.get_stats()
         else:

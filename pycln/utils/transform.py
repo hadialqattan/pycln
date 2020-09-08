@@ -33,16 +33,18 @@ class ImportTransformer(cst.CSTTransformer):
             # Bad class usage.
             raise ValueError("'used_names' parameter can't be empty set.")
         self._used_names = used_names
+        self._location = location
         self._indentation = SPACE * location.start.col
 
-    def _multiline_parenthesized_whitespace(self) -> cst.ParenthesizedWhitespace:
+    def _multiline_parenthesized_whitespace(self, indent: str) -> cst.ParenthesizedWhitespace:
         """Get multiline parenthesized white space.
 
+        :param indent: indentation of the last line.
         :returns: multiline `cst.ParenthesizedWhitespace`
         """
         return cst.ParenthesizedWhitespace(
             indent=True,
-            last_line=cst.SimpleWhitespace(value=self._indentation + SPACE4),
+            last_line=cst.SimpleWhitespace(value=indent),
         )
 
     def _multiline_alias(self, alias: cst.ImportAlias) -> cst.ImportAlias:
@@ -65,7 +67,7 @@ class ImportTransformer(cst.CSTTransformer):
         :returns: multiline `cst.LeftParen`.
         """
         return cst.LeftParen(
-            whitespace_after=self._multiline_parenthesized_whitespace()
+            whitespace_after=self._multiline_parenthesized_whitespace(self._indentation + SPACE4)
         )
 
     def _multiline_rpar(self) -> cst.RightParen:
@@ -74,7 +76,7 @@ class ImportTransformer(cst.CSTTransformer):
         :returns: multiline `cst.RightParen`.
         """
         return cst.RightParen(
-            whitespace_before=self._multiline_parenthesized_whitespace()
+            whitespace_before=self._multiline_parenthesized_whitespace(self._indentation)
         )
 
     def _get_alias_name(
@@ -110,7 +112,8 @@ class ImportTransformer(cst.CSTTransformer):
         node = node.with_changes(names=used_aliases)
         # Preserving multiline nodes style.
         if isinstance(node, cst.ImportFrom):
-            if force_multiline or node.rpar:
+            start, end = self._location.start.line, self._location.end.line
+            if force_multiline or (node.rpar and start != end):
                 rpar, lpar = self._multiline_rpar(), self._multiline_lpar()
                 node = node.with_changes(rpar=rpar, lpar=lpar)
         return node
