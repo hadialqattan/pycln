@@ -202,17 +202,21 @@ class Refactor:
                 # Get set of used names.
                 used_names = self._get_used_names(node, is_star)
 
-                # No alias has removed.
-                if len(used_names) == len(node.names):
-                    continue
-
                 # Depends on `--expand-stars, -x` option.
                 if is_star:
-                    node = self._preserve_import_star(node)
+                    if used_names:
+                        if self.configs.expand_stars:
+                            self.reporter.expanded_star(self._path, node)
+                        else:
+                            continue
+                    else:
+                        star_alias = ast.alias(name=STAR, asname=None)
+                        self.reporter.removed_import(self._path, node, star_alias)
 
-                # Depends on `--expand-stars, -x` option.
-                if node.names[0].name == STAR:
-                    continue
+                # No alias has removed/added.
+                if len(used_names) == len(node.names):
+                    if not self.configs.expand_stars:
+                        continue
 
                 # Depends on `--check, -c` option.
                 if self.configs.check:
@@ -243,22 +247,6 @@ class Refactor:
                 continue
             used_names.add(alias.name)
         return used_names
-
-    def _preserve_import_star(self, node: ImportFrom) -> ImportFrom:
-        """Preserve import star alias if `--expand-stars/-x` has not specified.
-
-        :param node: expanded `ImportFrom` node.
-        :returns: preserved import star (`ImportFrom`).
-        """
-        star_alias = ast.alias(name=STAR, asname=None)
-        if node.names:
-            if not self.configs.expand_stars:
-                node.names = [star_alias]
-            else:
-                self.reporter.expanded_star(self._path, node)
-        else:
-            self.reporter.removed_import(self._path, node, star_alias)
-        return node
 
     def _transform(
         self,
