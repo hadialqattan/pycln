@@ -5,27 +5,13 @@ import sys
 from dataclasses import dataclass
 from enum import Enum, unique
 from functools import lru_cache, wraps
-from importlib.util import find_spec
 from importlib import import_module
+from importlib.util import find_spec
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-    cast,
-)
+from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, cast
 
-from . import nodes, pathu, iou
-from ._exceptions import (
-    ReadPermissionError,
-    UnexpandableImportStar,
-    UnparsableFile,
-)
+from . import iou, nodes, pathu
+from ._exceptions import ReadPermissionError, UnexpandableImportStar, UnparsableFile
 
 # Constants.
 PY38_PLUS = sys.version_info >= (3, 8)
@@ -224,10 +210,13 @@ class SourceAnalyzer(ast.NodeVisitor):
         self._visit_string_type_annotation(node)
 
     @recursive
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def visit_FunctionDef(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]):
         # Support Python > 3.8 type comments.
         if PY38_PLUS:
             self._visit_type_comment(node)
+
+    # Support `ast.AsyncFunctionDef`.
+    visit_AsyncFunctionDef = visit_FunctionDef
 
     @recursive
     def visit_Assign(self, node: ast.Assign):
