@@ -4,6 +4,7 @@ repos:
     hooks:
       - id: isort
         files: "\\.(py)$"
+        args: [-l=88]
 
   - repo: https://github.com/myint/docformatter
     rev: v1.3.1
