@@ -1,6 +1,7 @@
 """Pycln regex utility."""
 import os
 import re
+import tokenize
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Pattern
@@ -61,7 +62,6 @@ def is_excluded(name: str, regex: Pattern[str]) -> bool:
     return bool(regex.fullmatch(name))
 
 
-@lru_cache()
 def get_gitignore(root: Path) -> PathSpec:
     """Return a PathSpec matching gitignore content, if present.
 
@@ -72,8 +72,9 @@ def get_gitignore(root: Path) -> PathSpec:
     lines: List[str] = []
 
     if os.path.isfile(path) and root:
-        with open(path) as ignore_file:
-            lines = ignore_file.readlines()
+        if os.access(path, os.R_OK):
+            with tokenize.open(path) as ignore_file:
+                lines = ignore_file.readlines()
 
     return PathSpec.from_lines(GitWildMatchPattern, lines)
 
