@@ -6,11 +6,11 @@ repos:
         files: "\\.(py)$"
         args:
           [
-            line_length=88,
-            multi_line_output=3,
-            include_trailing_comma=True,
-            force_grid_wrap=0,
-            use_parentheses=True,
+            --line-length=88,
+            --multi-line-output=3,
+            --include-trailing-comma=True,
+            --force-grid-wrap=0,
+            --use-parentheses=True,
           ]
 
   - repo: https://github.com/myint/docformatter
