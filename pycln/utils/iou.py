@@ -2,7 +2,7 @@
 import os
 import tokenize
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
 from ._exceptions import ReadPermissionError, UnparsableFile, WritePermissionError
 
