@@ -8,14 +8,7 @@ from ._exceptions import UnsupportedCase
 from .nodes import NodeLocation
 
 # Constants.
-DOT = "."
-PASS = "pass"
-EMPTY = ""
-SPACE = " "
-SPACE4 = SPACE * 4
-NEW_LINE = "\n"
-SEMICOLON = ";"
-RIGHT_PAEENTHESIS = ")"
+SPACE4 = " " * 4
 
 # Custom types.
 ImportT = TypeVar("ImportT", bound=Union[cst.Import, cst.ImportFrom])
@@ -35,7 +28,7 @@ class ImportTransformer(cst.CSTTransformer):
             raise ValueError("'used_names' parameter can't be empty set.")
         self._used_names = used_names
         self._location = location
-        self._indentation = SPACE * location.start.col
+        self._indentation = " " * location.start.col
 
     def refactor_import_star(self, updated_node: cst.ImportFrom) -> cst.ImportFrom:
         """Add used import aliases to import star.
@@ -49,13 +42,13 @@ class ImportTransformer(cst.CSTTransformer):
 
             # Skip any dotted name in order
             # to avoid names collision.
-            if DOT in name:
+            if "." in name:
                 continue
 
             # Initialy create a single line alias.
             cst_alias = cst.ImportAlias(
                 name=cst.Name(name),
-                comma=cst.Comma(whitespace_after=cst.SimpleWhitespace(SPACE)),
+                comma=cst.Comma(whitespace_after=cst.SimpleWhitespace(" ")),
             )
 
             # Convert the single line alias to multiline
@@ -93,13 +86,13 @@ class ImportTransformer(cst.CSTTransformer):
             return self.refactor_import(updated_node)
 
     def _get_alias_name(
-        self, node: Optional[Union[cst.Name, cst.Attribute]], name: str = EMPTY
+        self, node: Optional[Union[cst.Name, cst.Attribute]], name: str = ""
     ) -> str:
         # Recursion function that calculates `node` string dotted name.
         if isinstance(node, cst.Name):
             name += node.value
             return name
-        return self._get_alias_name(node.value) + DOT + node.attr.value  # type: ignore
+        return self._get_alias_name(node.value) + "." + node.attr.value  # type: ignore
 
     def _multiline_parenthesized_whitespace(
         self, indent: str
@@ -175,13 +168,13 @@ def rebuild_import(
     :raises cst.ParserSyntaxError: in some rare cases.
     :raises UnsupportedCase: in some rare cases.
     """
-    if SEMICOLON in import_stmnt:
-        msg = f"import statements separated with {SEMICOLON!r}."
+    if ";" in import_stmnt:
+        msg = "import statements separated with ';'."
         raise UnsupportedCase(path, location, msg)
 
-    # Remove `import_stmnt` indentation/last-NEW_LINE.
-    stripped_stmnt = import_stmnt.lstrip(SPACE).rstrip(NEW_LINE)
-    indentation = SPACE * location.start.col
+    # Remove `import_stmnt` indentation/last-"\n".
+    stripped_stmnt = import_stmnt.lstrip(" ").rstrip("\n")
+    indentation = " " * location.start.col
 
     # Remove unused aliases.
     fixed_lines: List[str] = []
@@ -192,12 +185,12 @@ def rebuild_import(
 
     # Replace each removed import with a pass statement.
     if not fixed_lines:
-        return [f"{indentation}{PASS}{NEW_LINE}" if indentation else EMPTY]
+        return [f"{indentation}pass\n" if indentation else ""]
 
     # Reinsert the removed indentation.
     fixed_lines[0] = indentation + fixed_lines[0]
 
-    # Reinsert the removed `NEW_LINE`.
-    fixed_lines[-1] = fixed_lines[-1] + NEW_LINE
+    # Reinsert the removed `"\n"`.
+    fixed_lines[-1] = fixed_lines[-1] + "\n"
 
     return fixed_lines

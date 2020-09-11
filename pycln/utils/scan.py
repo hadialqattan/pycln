@@ -16,6 +16,7 @@ from ._exceptions import ReadPermissionError, UnexpandableImportStar, Unparsable
 # Constants.
 PY38_PLUS = sys.version_info >= (3, 8)
 IMPORT_EXCEPTIONS = {"ImportError", "ImportWarning", "ModuleNotFoundError"}
+__ALL__ = "__all__"
 NAMES_TO_SKIP = {
     "__name__",
     "__doc__",
@@ -24,21 +25,8 @@ NAMES_TO_SKIP = {
     "__spec__",
     "__build_class__",
     "__import__",
-    "__all__",
+    __ALL__,
 }
-RIGHT_PAEENTHESIS = "("
-LEFT_PARENTHESIS = ")"
-D_UNDERSCORES = "__"
-BACK_SLASH = "\\"
-SEMICOLON = ";"
-__ALL__ = "__all__"
-EMPTY = ""
-NAMES = "names"
-STAR = "*"
-ELTS = "elts"
-DOT = "."
-ID = "id"
-
 
 # Custom types.
 FunctionT = TypeVar("FunctionT", bound=Callable[..., Any])
@@ -127,7 +115,7 @@ class SourceAnalyzer(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom):
         if node not in self._imports_to_skip:
             py38_node = self._get_py38_import_from_node(node)
-            if not str(py38_node.module).startswith(D_UNDERSCORES):
+            if not str(py38_node.module).startswith("__"):
                 self._import_stats.from_.add(py38_node)
 
     @recursive
@@ -172,17 +160,17 @@ class SourceAnalyzer(ast.NodeVisitor):
             :param body: ast.List to iterate over.
             """
             for child in body:
-                if hasattr(child, NAMES):
+                if hasattr(child, "names"):
                     self._imports_to_skip.add(child)  # type: ignore
 
         for handler in node.handlers:
-            if hasattr(handler.type, ELTS):
-                for name in getattr(handler.type, ELTS, []):
-                    if hasattr(name, ID) and name.id in IMPORT_EXCEPTIONS:
+            if hasattr(handler.type, "elts"):
+                for name in getattr(handler.type, "elts", []):
+                    if hasattr(name, "id") and name.id in IMPORT_EXCEPTIONS:
                         is_skip_case = True
                         break
-            elif hasattr(handler.type, ID):
-                if getattr(handler.type, ID, EMPTY) in IMPORT_EXCEPTIONS:
+            elif hasattr(handler.type, "id"):
+                if getattr(handler.type, "id", "") in IMPORT_EXCEPTIONS:
                     is_skip_case = True
             if is_skip_case:
                 add_imports_to_skip(handler.body)
@@ -223,7 +211,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         # Support Python > 3.8 type comments.
         if PY38_PLUS:
             self._visit_type_comment(node)
-        id_ = getattr(node.targets[0], ID, None)
+        id_ = getattr(node.targets[0], "id", None)
         # These names will be skipped on import `*` case.
         if id_ in NAMES_TO_SKIP:
             self._source_stats.names_to_skip.add(id_)
@@ -232,7 +220,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 for constant in node.value.elts:
                     k = "value" if PY38_PLUS else "s"
-                    value = getattr(constant, k, EMPTY)
+                    value = getattr(constant, k, "")
                     if value and isinstance(value, str):
                         self._source_stats.name_.add(value)
 
@@ -314,9 +302,9 @@ class SourceAnalyzer(ast.NodeVisitor):
     def _is_parentheses(self, import_from_line: str) -> Optional[bool]:
         # Return importFrom multi-line type.
         # ('(' => True), ('\\' => False) else None.
-        if RIGHT_PAEENTHESIS in import_from_line:
+        if "(" in import_from_line:
             return True
-        elif BACK_SLASH in import_from_line:
+        elif "\\" in import_from_line:
             return False
         else:
             return None
@@ -326,11 +314,11 @@ class SourceAnalyzer(ast.NodeVisitor):
         lines_len = len(self._lines)
         for end_lineno in range(lineno, lines_len):
             if is_parentheses:
-                if LEFT_PARENTHESIS in self._lines[end_lineno]:
+                if ")" in self._lines[end_lineno]:
                     end_lineno += 1
                     break
             else:
-                if BACK_SLASH not in self._lines[end_lineno]:
+                if "\\" not in self._lines[end_lineno]:
                     end_lineno += 1
                     break
         return end_lineno
@@ -369,7 +357,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         :raises ModuleNotFoundError: when we can't find the spec of the `module_name`
             and/or can't create the module.
         """
-        dots = DOT * level if level else None
+        dots = "." * level if level else None
         spec = find_spec(module_name, dots)
 
         if spec:
@@ -395,14 +383,14 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     @recursive
     def visit_Assign(self, node: ast.Assign):
         # Support `__all__` dunder overriding case.
-        id_ = getattr(node.targets[0], ID, None)
+        id_ = getattr(node.targets[0], "id", None)
         if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 self._has_all = True
                 self._importables.clear()
                 for constant in node.value.elts:
                     k = "value" if PY38_PLUS else "s"
-                    value = getattr(constant, k, EMPTY)
+                    value = getattr(constant, k, "")
                     if value and isinstance(value, str):
                         self._importables.add(value)
 
@@ -417,7 +405,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom):
         # Analyze each importFrom statement.
         try:
-            if node.names[0].name == STAR:
+            if node.names[0].name == "*":
                 # Expand import star if possible.
                 node = cast(ast.ImportFrom, expand_import_star(node, self._path))
             for alias in node.names:
@@ -532,7 +520,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_ImportFrom(self, node: ast.ImportFrom):
-        packages = node.module.split(DOT) if node.module else []
+        packages = node.module.split(".") if node.module else []
         packages_aliases = [ast.alias(name=name, asname=None) for name in packages]
         self._has_side_effects = self._check_names(packages_aliases)
         if self._has_side_effects is HasSideEffects.NO:
@@ -591,7 +579,7 @@ def expand_import_star(
     :raises UnexpandableImportStar: when `ReadPermissionError`,
         `UnparsableFile` or `ModuleNotFoundError` raised.
     """
-    mpath = pathu.get_import_from_path(path, STAR, node.module, node.level)
+    mpath = pathu.get_import_from_path(path, "*", node.module, node.level)
 
     importables: Set[str] = set()
 
@@ -629,9 +617,7 @@ def expand_import_star(
     return node
 
 
-def parse_ast(
-    source_code: str, path: Path = Path(EMPTY), mode: str = "exec"
-) -> ast.AST:
+def parse_ast(source_code: str, path: Path = Path(""), mode: str = "exec") -> ast.AST:
     """Parse the given `source_code` AST.
 
     :param source_code: python source code.

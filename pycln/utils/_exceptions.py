@@ -4,12 +4,6 @@ from typing import Union
 
 from .nodes import NodeLocation
 
-# Constants.
-DOT = "."
-EMPTY = ""
-SPACE = " "
-NEW_LINE = "\n"
-
 
 class BaseOSError(Exception):
 
@@ -49,7 +43,7 @@ class UnparsableFile(Exception):
         self, path: Path, err: Union[SyntaxError, ValueError, UnicodeDecodeError]
     ):
         location = str(path)
-        postfix = EMPTY
+        postfix = ""
         type_ = type(err)
         UnparsableFile._type_check(type_)
 
@@ -58,13 +52,14 @@ class UnparsableFile(Exception):
             if lineno:
                 location = f"{path}:{lineno}:{col}"
             if text:
-                postfix = f"{SPACE}{text.replace(NEW_LINE, EMPTY).lstrip()!r}"
+                text = text.replace("\n", "").lstrip()
+                postfix = f" {text!r}"
 
         elif type_ == UnicodeEncodeError:
             start, reason = err.start, err.reason  # type: ignore
             encoding, object_ = err.encoding, str(err.object)  # type: ignore
             if len(object_) > 10:
-                object_ = object_[:11] + (DOT * 3)
+                object_ = object_[:11] + ("." * 3)
             msg = (
                 f"{encoding!r} codec can't decode {object_}"
                 + f" in position {start}: {reason}"
@@ -109,5 +104,6 @@ def libcst_parser_syntax_error_message(path: Path, err) -> str:
     :returns: refactored message.
     """
     location = f"{path}:{err.raw_line}:{err.raw_column}"
-    postfix = SPACE + f"{err._lines[0].replace(NEW_LINE, EMPTY).lstrip()!r}"
-    return f"{location} libcst.ParserSyntaxError: {err.message.rstrip(DOT)}:{postfix}"
+    err = err._lines[0].replace("\n", "").lstrip()
+    postfix = f" {err!r}"
+    return f"{location} libcst.ParserSyntaxError: {err.message.rstrip('.')}:{postfix}"

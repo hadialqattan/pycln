@@ -3,9 +3,6 @@ import ast
 from dataclasses import dataclass
 from typing import List, Optional
 
-# Constants.
-DOT = "."
-
 
 @dataclass(frozen=True)
 class NodePosition:
@@ -82,7 +79,7 @@ class ImportFrom(BaseImport):
     @property
     def relative_name(self) -> str:
         """Node relative name."""
-        dots = DOT * self.level
+        dots = "." * self.level
         if self.module:
             return f"{dots}{self.module}"
         return dots

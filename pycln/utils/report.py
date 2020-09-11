@@ -9,22 +9,6 @@ import typer
 
 from . import config, nodes
 
-# Constants.
-AT = "@"
-AS = "as"
-DOT = "."
-STAR = "*"
-DASH = "-"
-PLUS = "+"
-FROM = "from"
-EMPTY = ""
-SPACE = " "
-COMMA = ","
-COLUMN = ":"
-IMPORT = "import"
-COMMA_SP = ", "
-NEW_LINE = "\n"
-
 
 @dataclass
 class Report:
@@ -47,7 +31,7 @@ class Report:
         """
         start = location.start
         line, col = str(start.line), str(start.col)
-        return COLUMN.join([str(path), line, col])
+        return ":".join([str(path), line, col])
 
     @staticmethod
     def secho(
@@ -81,7 +65,7 @@ class Report:
             color = typer.colors.RESET
         # Print the colored message
         typer.echo(
-            typer.style(SPACE, bg=color) + SPACE + typer.style(message, bold=bold),
+            typer.style(" ", bg=color) + " " + typer.style(message, bold=bold),
             err=err,
         )
 
@@ -103,18 +87,18 @@ class Report:
             fromfile=f"original/ {path}",
             tofile=f"fixed/ {path}",
             n=3,
-            lineterm=NEW_LINE,
+            lineterm="\n",
         )
-        diff_str = EMPTY
+        diff_str = ""
         for line in diff_gen:
-            if line.startswith(DASH):
+            if line.startswith("-"):
                 line = typer.style(line, fg=typer.colors.RED)
-            elif line.startswith(PLUS):
+            elif line.startswith("+"):
                 line = typer.style(line, fg=typer.colors.GREEN)
-            elif line.startswith(AT):
+            elif line.startswith("@"):
                 line = typer.style(line, fg=typer.colors.CYAN)
             diff_str += line
-        diff_str = diff_str.rstrip(NEW_LINE + SPACE) + NEW_LINE
+        diff_str = diff_str.rstrip("\n ") + "\n"
         typer.echo(diff_str)
 
     @staticmethod
@@ -127,17 +111,13 @@ class Report:
         :param node: import node.
         :param alias: `ast.alias` node.
         """
-        str_alias = (
-            f"{alias.name}{SPACE}{AS}{SPACE}{alias.asname}"
-            if alias.asname
-            else alias.name
-        )
+        str_alias = f"{alias.name} as {alias.asname}" if alias.asname else alias.name
         str_import = (
-            f"{FROM}{SPACE}{node.relative_name}{SPACE}{IMPORT}"
+            f"from {node.relative_name} import"
             if isinstance(node, nodes.ImportFrom)
-            else IMPORT
+            else "import"
         )
-        return f"{str_import}{SPACE}{str_alias}"
+        return f"{str_import} {str_alias}"
 
     #: Total removed import statements counter.
     _removed_imports: int = 0
@@ -178,7 +158,7 @@ class Report:
         """
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
             location = Report.get_location(path, node.location)
-            star_alias = ast.alias(name=STAR, asname=None)
+            star_alias = ast.alias(name="*", asname=None)
             statement = Report.rebuild_report_import(node, star_alias)
             expanded = "whould be expanded" if self.configs.check else "has expanded"
             Report.secho(
@@ -217,7 +197,7 @@ class Report:
                 s = "s" if self._file_expanded_stars > 1 else ""
                 file_report.append(f"{self._file_expanded_stars} import{s} {expanded}")
 
-            str_file_report = COMMA_SP.join(file_report)
+            str_file_report = ", ".join(file_report)
             Report.secho(f"{path} {str_file_report}! 🚀", bold=True, isedit=True)
 
         self._changed_files += 1
@@ -256,7 +236,7 @@ class Report:
             elif type_ == "include":
                 type_ = "does not match the --include regex"
             else:
-                sharp = "#"  # To avoid skiping this file.
+                sharp = "#"  # To no skip this file.
                 type_ = f"do to `{sharp} nopycln: file` comment"
             Report.secho(
                 f"{ignored_path} has ignored: {type_}! ⚠️",
@@ -284,11 +264,11 @@ class Report:
         """
         if self.configs.verbose:
             location = Report.get_location(path, node.location)
-            statement = Report.rebuild_report_import(node, node.names[0]) + (DOT * 3)
+            statement = Report.rebuild_report_import(node, node.names[0]) + ("." * 3)
             reason = (
                 "`# noqa` or `# nopycln: import`"
                 if not is_star
-                else f"cannot expand the {STAR!r}"
+                else "cannot expand the '*'"
             )
             Report.secho(
                 f"{location} {statement!r} has ignored: {reason}! ⚠️",
@@ -336,10 +316,10 @@ class Report:
     def report_prefix(self) -> str:
         """Return the correct prefix.
 
-        :returns: `NEW_LINE` or `EMPTY`.
+        :returns: `"\n"` or `""`.
         """
         return (
-            NEW_LINE
+            "\n"
             if any(
                 [
                     self._changed_files,
@@ -363,7 +343,7 @@ class Report:
                     ),
                 ]
             )
-            else EMPTY
+            else ""
         )
 
     def __str__(self) -> str:
@@ -374,11 +354,11 @@ class Report:
         :returns: a colored report of the current state.
         """
         if self.configs.silence:
-            return EMPTY
+            return ""
 
         if not any([self._changed_files, self._unchanged_files, self._failures]):
             typer.secho(
-                (NEW_LINE if self.configs.verbose and self._ignored_paths else EMPTY)
+                ("\n" if self.configs.verbose and self._ignored_paths else "")
                 + "No Python files are present to be cleaned. Nothing to do 😴",
                 bold=True,
                 err=True,
@@ -400,7 +380,7 @@ class Report:
         report = []
 
         if self._removed_imports:
-            s = "s" if self._removed_imports > 1 else EMPTY
+            s = "s" if self._removed_imports > 1 else ""
             report.append(
                 typer.style(
                     f"{self._removed_imports} import{s} {removed_imports}",
@@ -409,7 +389,7 @@ class Report:
             )
 
         if self._expanded_stars:
-            s = "s" if self._expanded_stars > 1 else EMPTY
+            s = "s" if self._expanded_stars > 1 else ""
             report.append(
                 typer.style(
                     f"{self._expanded_stars} import{s} {expanded_stars}",
@@ -418,7 +398,7 @@ class Report:
             )
 
         if self._changed_files:
-            s = "s" if self._changed_files > 1 else EMPTY
+            s = "s" if self._changed_files > 1 else ""
             report.append(
                 typer.style(
                     f"{self._changed_files} file{s} {changed_files}",
@@ -427,7 +407,7 @@ class Report:
             )
 
         if self._unchanged_files:
-            s = "s" if self._unchanged_files > 1 else EMPTY
+            s = "s" if self._unchanged_files > 1 else ""
             report.append(
                 typer.style(
                     f"{self._unchanged_files} file{s} {unchanged_files}",
@@ -436,7 +416,7 @@ class Report:
             )
 
         if self._failures:
-            s = "s" if self._failures > 1 else EMPTY
+            s = "s" if self._failures > 1 else ""
             report.append(
                 typer.style(f"{self._failures} file{s} {failures}", bold=False)
             )
@@ -446,7 +426,7 @@ class Report:
             ignored_paths = "has ignored"
 
             if self._ignored_imports:
-                s = "s" if self._ignored_imports > 1 else EMPTY
+                s = "s" if self._ignored_imports > 1 else ""
                 report.append(
                     typer.style(
                         f"{self._ignored_imports} import{s} {ignored_imports}",
@@ -455,7 +435,7 @@ class Report:
                 )
 
             if self._ignored_paths:
-                s = "s" if self._ignored_paths > 1 else EMPTY
+                s = "s" if self._ignored_paths > 1 else ""
                 report.append(
                     typer.style(
                         f"{self._ignored_paths} path{s} {ignored_paths}",
@@ -472,5 +452,5 @@ class Report:
             s = "are errors" if self._failures > 1 else "is an error"
             done_msg = f"Oh no, there {s}! 💔 ☹️"
 
-        sdone_msg = typer.style(done_msg + NEW_LINE, bold=True)
-        return self.report_prefix + sdone_msg + COMMA_SP.join(report) + DOT + NEW_LINE
+        sdone_msg = typer.style(done_msg + "\n", bold=True)
+        return self.report_prefix + sdone_msg + ", ".join(report) + ".\n"

@@ -12,15 +12,9 @@ from . import regexu
 from .report import Report
 
 # Constants.
-DOT = "."
-STAR = "*"
-DASH = "-"
-EMPTY = ""
 EXCLUDE = "exclude"
 INCLUDE = "include"
 GITIGNORE = "gitignore"
-UNDERSCORE = "_"
-FORWARD_SLASH = "/"
 PY_EXTENSION = ".py"
 __INIT__ = "__init__.py"
 LIB_DYNLOAD = "lib-dynload"
@@ -81,7 +75,7 @@ def yield_sources(
         if entry.is_symlink():
             continue
 
-        name = entry.name if entry.is_file() else f"{entry.name}{FORWARD_SLASH}"
+        name = entry.name if entry.is_file() else f"{entry.name}/"
         entry_path = Path(os.path.join(path, name))
 
         # Compute exclusions.
@@ -167,13 +161,13 @@ def get_standard_lib_names() -> Set[str]:
 
         name = str(path.parts[-1])
 
-        if name.startswith(UNDERSCORE) or DASH in name:
+        if name.startswith("_") or "-" in name:
             continue
 
-        if DOT in name and not name.endswith(LIB_PY_EXTENSIONS):
+        if "." in name and not name.endswith(LIB_PY_EXTENSIONS):
             continue
 
-        names.add(name.split(DOT)[0])
+        names.add(name.split(".")[0])
 
     return (names - IMPORTS_WITH_SIDE_EFFECTS) | BIN_IMPORTS
 
@@ -197,7 +191,7 @@ def get_third_party_lib_paths() -> Set[Path]:
     for path in packages_paths:
 
         for name in os.listdir(path):
-            if not name.startswith(UNDERSCORE) and not name.endswith(BIN_PY_EXTENSIONS):
+            if not name.startswith("_") and not name.endswith(BIN_PY_EXTENSIONS):
                 paths.add(Path(os.path.join(path, name)))
 
     return paths
@@ -213,7 +207,7 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
     :returns: a full `module/__init__.py` path.
     """
     dirnames = Path(os.path.dirname(path)).parts
-    names = module.split(DOT)
+    names = module.split(".")
 
     # Test different levels.
     for i in (None, -1, -2, -3):
@@ -247,8 +241,8 @@ def get_local_import_from_path(
     """
     dirname = Path(os.path.dirname(path))
     dirparts = dirname.parts[: (level * -1) + 1] if level > 1 else dirname.parts
-    modules = module.split(DOT) if module != STAR and module else []
-    packages = package.split(DOT) if package else []
+    modules = module.split(".") if module != "*" and module else []
+    packages = package.split(".") if package else []
 
     # Test different levels.
     for i in (None, -1, -2, -3):
@@ -262,10 +256,10 @@ def get_local_import_from_path(
                 f"{modules[-1]}{PY_EXTENSION}",
             )
         else:
-            # IMPORT STAR CASE.
+            # IMPORT "*" CASE.
             fpath = os.path.join(
                 *dirparts[:i],
-                *packages[:-1] if level > 0 else EMPTY,
+                *packages[:-1] if level > 0 else "",
                 f"{packages[-1]}{PY_EXTENSION}",
             )
         if os.path.isfile(fpath):
@@ -280,14 +274,14 @@ def get_local_import_from_path(
                 __INIT__,
             )
         else:
-            # IMPORT STAR CASE.
+            # IMPORT "*" CASE.
             mpath = os.path.join(
                 *dirparts[:i],
                 *packages,
                 __INIT__,
             )
 
-        if os.path.isfile(mpath) and package.split(DOT)[0] in mpath:
+        if os.path.isfile(mpath) and package.split(".")[0] in mpath:
             return Path(mpath)
 
     # Path not found.
@@ -301,9 +295,9 @@ def get_module_path(paths: Set[Path], module: str) -> Optional[Path]:
     :param module: module name.
     :returns: `module` path if exist else None.
     """
-    module = module.split(DOT)[0]
+    module = module.split(".")[0]
     for path in paths:
-        name = str(path.parts[-1]).split(DOT)[0]
+        name = str(path.parts[-1]).split(".")[0]
         if name == module:
             if str(path).endswith(PY_EXTENSION):
                 return path
@@ -352,7 +346,7 @@ def get_import_from_path(
     if mpath:
         return mpath
 
-    if module == STAR:
+    if module == "*":
         module = package
 
     if module in get_standard_lib_names():

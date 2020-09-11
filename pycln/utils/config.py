@@ -14,10 +14,6 @@ import yaml
 from . import regexu
 
 # Constants.
-DOT = "."
-EMPTY = ""
-DOT_FSLSH = "./"
-DDOT_FSLSH = "../"
 CONFIG_EXTENSIONS = {
     ".cfg": "pycln",
     ".toml": "tool.pycln",
@@ -125,7 +121,7 @@ class ParseConfigFile:
             )
             typer.secho(f"Supported types: {CONFIG_EXTENSIONS.keys()}.", err=True)
             raise typer.Exit(1)
-        getattr(self, f"_parse_{self._path.suffix.strip(DOT)}")()
+        getattr(self, f"_parse_{self._path.suffix.strip('.')}")()
 
     def _parse_cfg(self) -> None:
         # Parse `.cfg` file.
@@ -137,7 +133,7 @@ class ParseConfigFile:
     def _parse_toml(self) -> None:
         # Parse `.toml` file.
         parsed_toml = toml.load(self._path)
-        tool, pycln = self._section.split(DOT)
+        tool, pycln = self._section.split(".")
         configs = parsed_toml.get(tool, {}).get(pycln, {})
         self._config_loader(configs)
 

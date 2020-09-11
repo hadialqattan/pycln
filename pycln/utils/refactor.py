@@ -20,6 +20,12 @@ from .config import Config
 from .nodes import Import, ImportFrom
 from .report import Report
 
+# Constants.
+NOPYCLN = "nopycln"
+CHANGE_MARK = "\n_CHANGED_"
+TRANSFORM = ".transform"
+PYCLN_UTILS = "pycln.utils"
+
 
 class LazyLibCSTLoader:
 
@@ -31,22 +37,11 @@ class LazyLibCSTLoader:
 
     def __getattr__(self, name):
         if self._module is None:
-            self._module = import_module(".transform", "pycln.utils")
+            self._module = import_module(TRANSFORM, PYCLN_UTILS)
         return getattr(self._module, name)
 
 
 transform = LazyLibCSTLoader()
-
-# Constants.
-DOT = "."
-STAR = "*"
-CODE = "code"
-EMPTY = ""
-SPACE = " "
-NOPYCLN = "nopycln"
-NEW_LINE = "\n"
-SEMICOLON = ";"
-CHANGE_MARK = "\n_CHANGED_"
 
 
 class Refactor:
@@ -70,12 +65,12 @@ class Refactor:
         # Resetables.
         self._import_stats = scan.ImportStats(set(), set())
         self._source_stats = scan.SourceStats(set(), set(), set())
-        self._path = Path(EMPTY)
+        self._path = Path("")
 
     def _reset(self) -> None:
         self._import_stats = scan.ImportStats(set(), set())
         self._source_stats = scan.SourceStats(set(), set(), set())
-        self._path = Path(EMPTY)
+        self._path = Path("")
 
     @staticmethod
     def remove_useless_passes(source_lines: List[str]) -> List[str]:
@@ -84,7 +79,7 @@ class Refactor:
         :param source_lines: source code lines.
         :returns: clean source code lines.
         """
-        tree = ast.parse(EMPTY.join(source_lines))
+        tree = ast.parse("".join(source_lines))
         for parent in ast.walk(tree):
             try:
                 if parent.__dict__.get("body", None):
@@ -97,8 +92,8 @@ class Refactor:
                 if isinstance(child, ast.Pass):
                     if body_len > 1:
                         body_len -= 1
-                        source_lines[child.lineno - 1] = EMPTY
-        return EMPTY.join(source_lines).splitlines(True)
+                        source_lines[child.lineno - 1] = ""
+        return "".join(source_lines).splitlines(True)
 
     def session(self, path: Path) -> None:
         """Refactoring session.
@@ -222,7 +217,7 @@ class Refactor:
                         else:
                             continue
                     else:
-                        star_alias = ast.alias(name=STAR, asname=None)
+                        star_alias = ast.alias(name="*", asname=None)
                         self.reporter.removed_import(self._path, node, star_alias)
 
                 # No alias has removed/added.
@@ -240,7 +235,7 @@ class Refactor:
                     node, used_names, original_lines, fixed_lines
                 )
 
-        return EMPTY.join(fixed_lines)
+        return "".join(fixed_lines)
 
     def _get_used_names(
         self, node: Union[Import, ImportFrom], is_star: bool
@@ -279,7 +274,7 @@ class Refactor:
             try:
                 lineno = node.location.start.line - 1
                 end_lineno = node.location.end.line
-                import_stmnt = EMPTY.join(original_lines[lineno:end_lineno])
+                import_stmnt = "".join(original_lines[lineno:end_lineno])
                 rebuilt_import = transform.rebuild_import(
                     import_stmnt,
                     used_names,
@@ -304,7 +299,7 @@ class Refactor:
         """
         try:
             is_star = False
-            if node.names[0].name == STAR:
+            if node.names[0].name == "*":
                 is_star = True
                 node = cast(ImportFrom, scan.expand_import_star(node, self._path))
             return node, is_star
@@ -345,7 +340,7 @@ class Refactor:
         :param is_star: is it a '*' import.
         :returns: True if the name has used else False.
         """
-        name = name.split(DOT) if DOT in name else name  # type: ignore
+        name = name.split(".") if "." in name else name  # type: ignore
         if isinstance(name, str):
             if is_star and name in self._source_stats.names_to_skip:
                 return False
@@ -412,14 +407,14 @@ class Refactor:
         new_len = len(rebuilt_import)
         old_len = len(node.location)
         delta = old_len - new_len
-        if rebuilt_import[0] == EMPTY:
+        if rebuilt_import[0] == "":
             delta += 1
 
         # Insert the rebuilt import statement.
         index = node.location.start.line - 1
         for i in range(new_len):
             if old_len == 1 and i != (new_len - 3):
-                line = EMPTY.join(rebuilt_import[i:])
+                line = "".join(rebuilt_import[i:])
                 fixed_lines[index] = line
                 break
             else:
@@ -427,10 +422,10 @@ class Refactor:
             index += 1
             old_len -= 1
 
-        # Replace each removed line with `EMPTY`.
+        # Replace each removed line with `""`.
         if delta > 0:
             for i in range(delta):
-                fixed_lines[index] = EMPTY
+                fixed_lines[index] = ""
                 index += 1
 
         return fixed_lines

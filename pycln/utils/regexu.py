@@ -10,7 +10,6 @@ from pathspec import PathSpec
 from pathspec.patterns import GitWildMatchPattern
 
 # Constants.
-EMPTY = ""
 INCLUDE = "include"
 EXCLUDE = "exclude"
 GITIGNORE = ".gitignore"
