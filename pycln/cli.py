@@ -1,6 +1,6 @@
 """Pycln CLI implementation."""
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator, Optional, Pattern
 
 import typer
 
@@ -21,7 +21,7 @@ def main(
     config: Optional[Path] = typer.Option(
         None, "--config", show_default=False, help="Read configuration from a file."
     ),
-    include: str = typer.Option(
+    include: Pattern[str] = typer.Option(
         regexu.INCLUDE_REGEX,
         "--include",
         "-i",
@@ -34,7 +34,7 @@ def main(
             " Exclusions are calculated first, inclusions later."
         ),
     ),
-    exclude: str = typer.Option(
+    exclude: Pattern[str] = typer.Option(
         regexu.EXCLUDE_REGEX,
         "--exclude",
         "-e",

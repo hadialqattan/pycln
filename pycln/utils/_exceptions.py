@@ -1,4 +1,5 @@
 """Pycln custom exceptions utility."""
+from pathlib import Path
 from typing import Union
 
 from .nodes import NodeLocation
@@ -14,7 +15,7 @@ class BaseOSError(Exception):
 
     """Custom OSError."""
 
-    def __init__(self, errno: int, strerror: str, filepath: str):
+    def __init__(self, errno: int, strerror: str, filepath: Path):
         message = f"{filepath} {strerror} [Errno {errno}]"
         super(BaseOSError, self).__init__(message)
 
@@ -33,7 +34,7 @@ class UnexpandableImportStar(Exception):
 
     """Raises when the import `*` statement unexpandable."""
 
-    def __init__(self, path: str, location: NodeLocation, msg: str):
+    def __init__(self, path: Path, location: NodeLocation, msg: str):
         line, col = location.start.line, location.start.col
         message = f"{path}:{line}:{col} {self.__class__.__name__}: {msg}"
         super(UnexpandableImportStar, self).__init__(message)
@@ -45,23 +46,23 @@ class UnparsableFile(Exception):
     contains null bytes."""
 
     def __init__(
-        self,
-        path: str,
-        err: Union[SyntaxError, ValueError, UnicodeDecodeError],
+        self, path: Path, err: Union[SyntaxError, ValueError, UnicodeDecodeError]
     ):
+        location = str(path)
         postfix = EMPTY
         type_ = type(err)
         UnparsableFile._type_check(type_)
 
         if type_ == SyntaxError:
-            if err.lineno:
-                path = f"{path}:{err.lineno}:{err.offset}"
-            if err.text:
-                postfix = f"{SPACE}{err.text.replace(NEW_LINE, EMPTY).lstrip()!r}"
+            lineno, col, text = err.lineno, err.offset, err.text  # type: ignore
+            if lineno:
+                location = f"{path}:{lineno}:{col}"
+            if text:
+                postfix = f"{SPACE}{text.replace(NEW_LINE, EMPTY).lstrip()!r}"
 
         elif type_ == UnicodeEncodeError:
-            start, reason = err.start, err.reason
-            encoding, object_ = err.encoding, err.object
+            start, reason = err.start, err.reason  # type: ignore
+            encoding, object_ = err.encoding, str(err.object)  # type: ignore
             if len(object_) > 10:
                 object_ = object_[:11] + (DOT * 3)
             msg = (
@@ -70,7 +71,8 @@ class UnparsableFile(Exception):
             )
             setattr(err, "msg", msg)
 
-        message = f"{path} {type_.__name__}: {err.msg}{postfix}"
+        msg = err.msg  # type: ignore
+        message = f"{location} {type_.__name__}: {msg}{postfix}"
         super(UnparsableFile, self).__init__(message)
 
     @staticmethod
@@ -92,14 +94,14 @@ class UnsupportedCase(Exception):
 
     """Raises when unsupported import case detected."""
 
-    def __init__(self, path: str, location: NodeLocation, msg: str):
+    def __init__(self, path: Path, location: NodeLocation, msg: str):
         line, col = location.start.line, location.start.col
         cls_name = self.__class__.__name__
         message = f"{path}:{line}:{col} {cls_name}: {msg}"
         super(UnsupportedCase, self).__init__(message)
 
 
-def libcst_parser_syntax_error_message(path: str, err) -> str:
+def libcst_parser_syntax_error_message(path: Path, err) -> str:
     """Refactor `LibCST.ParserSyntaxError` message.
 
     :param path: where the exception has occurred.

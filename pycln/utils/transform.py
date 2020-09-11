@@ -1,11 +1,11 @@
 """Pycln CST utility."""
-from typing import List, Set, Union, Optional
 from pathlib import Path
+from typing import List, Optional, Set, TypeVar, Union, cast
 
 import libcst as cst
 
-from .nodes import NodeLocation
 from ._exceptions import UnsupportedCase
+from .nodes import NodeLocation
 
 # Constants.
 DOT = "."
@@ -16,6 +16,9 @@ SPACE4 = SPACE * 4
 NEW_LINE = "\n"
 SEMICOLON = ";"
 RIGHT_PAEENTHESIS = ")"
+
+# Custom types.
+ImportT = TypeVar("ImportT", bound=Union[cst.Import, cst.ImportFrom])
 
 
 class ImportTransformer(cst.CSTTransformer):
@@ -33,94 +36,6 @@ class ImportTransformer(cst.CSTTransformer):
         self._used_names = used_names
         self._location = location
         self._indentation = SPACE * location.start.col
-
-    def _multiline_parenthesized_whitespace(
-        self, indent: str
-    ) -> cst.ParenthesizedWhitespace:
-        """Get multiline parenthesized white space.
-
-        :param indent: indentation of the last line.
-        :returns: multiline `cst.ParenthesizedWhitespace`
-        """
-        return cst.ParenthesizedWhitespace(
-            indent=True,
-            last_line=cst.SimpleWhitespace(value=indent),
-        )
-
-    def _multiline_alias(self, alias: cst.ImportAlias) -> cst.ImportAlias:
-        """Convert the given `alias` to multiline `alias`.
-
-        :param alias: `cst.ImportAlias` to correct.
-        :returns: multiline `cst.ImportAlias`.
-        """
-        return cst.ImportAlias(
-            name=alias.name,
-            asname=alias.asname,
-            comma=cst.Comma(
-                whitespace_after=self._multiline_parenthesized_whitespace()
-            ),
-        )
-
-    def _multiline_lpar(self) -> cst.LeftParen:
-        """Get multiline `lpar`.
-
-        :returns: multiline `cst.LeftParen`.
-        """
-        return cst.LeftParen(
-            whitespace_after=self._multiline_parenthesized_whitespace(
-                self._indentation + SPACE4
-            )
-        )
-
-    def _multiline_rpar(self) -> cst.RightParen:
-        """Get multiline `rpar`.
-
-        :returns: multiline `cst.RightParen`.
-        """
-        return cst.RightParen(
-            whitespace_before=self._multiline_parenthesized_whitespace(
-                self._indentation
-            )
-        )
-
-    def _get_alias_name(
-        self, node: Optional[Union[cst.Name, cst.Attribute]], name: str = ""
-    ) -> str:
-        """Recursion function that calculates `node` string dotted name.
-
-        :param node: `cst.Name` or `cst.Attribute`.
-        :returns: dotted name.
-        """
-        if isinstance(node, cst.Name):
-            name += node.value
-            return name
-        return self._get_alias_name(node.value) + DOT + node.attr.value
-
-    def _stylize(
-        self,
-        node: Union[cst.Import, cst.ImportFrom],
-        used_aliases: List[cst.ImportAlias],
-        force_multiline: bool = False,
-    ) -> Union[cst.Import, cst.ImportFrom]:
-        """Preserving `node` style.
-
-        :param node: `cst.Import` or `cst.ImportFrom` to stylize.
-        :param used_aliases: list of `cst.ImportAlias`.
-        :param force_multiline: make the node multiline.
-        :returns: stylized node.
-        """
-        # Remove the comma from the last name.
-        used_aliases[-1] = used_aliases[-1].with_changes(
-            comma=cst.MaybeSentinel.DEFAULT
-        )
-        node = node.with_changes(names=used_aliases)
-        # Preserving multiline nodes style.
-        if isinstance(node, cst.ImportFrom):
-            start, end = self._location.start.line, self._location.end.line
-            if force_multiline or (node.rpar and start != end):
-                rpar, lpar = self._multiline_rpar(), self._multiline_lpar()
-                node = node.with_changes(rpar=rpar, lpar=lpar)
-        return node
 
     def refactor_import_star(self, updated_node: cst.ImportFrom) -> cst.ImportFrom:
         """Add used import aliases to import star.
@@ -152,17 +67,14 @@ class ImportTransformer(cst.CSTTransformer):
 
         return self._stylize(updated_node, used_aliases, is_multiline)
 
-    def refactor_import(
-        self, updated_node: Union[cst.Import, cst.ImportFrom]
-    ) -> Union[cst.Import, cst.ImportFrom]:
+    def refactor_import(self, updated_node: ImportT) -> ImportT:
         """Remove unused imports from the given `updated_node`.
 
         :param updated_node: `cst.Import` or `cst.ImportFrom` node to refactor.
-        :returns: refactored node, or `cst.RemovalSentianel` if there's no used aliases.
+        :returns: refactored node.
         """
-        # Normal import.
         used_aliases: List[cst.ImportAlias] = []
-        for alias in updated_node.names:
+        for alias in updated_node.names:  # type: ignore
             if self._get_alias_name(alias.name) in self._used_names:
                 used_aliases.append(alias)
         return self._stylize(updated_node, used_aliases)
@@ -180,11 +92,77 @@ class ImportTransformer(cst.CSTTransformer):
         else:
             return self.refactor_import(updated_node)
 
+    def _get_alias_name(
+        self, node: Optional[Union[cst.Name, cst.Attribute]], name: str = EMPTY
+    ) -> str:
+        # Recursion function that calculates `node` string dotted name.
+        if isinstance(node, cst.Name):
+            name += node.value
+            return name
+        return self._get_alias_name(node.value) + DOT + node.attr.value  # type: ignore
+
+    def _multiline_parenthesized_whitespace(
+        self, indent: str
+    ) -> cst.ParenthesizedWhitespace:
+        # Return multiline parenthesized white space.
+        return cst.ParenthesizedWhitespace(
+            indent=True,
+            last_line=cst.SimpleWhitespace(value=indent),
+        )
+
+    def _multiline_alias(self, alias: cst.ImportAlias) -> cst.ImportAlias:
+        # Convert the given `alias` to multiline `alias`.
+        return cst.ImportAlias(
+            name=alias.name,
+            asname=alias.asname,
+            comma=cst.Comma(
+                whitespace_after=self._multiline_parenthesized_whitespace(
+                    self._indentation + SPACE4
+                )
+            ),
+        )
+
+    def _multiline_lpar(self) -> cst.LeftParen:
+        # Return multiline `cst.LeftParen`.
+        return cst.LeftParen(
+            whitespace_after=self._multiline_parenthesized_whitespace(
+                self._indentation + SPACE4
+            )
+        )
+
+    def _multiline_rpar(self) -> cst.RightParen:
+        # Return multiline `cst.RightParen`.
+        return cst.RightParen(
+            whitespace_before=self._multiline_parenthesized_whitespace(
+                self._indentation
+            )
+        )
+
+    def _stylize(
+        self,
+        node: ImportT,
+        used_aliases: List[cst.ImportAlias],
+        force_multiline: bool = False,
+    ) -> ImportT:
+        # (Preserving `node` style).
+        # Remove the comma from the last name.
+        used_aliases[-1] = used_aliases[-1].with_changes(
+            comma=cst.MaybeSentinel.DEFAULT
+        )
+        node = cast(ImportT, node.with_changes(names=used_aliases))
+        # Preserving multiline nodes style.
+        if isinstance(node, cst.ImportFrom):
+            start, end = self._location.start.line, self._location.end.line
+            if force_multiline or (node.rpar and start != end):
+                rpar, lpar = self._multiline_rpar(), self._multiline_lpar()
+                node = cast(ImportT, node.with_changes(rpar=rpar, lpar=lpar))
+        return node
+
 
 def rebuild_import(
     import_stmnt: str,
     used_names: Set[str],
-    path: Union[Path, str],
+    path: Path,
     location: NodeLocation,
 ) -> List[str]:
     """Rebuild the given `import_stmnt` based on `used_names` using `LibCST`.
@@ -198,7 +176,7 @@ def rebuild_import(
     :raises UnsupportedCase: in some rare cases.
     """
     if SEMICOLON in import_stmnt:
-        msg = "import statements separated with ';'."
+        msg = f"import statements separated with {SEMICOLON!r}."
         raise UnsupportedCase(path, location, msg)
 
     # Remove `import_stmnt` indentation/last-NEW_LINE.

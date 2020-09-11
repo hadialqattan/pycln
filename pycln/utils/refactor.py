@@ -5,7 +5,7 @@ from copy import copy
 from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union, cast
 
 from . import iou, pathu, regexu, scan
 from ._exceptions import (
@@ -68,14 +68,14 @@ class Refactor:
         self.configs = configs
         self.reporter = reporter
         # Resetables.
-        self._import_stats = None
-        self._source_stats = None
-        self._path = None
+        self._import_stats = scan.ImportStats(set(), set())
+        self._source_stats = scan.SourceStats(set(), set(), set())
+        self._path = Path(EMPTY)
 
     def _reset(self) -> None:
-        self._import_stats = None
-        self._source_stats = None
-        self._path = None
+        self._import_stats = scan.ImportStats(set(), set())
+        self._source_stats = scan.SourceStats(set(), set(), set())
+        self._path = Path(EMPTY)
 
     @staticmethod
     def remove_useless_passes(source_lines: List[str]) -> List[str]:
@@ -88,7 +88,7 @@ class Refactor:
         for parent in ast.walk(tree):
             try:
                 if parent.__dict__.get("body", None):
-                    body_len = len(parent.body)
+                    body_len = len(parent.body)  # type: ignore
                 else:
                     continue
             except TypeError:
@@ -100,7 +100,7 @@ class Refactor:
                         source_lines[child.lineno - 1] = EMPTY
         return EMPTY.join(source_lines).splitlines(True)
 
-    def session(self, path: Union[Path, str]) -> None:
+    def session(self, path: Path) -> None:
         """Refactoring session.
 
         Refactor the given `path` source code.
@@ -110,10 +110,10 @@ class Refactor:
         self._path = path
         try:
             # Safly read the file.
-            permissions = (os.R_OK,)
+            permissions = [os.R_OK]
             if not self.configs.check and not self.configs.diff:
-                permissions = (os.R_OK, os.W_OK)
-            content, encoding = iou.safe_read(self._path, permissions)
+                permissions.append(os.W_OK)
+            content, encoding = iou.safe_read(self._path, tuple(permissions))
 
             # Refactor and output the `content`.
             fixed_lines = self._code_session(content).splitlines(True)
@@ -123,7 +123,7 @@ class Refactor:
             WritePermissionError,
             UnparsableFile,
         ) as err:
-            self.reporter.failure(err)
+            self.reporter.failure(str(err))
         finally:
             self._reset()
 
@@ -172,11 +172,11 @@ class Refactor:
                     iou.safe_write(self._path, fixed_lines, encoding)
 
     def _analyze(
-        self, tree: ast.Module, original_lines: List[str]
-    ) -> Optional[Tuple[scan.SourceStats, scan.ImportStats]]:
+        self, tree: ast.AST, original_lines: List[str]
+    ) -> Tuple[scan.SourceStats, scan.ImportStats]:
         """Analyze the given `tree`.
 
-        :param tree: a parsed `ast.Module`.
+        :param tree: a parsed `ast.AST`.
         :param original_lines: code lines requiered for Python < 3.8.
         :returns: tuple of `ImportStats`, `SourceStats` and set of names to skip.
         """
@@ -186,7 +186,8 @@ class Refactor:
             source_stats, import_stats = analyzer.get_stats()
             return source_stats, import_stats
         except Exception as err:
-            self.reporter.failure(err, self._path)
+            self.reporter.failure(str(err), self._path)
+            return None
 
     def _refactor(self, original_lines: List[str]) -> str:
         """Remove all unused imports from given `original_lines`.
@@ -286,8 +287,8 @@ class Refactor:
                     node.location,
                 )
                 updated_lines = self._insert(rebuilt_import, updated_lines, node)
-            except UnsupportedCase as msg:
-                self.reporter.failure(msg)
+            except UnsupportedCase as errin:
+                self.reporter.failure(str(errin))
         except transform.cst.ParserSyntaxError as err:
             msg = libcst_parser_syntax_error_message(self._path, err)
             self.reporter.failure(msg)
@@ -295,7 +296,7 @@ class Refactor:
 
     def _expand_import_star(
         self, node: ImportFrom
-    ) -> Tuple[ast.ImportFrom, Optional[bool]]:
+    ) -> Tuple[ImportFrom, Optional[bool]]:
         """Expand import star statement, `scan.expand_import_star` abstraction.
 
         :param node: `ImportFrom` that has a '*' as `alias.name`.
@@ -305,10 +306,10 @@ class Refactor:
             is_star = False
             if node.names[0].name == STAR:
                 is_star = True
-                node = scan.expand_import_star(node, self._path)
+                node = cast(ImportFrom, scan.expand_import_star(node, self._path))
             return node, is_star
         except UnexpandableImportStar as err:
-            self.reporter.failure(err)
+            self.reporter.failure(str(err))
             self.reporter.ignored_import(self._path, node, is_star=True)
             return node, None
 
@@ -344,7 +345,7 @@ class Refactor:
         :param is_star: is it a '*' import.
         :returns: True if the name has used else False.
         """
-        name = name.split(DOT) if DOT in name else name
+        name = name.split(DOT) if DOT in name else name  # type: ignore
         if isinstance(name, str):
             if is_star and name in self._source_stats.names_to_skip:
                 return False
@@ -380,7 +381,7 @@ class Refactor:
             code, _ = iou.safe_read(module_source, permissions=(os.R_OK,))
             tree = scan.parse_ast(code, module_source)
         except (ReadPermissionError, UnparsableFile) as err:
-            self.reporter.failure(err)
+            self.reporter.failure(str(err))
             return scan.HasSideEffects.NOT_KNOWN
 
         try:
@@ -388,7 +389,7 @@ class Refactor:
             analyzer.visit(tree)
             return analyzer.has_side_effects()
         except Exception as err:
-            self.reporter.failure(err, self._path)
+            self.reporter.failure(str(err), self._path)
             return scan.HasSideEffects.NOT_KNOWN
 
     def _insert(

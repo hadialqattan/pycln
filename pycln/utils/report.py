@@ -3,7 +3,7 @@ import ast
 from dataclasses import dataclass
 from difflib import unified_diff
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 import typer
 
@@ -38,17 +38,16 @@ class Report:
     configs: config.Config
 
     @staticmethod
-    def get_location(path: Union[Path, str], location: nodes.NodeLocation) -> str:
+    def get_location(path: Path, location: nodes.NodeLocation) -> str:
         """Create full location from `path` and node location.
 
         :param path: file path.
         :param location: `nodes.NodeLocation`.
         :returns: full location.
         """
-        path = str(path)
         start = location.start
         line, col = str(start.line), str(start.col)
-        return COLUMN.join([path, line, col])
+        return COLUMN.join([str(path), line, col])
 
     @staticmethod
     def secho(
@@ -88,7 +87,7 @@ class Report:
 
     @staticmethod
     def colored_unified_diff(
-        path: Union[Path, str],
+        path: Path,
         original_lines: List[str],
         fixed_lines: List[str],
     ) -> None:
@@ -302,7 +301,7 @@ class Report:
     #: Total number of failures.
     _failures: int = 0
 
-    def failure(self, msg: str, path: Path = None) -> None:
+    def failure(self, msg: str, path: Optional[Path] = None) -> None:
         """Increment `self._failures`. Write a msg to stderr.
 
         :param msg: a failure msg.

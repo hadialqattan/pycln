@@ -16,10 +16,13 @@ EXCLUDE = "exclude"
 GITIGNORE = ".gitignore"
 SKIP_FILE_REGEX = r"# *(nopycln *: *file).*"
 SKIP_IMPORT_REGEX = r"# *((noqa *:*)|(nopycln *: *import)).*"
-INCLUDE_REGEX = r".*\.py$"
-EXCLUDE_REGEX = (
-    r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|"
-    + r"\.tox|\.venv|\.svn|buck-out|build|dist)/"
+INCLUDE_REGEX = safe_compile(r".*\.py$", INCLUDE)
+EXCLUDE_REGEX = safe_compile(
+    (
+        r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|"
+        + r"\.tox|\.venv|\.svn|buck-out|build|dist)/"
+    ),
+    EXCLUDE,
 )
 
 
@@ -34,7 +37,7 @@ def safe_compile(pattern: str, type_: str) -> Pattern[str]:
         if type(pattern) is str:
             compiled: Pattern[str] = re.compile(pattern, re.IGNORECASE)
             return compiled
-        return pattern
+        return pattern  # type: ignore
     except re.error:
         typer.secho(
             f"Invalid regular expression for {type_} given: {pattern!r} ⛔",

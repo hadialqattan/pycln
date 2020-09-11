@@ -41,10 +41,13 @@ ID = "id"
 
 
 # Custom types.
-Function = TypeVar("Function", bound=Callable[..., Any])
+FunctionT = TypeVar("FunctionT", bound=Callable[..., Any])
+FunctionDefT = TypeVar(
+    "FunctionDefT", bound=Union[ast.FunctionDef, ast.AsyncFunctionDef]
+)
 
 
-def recursive(func: Function) -> Function:
+def recursive(func: FunctionT) -> FunctionT:
     """decorator to make `ast.NodeVisitor` work recursive.
 
     :param func: `ast.NodeVisitor.visit_*` function.
@@ -55,7 +58,7 @@ def recursive(func: Function) -> Function:
         func(self, *args, **kwargs)
         self.generic_visit(*args)
 
-    return cast(Function, wrapper)
+    return cast(FunctionT, wrapper)
 
 
 @dataclass
@@ -104,8 +107,8 @@ class SourceAnalyzer(ast.NodeVisitor):
     :raises ValueError: when Python < 3.8 and no source code lines provided.
     """
 
-    def __init__(self, source_lines: Optional[List[str]] = None, *args, **kwargs):
-        super(SourceAnalyzer, self).__init__(*args, **kwargs)
+    def __init__(self, source_lines: Optional[List[str]] = None):
+        super(SourceAnalyzer, self).__init__()
         if not PY38_PLUS and source_lines is None:
             # Bad class usage.
             raise ValueError("Please provide source lines for Python < 3.8.")
@@ -132,7 +135,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         self._source_stats.name_.add(node.id)
 
     @recursive
-    def visit_Attribute(self, node: ast.Name):
+    def visit_Attribute(self, node: ast.Attribute):
         self._source_stats.attr_.add(node.attr)
 
     @recursive
@@ -162,7 +165,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         """
         is_skip_case = False
 
-        def add_imports_to_skip(body: ast.List) -> None:
+        def add_imports_to_skip(body: List[ast.stmt]) -> None:
             """Add all try/except/else blocks body import children to
             `self._imports_to_skip`.
 
@@ -170,16 +173,16 @@ class SourceAnalyzer(ast.NodeVisitor):
             """
             for child in body:
                 if hasattr(child, NAMES):
-                    self._imports_to_skip.add(child)
+                    self._imports_to_skip.add(child)  # type: ignore
 
         for handler in node.handlers:
             if hasattr(handler.type, ELTS):
-                for name in handler.type.elts:
+                for name in getattr(handler.type, ELTS, []):
                     if hasattr(name, ID) and name.id in IMPORT_EXCEPTIONS:
                         is_skip_case = True
                         break
             elif hasattr(handler.type, ID):
-                if handler.type.id in IMPORT_EXCEPTIONS:
+                if getattr(handler.type, ID, EMPTY) in IMPORT_EXCEPTIONS:
                     is_skip_case = True
             if is_skip_case:
                 add_imports_to_skip(handler.body)
@@ -190,27 +193,24 @@ class SourceAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_AnnAssign(self, node: ast.AnnAssign):
-        """Support string type annotations.
-
-        exp:- this code has no unused imports:
-            >>> from typing import List
-            >>> foo: "List[str]" = []
-        """
+        #: Support string type annotations.
+        #: >>> from typing import List
+        #: >>> foo: "List[str]" = []
         self._visit_string_type_annotation(node)
 
     @recursive
     def visit_arg(self, node: ast.arg):
-        """Support arg string type annotations.
-
-        exp:- this code has no unused imports:
-            >>> from typing import Tuple
-            >>> def foo(bar: "Tuple[str, int]"):
-                    pass
-        """
+        # Support Python > 3.8 type comments.
+        if PY38_PLUS:
+            self._visit_type_comment(node)
+        #: Support arg string type annotations.
+        #: >>> from typing import Tuple
+        #: >>> def foo(bar: "Tuple[str, int]"):
+        #: ...     pass
         self._visit_string_type_annotation(node)
 
     @recursive
-    def visit_FunctionDef(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+    def visit_FunctionDef(self, node: FunctionDefT):
         # Support Python > 3.8 type comments.
         if PY38_PLUS:
             self._visit_type_comment(node)
@@ -223,57 +223,50 @@ class SourceAnalyzer(ast.NodeVisitor):
         # Support Python > 3.8 type comments.
         if PY38_PLUS:
             self._visit_type_comment(node)
+        id_ = getattr(node.targets[0], ID, None)
         # These names will be skipped on import `*` case.
-        if getattr(node.targets[0], ID, None) in NAMES_TO_SKIP:
-            self._source_stats.names_to_skip.add(node.targets[0].id)
+        if id_ in NAMES_TO_SKIP:
+            self._source_stats.names_to_skip.add(id_)
         # Support `__all__` dunder overriding case
-        if getattr(node.targets[0], ID, None) == __ALL__:
+        if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 for constant in node.value.elts:
-                    if PY38_PLUS:
-                        if isinstance(constant.value, str):
-                            self._source_stats.name_.add(constant.value)
-                    else:
-                        if isinstance(constant.s, str):
-                            self._source_stats.name_.add(constant.s)
+                    k = "value" if PY38_PLUS else "s"
+                    value = getattr(constant, k, EMPTY)
+                    if value and isinstance(value, str):
+                        self._source_stats.name_.add(value)
 
-    def _visit_type_comment(self, node: Union[ast.Assign, ast.FunctionDef]) -> None:
-        """Support Python > 3.8 type comments.
-
-        This feature is only available for python > 3.8.
-        PEP 526 -- Syntax for Variable Annotations.
-        For more information:
-            - https://www.python.org/dev/peps/pep-0526/
-            - https://docs.python.org/3.8/library/ast.html#ast.parse
-        """
+    def _visit_type_comment(
+        self, node: Union[ast.Assign, ast.arg, FunctionDefT]
+    ) -> None:
+        #: Support Python > 3.8 type comments.
+        #:
+        #: This feature is only available for python > 3.8.
+        #: PEP 526 -- Syntax for Variable Annotations.
+        #: For more information:
+        #:     - https://www.python.org/dev/peps/pep-0526/
+        #:     - https://docs.python.org/3.8/library/ast.html#ast.parse
         if node.type_comment:
-            if isinstance(node, ast.Assign):
+            if isinstance(node, (ast.Assign, ast.arg)):
                 mode = "eval"
             else:
                 mode = "func_type"
-            tree = parse_ast(node.type_comment, EMPTY, mode)
+            tree = parse_ast(node.type_comment, mode=mode)
             self._add_name_attr(tree)
 
     def _visit_string_type_annotation(self, node: Union[ast.AnnAssign, ast.arg]):
-        """Support string type annotations.
-
-        exp:- this code has no unused imports:
-            >>> from typing import List, Tuple
-            >>> foo: "List[str]" = []
-            >>> def foobar(bar: "Tuple[str, int]"):
-            ...     pass
-        """
+        # Support string type annotations.
         if isinstance(node.annotation, (ast.Constant, ast.Str)):
             if PY38_PLUS:
                 value = node.annotation.value
             else:
                 value = node.annotation.s
-            tree = parse_ast(value, EMPTY, mode="eval")
+            tree = parse_ast(value, mode="eval")
             self._add_name_attr(tree)
 
-    def _add_name_attr(self, tree: ast.Module):
-        """Add any `node` `ast.Name` or `ast.Attribute` child to
-        `self._source_stats`."""
+    def _add_name_attr(self, tree: ast.AST):
+        # Add any `node` `ast.Name` or `ast.Attribute`
+        # child to `self._source_stats`.
         for node in ast.walk(tree):
             if isinstance(node, ast.Name):
                 self._source_stats.name_.add(node.id)
@@ -281,12 +274,8 @@ class SourceAnalyzer(ast.NodeVisitor):
                 self._source_stats.attr_.add(node.attr)
 
     def _get_py38_import_node(self, node: ast.Import) -> nodes.Import:
-        """Convert any Python < 3.8 `ast.Import` to `nodes.Import` in order to
-        support `end_lineno`.
-
-        :param node: an `ast.Import` node.
-        :returns: a `nodes.Import` node.
-        """
+        # Convert any Python < 3.8 `ast.Import`
+        # to `nodes.Import` in order to support `end_lineno`.
         if PY38_PLUS:
             end_lineno = node.end_lineno
         else:
@@ -299,12 +288,8 @@ class SourceAnalyzer(ast.NodeVisitor):
         return nodes.Import(location=location, names=node.names)
 
     def _get_py38_import_from_node(self, node: ast.ImportFrom) -> nodes.ImportFrom:
-        """Convert any Python < 3.8 `ast.ImportFrom` to `nodes.ImportFrom` in
-        order to support `end_lineno`.
-
-        :param node: an `ast.ImportFrom` node.
-        :returns: a `nodes.ImportFrom` node.
-        """
+        # Convert any Python < 3.8 `ast.ImportFrom`
+        # to `nodes.ImportFrom` in order to support `end_lineno`.
         if PY38_PLUS:
             end_lineno = node.end_lineno
         else:
@@ -327,11 +312,8 @@ class SourceAnalyzer(ast.NodeVisitor):
         )
 
     def _is_parentheses(self, import_from_line: str) -> Optional[bool]:
-        """Return importFrom multi-line type.
-
-        :param import_from_line: importFrom statement str line.
-        :returns: importFrom type ('(' => True), ('\\' => False), else None.
-        """
+        # Return importFrom multi-line type.
+        # ('(' => True), ('\\' => False) else None.
         if RIGHT_PAEENTHESIS in import_from_line:
             return True
         elif BACK_SLASH in import_from_line:
@@ -340,22 +322,20 @@ class SourceAnalyzer(ast.NodeVisitor):
             return None
 
     def _get_end_lineno(self, lineno: int, is_parentheses: bool) -> int:
-        """Get `ast.ImportFrom` end lineno of the given lineno.
-
-        :param lineno: `ast.ImportFrom.lineno`.
-        :param is_parentheses: is the multiline notations are parentheses.
-        :returns: end_lineno.
-        """
+        # Get `ast.ImportFrom` `end_lineno` of the given `lineno`.
         lines_len = len(self._lines)
         for end_lineno in range(lineno, lines_len):
             if is_parentheses:
                 if LEFT_PARENTHESIS in self._lines[end_lineno]:
-                    return end_lineno + 1
+                    end_lineno += 1
+                    break
             else:
                 if BACK_SLASH not in self._lines[end_lineno]:
-                    return end_lineno + 1
+                    end_lineno += 1
+                    break
+        return end_lineno
 
-    def get_stats(self) -> Tuple[ImportStats, SourceStats]:
+    def get_stats(self) -> Tuple[SourceStats, ImportStats]:
         """Get source analyzer results.
 
         :returns: tuple of `ImportStats` and `SourceStats`.
@@ -394,7 +374,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
         if spec:
             # Module `__init__.py`.
-            module = spec.loader.create_module(spec)
+            module = spec.loader.create_module(spec)  # type: ignore
             if module:
                 return set(dir(module))
 
@@ -405,8 +385,8 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
         raise ModuleNotFoundError(name=module_name)
 
-    def __init__(self, path: Path, *args, **kwargs):
-        super(ImportablesAnalyzer, self).__init__(*args, **kwargs)
+    def __init__(self, path: Path):
+        super(ImportablesAnalyzer, self).__init__()
         self._not_importables: Set[ast.Name] = set()
         self._importables: Set[str] = set()
         self._has_all = False
@@ -415,17 +395,16 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     @recursive
     def visit_Assign(self, node: ast.Assign):
         # Support `__all__` dunder overriding case.
-        if getattr(node.targets[0], ID, None) == __ALL__:
+        id_ = getattr(node.targets[0], ID, None)
+        if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 self._has_all = True
                 self._importables.clear()
                 for constant in node.value.elts:
-                    if PY38_PLUS:
-                        if isinstance(constant.value, str):
-                            self._importables.add(constant.value)
-                    else:
-                        if isinstance(constant.s, str):
-                            self._importables.add(constant.s)
+                    k = "value" if PY38_PLUS else "s"
+                    value = getattr(constant, k, EMPTY)
+                    if value and isinstance(value, str):
+                        self._importables.add(value)
 
     @recursive
     def visit_Import(self, node: ast.Import):
@@ -440,7 +419,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         try:
             if node.names[0].name == STAR:
                 # Expand import star if possible.
-                node = expand_import_star(node, self._path)
+                node = cast(ast.ImportFrom, expand_import_star(node, self._path))
             for alias in node.names:
                 name = alias.asname if alias.asname else alias.name
                 self._importables.add(name)
@@ -449,30 +428,19 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             pass
 
     @recursive
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def visit_FunctionDef(self, node: FunctionDefT):
         # Add function name as importable name.
         self._importables.add(node.name)
+        self._compute_not_importables(node)
 
-        # Compute function not-importables.
-        for node_ in ast.iter_child_nodes(node):
-
-            if isinstance(node_, ast.Assign):
-
-                for target in node_.targets:
-                    self._not_importables.add(target)
+    # Support `ast.AsyncFunctionDef`.
+    visit_AsyncFunctionDef = visit_FunctionDef
 
     @recursive
     def visit_ClassDef(self, node: ast.ClassDef):
         # Add class name as importable name.
         self._importables.add(node.name)
-
-        # Compute class not-importables.
-        for node_ in ast.iter_child_nodes(node):
-
-            if isinstance(node_, ast.Assign):
-
-                for target in node_.targets:
-                    self._not_importables.add(target)
+        self._compute_not_importables(node)
 
     @recursive
     def visit_Name(self, node: ast.Name):
@@ -480,6 +448,15 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             # Except not-importables.
             if node not in self._not_importables:
                 self._importables.add(node.id)
+
+    def _compute_not_importables(self, node: Union[FunctionDefT, ast.ClassDef]):
+        # Compute class/function not-importables.
+        for node_ in ast.iter_child_nodes(node):
+
+            if isinstance(node_, ast.Assign):
+
+                for target in node_.targets:
+                    self._not_importables.add(cast(ast.Name, target))
 
     def get_stats(self) -> Set[str]:
         return self._importables
@@ -637,12 +614,12 @@ def expand_import_star(
             else f"{err.name!r} module not found!"
         )
         if hasattr(node, "location"):
-            location = node.location
+            location = node.location  # type: ignore
         else:
-            start = nodes.NodePosition(node.lineno, node.col_offset)
-            end = nodes.NodePosition(node.end_lineno)
+            start = nodes.NodePosition(node.lineno, node.col_offset)  # type: ignore
+            end = nodes.NodePosition(node.end_lineno)  # type: ignore
             location = nodes.NodeLocation(start, end)
-        raise UnexpandableImportStar(path, location, msg)
+        raise UnexpandableImportStar(path, location, str(msg))
 
     # Create `ast.alias` for each name.
     node.names.clear()
@@ -653,14 +630,14 @@ def expand_import_star(
 
 
 def parse_ast(
-    source_code: str, path: Union[Path, str], mode: str = "exec"
-) -> ast.Module:
+    source_code: str, path: Path = Path(EMPTY), mode: str = "exec"
+) -> ast.AST:
     """Parse the given `source_code` AST.
 
     :param source_code: python source code.
     :param path: `source_code` file path.
     :param mode: `ast.parse` mode.
-    :returns: `ast.Module` (source code AST).
+    :returns: `ast.AST` (source code AST).
     :raises UnparsableFile: if the compiled source is invalid,
         or the source contains null bytes.
     """

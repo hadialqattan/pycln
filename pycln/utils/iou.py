@@ -2,18 +2,12 @@
 import os
 import tokenize
 from pathlib import Path
-from typing import Union, Tuple, List
+from typing import List, Tuple, Union
 
-from ._exceptions import (
-    ReadPermissionError,
-    WritePermissionError,
-    UnparsableFile,
-)
+from ._exceptions import ReadPermissionError, UnparsableFile, WritePermissionError
 
 
-def safe_read(
-    path: Union[Path, str], permissions: tuple = (os.R_OK, os.W_OK)
-) -> Tuple[str, str]:
+def safe_read(path: Path, permissions: tuple = (os.R_OK, os.W_OK)) -> Tuple[str, str]:
     """Read file content with encode detecting support.
 
     :param path: `.py` file path.
@@ -40,7 +34,7 @@ def safe_read(
         raise UnparsableFile(path, err)
 
 
-def safe_write(path: Union[Path, str], fixed_lines: List[str], encoding: str) -> None:
+def safe_write(path: Path, fixed_lines: List[str], encoding: str) -> None:
     """Write file content based on given `encoding`.
 
     :param path: `.py` file path.

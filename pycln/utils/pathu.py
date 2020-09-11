@@ -82,7 +82,7 @@ def yield_sources(
             continue
 
         name = entry.name if entry.is_file() else f"{entry.name}{FORWARD_SLASH}"
-        entry_path = os.path.join(path, name)
+        entry_path = Path(os.path.join(path, name))
 
         # Compute exclusions.
         if is_excluded(name, exclude):
@@ -114,12 +114,12 @@ def yield_sources(
 
         # Compute exclusions.
         if is_excluded(dirname, exclude):
-            reporter.ignored_path(str(dir_path), EXCLUDE)
+            reporter.ignored_path(dir_path, EXCLUDE)
             continue
 
         # Compute `.gitignore`.
         if gitignore.match_file(dirname):
-            reporter.ignored_path(str(dir_path), GITIGNORE)
+            reporter.ignored_path(dir_path, GITIGNORE)
             continue
 
         yield from yield_sources(dir_path, include, exclude, gitignore, reporter)
@@ -203,7 +203,7 @@ def get_third_party_lib_paths() -> Set[Path]:
     return paths
 
 
-def get_local_import_path(path: Path, module: str) -> Optional[str]:
+def get_local_import_path(path: Path, module: str) -> Optional[Path]:
     """Find the given local module file.py/__init_.py path.
 
     Written FOR `ast.Import`.
@@ -221,17 +221,20 @@ def get_local_import_path(path: Path, module: str) -> Optional[str]:
         # If it's a file.
         fpath = os.path.join(*dirnames[:i], *names[:-1], f"{names[-1]}{PY_EXTENSION}")
         if os.path.isfile(fpath):
-            return fpath
+            return Path(fpath)
 
         # If it's a module.
         mpath = os.path.join(*dirnames[:i], *names, __INIT__)
         if os.path.isfile(mpath):
-            return mpath
+            return Path(mpath)
+
+    # Path not found.
+    return None
 
 
 def get_local_import_from_path(
     path: Path, module: str, package: str, level: int
-) -> Optional[str]:
+) -> Optional[Path]:
     """Find the given local module file.py/__init_.py path.
 
     Written FOR `ast.ImportFrom`.
@@ -266,7 +269,7 @@ def get_local_import_from_path(
                 f"{packages[-1]}{PY_EXTENSION}",
             )
         if os.path.isfile(fpath):
-            return fpath
+            return Path(fpath)
 
         # If it's a module.
         if modules:
@@ -285,10 +288,13 @@ def get_local_import_from_path(
             )
 
         if os.path.isfile(mpath) and package.split(DOT)[0] in mpath:
-            return mpath
+            return Path(mpath)
+
+    # Path not found.
+    return None
 
 
-def get_module_path(paths: List[Path], module: str) -> Optional[Path]:
+def get_module_path(paths: Set[Path], module: str) -> Optional[Path]:
     """Get the `module` path from the given `paths`.
 
     :param paths: a list of paths to search.
@@ -303,6 +309,8 @@ def get_module_path(paths: List[Path], module: str) -> Optional[Path]:
                 return path
             else:
                 return Path(os.path.join(path, __INIT__))
+    # Path not found.
+    return None
 
 
 @lru_cache()
