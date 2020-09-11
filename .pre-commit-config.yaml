@@ -1,4 +1,18 @@
 repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 5.5.1
+    hooks:
+      - id: isort
+        files: "\\.(py)$"
+        args:
+          [
+            line_length=88,
+            multi_line_output=3,
+            include_trailing_comma=True,
+            force_grid_wrap=0,
+            use_parentheses=True,
+          ]
+
   - repo: https://github.com/myint/docformatter
     rev: v1.3.1
     hooks:
@@ -10,13 +24,6 @@ repos:
     hooks:
       - id: black
         args: [--line-length=88]
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.5.1
-    hooks:
-      - id: isort
-        files: "\\.(py)$"
-        args: [-l=88]
 
   - repo: https://github.com/prettier/prettier
     rev: 2.1.1
