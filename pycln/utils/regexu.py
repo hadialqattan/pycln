@@ -11,6 +11,7 @@ from pathspec import PathSpec
 from pathspec.patterns import GitWildMatchPattern
 
 # Constants.
+EMPTY = ""
 INCLUDE = "include"
 EXCLUDE = "exclude"
 GITIGNORE = ".gitignore"
@@ -31,8 +32,10 @@ def safe_compile(pattern: str, type_: str) -> Pattern[str]:
     :returns: complied regex.
     """
     try:
-        compiled: Pattern[str] = re.compile(pattern, re.IGNORECASE)
-        return compiled
+        if type(pattern) is str:
+            compiled: Pattern[str] = re.compile(pattern, re.IGNORECASE)
+            return compiled
+        return pattern
     except re.error:
         typer.secho(
             f"Invalid regular expression for {type_} given: {pattern!r} ⛔",
@@ -62,20 +65,20 @@ def is_excluded(name: str, regex: Pattern[str]) -> bool:
     return bool(regex.fullmatch(name))
 
 
-def get_gitignore(root: Path) -> PathSpec:
+def get_gitignore(root: Path, no_gitignore: bool) -> PathSpec:
     """Return a PathSpec matching gitignore content, if present.
 
     :param root: root path to search for `.gitignore`.
+    :param no_gitignore: `config.no_gitignore` value.
     :returns: PathSpec matching gitignore content, if present.
     """
-    path = os.path.join(root, GITIGNORE)
     lines: List[str] = []
-
-    if os.path.isfile(path) and root:
-        if os.access(path, os.R_OK):
-            with tokenize.open(path) as ignore_file:
-                lines = ignore_file.readlines()
-
+    if not no_gitignore:
+        path = os.path.join(root, GITIGNORE)
+        if os.path.isfile(path) and root:
+            if os.access(path, os.R_OK):
+                with tokenize.open(path) as ignore_file:
+                    lines = ignore_file.readlines()
     return PathSpec.from_lines(GitWildMatchPattern, lines)
 
 
