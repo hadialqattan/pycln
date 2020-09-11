@@ -2,7 +2,6 @@
 import os
 import re
 import tokenize
-from functools import lru_cache
 from pathlib import Path
 from typing import List, Pattern
 
