@@ -7,8 +7,8 @@ repos:
         args:
           [
             --line-length=88,
-            --multi-line-output=3,
-            --include-trailing-comma=True,
+            --multi-line=3,
+            --trailing-comma=True,
             --force-grid-wrap=0,
             --use-parentheses=True,
           ]
