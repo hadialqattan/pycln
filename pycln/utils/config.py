@@ -1,17 +1,30 @@
 """Pycln configuration management utility."""
+import configparser
+import json
 import os
+import tokenize
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Pattern, Union
+from typing import Optional, Pattern, Union
 
+import toml
 import typer
+import yaml
 
 from . import regexu
 
 # Constants.
+DOT = "."
 EMPTY = ""
 DOT_FSLSH = "./"
 DDOT_FSLSH = "../"
+CONFIG_EXTENSIONS = {
+    ".cfg": "pycln",
+    ".toml": "tool.pycln",
+    ".json": "pycln",
+    ".yaml": "pycln",
+    ".yml": "pycln",
+}
 
 
 @dataclass
@@ -20,11 +33,16 @@ class Config:
     """Pycln configs dataclass."""
 
     def __post_init__(self):
-        self._check_path()
-        self.include: Pattern[str] = regexu.safe_compile(self.include, regexu.INCLUDE)
-        self.exclude: Pattern[str] = regexu.safe_compile(self.exclude, regexu.EXCLUDE)
+        if self.config is not None:
+            file_path = self.config
+            self.config = None
+            ParseConfigFile(file_path, self)
+        else:
+            self._check_path()
+            self._check_regex()
 
     path: Path
+    config: Optional[Path] = None
     include: str = regexu.INCLUDE_REGEX
     exclude: str = regexu.EXCLUDE_REGEX
     all_: bool = False
@@ -55,6 +73,11 @@ class Config:
             )
             raise typer.Exit(1)
 
+    def _check_regex(self) -> None:
+        """Validate `self.include/exclude`."""
+        self.include: Pattern[str] = regexu.safe_compile(self.include, regexu.INCLUDE)
+        self.exclude: Pattern[str] = regexu.safe_compile(self.exclude, regexu.EXCLUDE)
+
     def get_relpath(self, src: Union[Path, str]) -> str:
         """Get relative path from the given `src`.
 
@@ -68,3 +91,77 @@ class Config:
         if not str(relpath).startswith((DOT_FSLSH, DDOT_FSLSH)):
             relpath = os.path.join(DOT_FSLSH, relpath)
         return relpath
+
+
+class ParseConfigFile:
+
+    """Conifg file parser.
+
+    :param file_path: config file path.
+    :param config: Config instance as base.
+    """
+
+    def __init__(self, file_path: Union[Path, str], config: Config):
+        self._path = file_path
+        self._config = config
+        self._section = CONFIG_EXTENSIONS.get(self._path.suffix, None)
+        self.parse()
+        self._config.__post_init__()
+
+    def parse(self) -> None:
+        """Get conifg from a `cfg`/`toml`/`json`/`yaml`/`yml` file."""
+        if not Path(self._path).is_file():
+            typer.secho(
+                f"Config file {str(self._path)!r} does not exist 😅", bold=True, err=True
+            )
+            raise typer.Exit(1)
+        if self._section is None:
+            typer.secho(
+                f"Config file {str(self._path)!r} is not supported 😅",
+                bold=True,
+                err=True,
+            )
+            typer.secho(f"Supported types: {CONFIG_EXTENSIONS.keys()}.", err=True)
+            raise typer.Exit(1)
+        getattr(self, f"_parse_{self._path.suffix.strip(DOT)}")()
+
+    def _parse_cfg(self) -> None:
+        # Parse `.cfg` file.
+        parser = configparser.ConfigParser(allow_no_value=True)
+        parser.read(self._path)
+        conifgs = parser._sections.get(self._section, {})
+        self._config_loader(conifgs)
+
+    def _parse_toml(self) -> None:
+        # Parse `.toml` file.
+        parsed_toml = toml.load(self._path)
+        tool, pycln = self._section.split(DOT)
+        configs = parsed_toml.get(tool, {}).get(pycln, {})
+        self._config_loader(conifgs)
+
+    def _parse_json(self) -> None:
+        # Parse `.json` file.
+        parsed_json = json.load(self._path)
+        configs = parsed_json.get(self._section, {})
+        self._config_loader(conifgs)
+
+    def _parse_yaml(self) -> None:
+        # Parse `.yaml` file.
+        with tokenize.open(self._path) as stream:
+            parsed_yaml = yaml.load(stream, Loader=yaml.SafeLoader)
+        conifgs = parsed_yaml.get(self._section, {})
+        self._config_loader(conifgs)
+
+    def _parse_yml(self) -> None:
+        # Support `.yml` file.
+        return self.parse_yaml()
+
+    def _config_loader(self, config_dict: dict) -> None:
+        # k, v: config loader.
+        if config_dict:
+            for k, v in config_dict.items():
+                # Python preserved name.
+                # `all` ~> `all_`.
+                k = "all_" if k == "all" else k
+                if hasattr(Config, k):
+                    setattr(self._config, k, v)

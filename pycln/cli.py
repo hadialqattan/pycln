@@ -1,13 +1,15 @@
 """Pycln CLI implementation."""
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Optional
 
 import typer
 
 from . import __doc__, __name__, version_callback
-from .utils import config, pathu, refactor, regexu, report
+from .utils import pathu, refactor, regexu, report
+from .utils.config import Config
 
 # Constants.
+DOT = "."
 EMPTY = ""
 
 app = typer.Typer(name=__name__, add_completion=True)
@@ -16,6 +18,9 @@ app = typer.Typer(name=__name__, add_completion=True)
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main(
     path: Path = typer.Argument(None, help="Directory or a file path."),
+    config: Optional[Path] = typer.Option(
+        None, "--config", show_default=False, help="Read configuration from a file."
+    ),
     include: str = typer.Option(
         regexu.INCLUDE_REGEX,
         "--include",
@@ -109,7 +114,7 @@ def main(
         False,
         "--no-gitignore",
         show_default=True,
-        help="Set to ignore `.gitignore` patterns. if present.",
+        help="Ignore `.gitignore` patterns. if present.",
     ),
     version: bool = typer.Option(
         None,
@@ -118,8 +123,9 @@ def main(
         help="Show the version and exit.",
     ),
 ):
-    configs = config.Config(
+    configs = Config(
         path=path,
+        config=config,
         include=include,
         exclude=exclude,
         all_=all_,
@@ -133,15 +139,10 @@ def main(
     )
     reporter = report.Report(configs)
     session_maker = refactor.Refactor(configs, reporter)
-    if path.is_file() and str(path).endswith(pathu.PY_EXTENSION):
-        sources = [path]
-    else:
-        gitignore = regexu.get_gitignore(
-            configs.path if not configs.no_gitignore else EMPTY
-        )
-        sources: Generator = pathu.yield_sources(
-            configs.path, configs.include, configs.exclude, gitignore, reporter
-        )
+    gitignore = regexu.get_gitignore(Path(DOT), configs.no_gitignore)
+    sources: Generator = pathu.yield_sources(
+        configs.path, configs.include, configs.exclude, gitignore, reporter
+    )
     for source in sources:
         session_maker.session(configs.get_relpath(source))
     # Print the report.
