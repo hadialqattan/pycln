@@ -5,20 +5,20 @@ from copy import copy
 from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
-from typing import List, Set, Tuple, Union, Optional
+from typing import List, Optional, Set, Tuple, Union
 
-from . import scan, pathu, regexu, iou
-from .nodes import Import, ImportFrom
-from .config import Config
-from .report import Report
+from . import iou, pathu, regexu, scan
 from ._exceptions import (
     ReadPermissionError,
     UnexpandableImportStar,
     UnparsableFile,
-    WritePermissionError,
     UnsupportedCase,
+    WritePermissionError,
     libcst_parser_syntax_error_message,
 )
+from .config import Config
+from .nodes import Import, ImportFrom
+from .report import Report
 
 
 class LazyLibCSTLoader:
@@ -103,6 +103,8 @@ class Refactor:
     def session(self, path: Union[Path, str]) -> None:
         """Refactoring session.
 
+        Refactor the given `path` source code.
+
         :param path: `.py` file to refactor.
         """
         self._path = path
@@ -113,22 +115,9 @@ class Refactor:
                 permissions = (os.R_OK, os.W_OK)
             content, encoding = iou.safe_read(self._path, permissions)
 
-            # Skip any file that has `# nopycln: file`.
-            if regexu.skip_file(content):
-                self.reporter.ignored_path(self._path, NOPYCLN)
-                return
-
-            # Parse and analyze the `content` AST.
-            tree = scan.parse_ast(content, self._path)
-            original_lines = content.splitlines(True)
-            stats = self._analyze(tree, original_lines)
-            if not stats:
-                return
-            self._source_stats, self._import_stats = stats
-
             # Refactor and output the `content`.
-            fixed_lines = self._refactor(original_lines).splitlines(True)
-            self._output(fixed_lines, original_lines, encoding)
+            fixed_lines = self._code_session(content).splitlines(True)
+            self._output(fixed_lines, content.splitlines(True), encoding)
         except (
             ReadPermissionError,
             WritePermissionError,
@@ -137,6 +126,28 @@ class Refactor:
             self.reporter.failure(err)
         finally:
             self._reset()
+
+    def _code_session(self, source_code: str) -> str:
+        """Refactor the given `source_code`.
+
+        :param source_code: python source code.
+        :returns: fixed source code.
+        """
+        # Skip any file that has `# nopycln: file`.
+        if regexu.skip_file(source_code):
+            self.reporter.ignored_path(self._path, NOPYCLN)
+            return source_code
+
+        # Parse and analyze the `source_code` AST.
+        tree = scan.parse_ast(source_code, self._path)
+        original_lines = source_code.splitlines(True)
+        stats = self._analyze(tree, original_lines)
+        if not stats:
+            return source_code
+        self._source_stats, self._import_stats = stats
+
+        # Refactor the `source_code`.
+        return self._refactor(original_lines)
 
     def _output(
         self, fixed_lines: List[str], original_lines: List[str], encoding: str
