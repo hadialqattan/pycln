@@ -5,7 +5,7 @@ from typing import List, Optional, Set, TypeVar, Union, cast
 import libcst as cst
 
 from ._exceptions import UnsupportedCase
-from .nodes import NodeLocation
+from ._nodes import NodeLocation
 
 # Constants.
 SPACE4 = " " * 4

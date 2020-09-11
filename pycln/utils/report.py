@@ -7,7 +7,7 @@ from typing import List, Optional, Union
 
 import typer
 
-from . import config, nodes
+from . import _nodes, config
 
 
 @dataclass
@@ -22,11 +22,11 @@ class Report:
     configs: config.Config
 
     @staticmethod
-    def get_location(path: Path, location: nodes.NodeLocation) -> str:
+    def get_location(path: Path, location: _nodes.NodeLocation) -> str:
         """Create full location from `path` and node location.
 
         :param path: file path.
-        :param location: `nodes.NodeLocation`.
+        :param location: `_nodes.NodeLocation`.
         :returns: full location.
         """
         start = location.start
@@ -103,7 +103,7 @@ class Report:
 
     @staticmethod
     def rebuild_report_import(
-        node: Union[nodes.Import, nodes.ImportFrom],
+        node: Union[_nodes.Import, _nodes.ImportFrom],
         alias: ast.alias,
     ) -> str:
         """Rebuild import statement from AST for reporting purposes.
@@ -114,7 +114,7 @@ class Report:
         str_alias = f"{alias.name} as {alias.asname}" if alias.asname else alias.name
         str_import = (
             f"from {node.relative_name} import"
-            if isinstance(node, nodes.ImportFrom)
+            if isinstance(node, _nodes.ImportFrom)
             else "import"
         )
         return f"{str_import} {str_alias}"
@@ -125,7 +125,7 @@ class Report:
     def removed_import(
         self,
         path: Path,
-        node: Union[nodes.Import, nodes.ImportFrom],
+        node: Union[_nodes.Import, _nodes.ImportFrom],
         removed_alias: ast.alias,
     ) -> None:
         """Increment `self._removed_imports`. Write a message to stdout.
@@ -150,7 +150,7 @@ class Report:
     #: Total expanded import statements counter.
     _expanded_stars: int = 0
 
-    def expanded_star(self, path: Path, node: nodes.ImportFrom) -> None:
+    def expanded_star(self, path: Path, node: _nodes.ImportFrom) -> None:
         """Increment `self._expanded_stars`. Write a message to stdout.
 
         :param path: where the import has expanded.
@@ -253,7 +253,7 @@ class Report:
     def ignored_import(
         self,
         path: Path,
-        node: Union[nodes.Import, nodes.ImportFrom],
+        node: Union[_nodes.Import, _nodes.ImportFrom],
         is_star: bool = False,
     ) -> None:
         """Increment `self._ignored_imports`. Write a message to stderr.

@@ -16,8 +16,8 @@ from ._exceptions import (
     WritePermissionError,
     libcst_parser_syntax_error_message,
 )
+from ._nodes import Import, ImportFrom
 from .config import Config
-from .nodes import Import, ImportFrom
 from .report import Report
 
 # Constants.

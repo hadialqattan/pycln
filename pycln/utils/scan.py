@@ -10,7 +10,7 @@ from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, cast
 
-from . import iou, nodes, pathu
+from . import _nodes, iou, pathu
 from ._exceptions import ReadPermissionError, UnexpandableImportStar, UnparsableFile
 
 # Constants.
@@ -54,8 +54,8 @@ class ImportStats:
 
     """Import statements statistics."""
 
-    import_: Set[nodes.Import]
-    from_: Set[nodes.ImportFrom]
+    import_: Set[_nodes.Import]
+    from_: Set[_nodes.ImportFrom]
 
     def __iter__(self):
         return iter([self.import_, self.from_])
@@ -102,7 +102,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             raise ValueError("Please provide source lines for Python < 3.8.")
         self._lines = source_lines
         self._import_stats = ImportStats(set(), set())
-        self._imports_to_skip: Set[Union[nodes.Import, nodes.ImportFrom]] = set()
+        self._imports_to_skip: Set[Union[_nodes.Import, _nodes.ImportFrom]] = set()
         self._source_stats = SourceStats(set(), set(), set())
 
     @recursive
@@ -261,23 +261,23 @@ class SourceAnalyzer(ast.NodeVisitor):
             elif isinstance(node, ast.Attribute):
                 self._source_stats.attr_.add(node.attr)
 
-    def _get_py38_import_node(self, node: ast.Import) -> nodes.Import:
+    def _get_py38_import_node(self, node: ast.Import) -> _nodes.Import:
         # Convert any Python < 3.8 `ast.Import`
-        # to `nodes.Import` in order to support `end_lineno`.
+        # to `_nodes.Import` in order to support `end_lineno`.
         if PY38_PLUS:
             end_lineno = node.end_lineno
         else:
             line = self._lines[node.lineno - 1]
             multiline = self._is_parentheses(line) is not None
             end_lineno = node.lineno + (1 if multiline else 0)
-        start = nodes.NodePosition(node.lineno, node.col_offset)
-        end = nodes.NodePosition(end_lineno)
-        location = nodes.NodeLocation(start, end)
-        return nodes.Import(location=location, names=node.names)
+        start = _nodes.NodePosition(node.lineno, node.col_offset)
+        end = _nodes.NodePosition(end_lineno)
+        location = _nodes.NodeLocation(start, end)
+        return _nodes.Import(location=location, names=node.names)
 
-    def _get_py38_import_from_node(self, node: ast.ImportFrom) -> nodes.ImportFrom:
+    def _get_py38_import_from_node(self, node: ast.ImportFrom) -> _nodes.ImportFrom:
         # Convert any Python < 3.8 `ast.ImportFrom`
-        # to `nodes.ImportFrom` in order to support `end_lineno`.
+        # to `_nodes.ImportFrom` in order to support `end_lineno`.
         if PY38_PLUS:
             end_lineno = node.end_lineno
         else:
@@ -289,10 +289,10 @@ class SourceAnalyzer(ast.NodeVisitor):
                 if not multiline
                 else self._get_end_lineno(node.lineno, is_parentheses)
             )
-        start = nodes.NodePosition(node.lineno, node.col_offset)
-        end = nodes.NodePosition(end_lineno)
-        location = nodes.NodeLocation(start, end)
-        return nodes.ImportFrom(
+        start = _nodes.NodePosition(node.lineno, node.col_offset)
+        end = _nodes.NodePosition(end_lineno)
+        location = _nodes.NodeLocation(start, end)
+        return _nodes.ImportFrom(
             location=location,
             names=node.names,
             module=node.module,
@@ -351,8 +351,8 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     def handle_c_libs_importables(module_name: str, level: int) -> Set[str]:
         """Handle libs written in C or built-in CPython.
 
-        :param module_name: `nodes/ast.ImportFrom.module`.
-        :param level: `nodes/ast.ImportFrom.level`.
+        :param module_name: `_nodes/ast.ImportFrom.module`.
+        :param level: `_nodes/ast.ImportFrom.level`.
         :returns: set of importables.
         :raises ModuleNotFoundError: when we can't find the spec of the `module_name`
             and/or can't create the module.
@@ -569,13 +569,13 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
 
 
 def expand_import_star(
-    node: Union[ast.ImportFrom, nodes.ImportFrom], path: Path
-) -> Union[ast.ImportFrom, nodes.ImportFrom]:
+    node: Union[ast.ImportFrom, _nodes.ImportFrom], path: Path
+) -> Union[ast.ImportFrom, _nodes.ImportFrom]:
     """Expand import star statement, replace the `*` with a list of ast.alias.
 
-    :param node: `nodes/ast.ImportFrom` node that has a '*' as `alias.name`.
+    :param node: `_nodes/ast.ImportFrom` node that has a '*' as `alias.name`.
     :param path: where the node has imported.
-    :returns: expanded `nodes/ast.ImportFrom` (same input node type).
+    :returns: expanded `_nodes/ast.ImportFrom` (same input node type).
     :raises UnexpandableImportStar: when `ReadPermissionError`,
         `UnparsableFile` or `ModuleNotFoundError` raised.
     """
@@ -604,9 +604,9 @@ def expand_import_star(
         if hasattr(node, "location"):
             location = node.location  # type: ignore
         else:
-            start = nodes.NodePosition(node.lineno, node.col_offset)  # type: ignore
-            end = nodes.NodePosition(node.end_lineno)  # type: ignore
-            location = nodes.NodeLocation(start, end)
+            start = _nodes.NodePosition(node.lineno, node.col_offset)  # type: ignore
+            end = _nodes.NodePosition(node.end_lineno)  # type: ignore
+            location = _nodes.NodeLocation(start, end)
         raise UnexpandableImportStar(path, location, str(msg))
 
     # Create `ast.alias` for each name.

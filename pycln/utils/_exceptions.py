@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import Union
 
-from .nodes import NodeLocation
+from ._nodes import NodeLocation
 
 
 class BaseOSError(Exception):
