@@ -8,9 +8,9 @@ repos:
           [
             --line-length=88,
             --multi-line=3,
-            --trailing-comma=True,
             --force-grid-wrap=0,
-            --use-parentheses=True,
+            --trailing-comma,
+            --use-parentheses,
           ]
 
   - repo: https://github.com/myint/docformatter
