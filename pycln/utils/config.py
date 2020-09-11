@@ -14,7 +14,7 @@ import yaml
 from . import regexu
 
 # Constants.
-CONFIG_EXTENSIONS = {
+CONFIG_SECTIONS = {
     ".cfg": "pycln",
     ".toml": "tool.pycln",
     ".json": "pycln",
@@ -102,7 +102,7 @@ class ParseConfigFile:
     def __init__(self, file_path: Path, config: Config):
         self._path = file_path
         self._config = config
-        self._section = CONFIG_EXTENSIONS.get(self._path.suffix, None)
+        self._section = CONFIG_SECTIONS.get(self._path.suffix, None)
         self.parse()
         self._config.__post_init__()
 
@@ -119,7 +119,7 @@ class ParseConfigFile:
                 bold=True,
                 err=True,
             )
-            typer.secho(f"Supported types: {CONFIG_EXTENSIONS.keys()}.", err=True)
+            typer.secho(f"Supported types: {CONFIG_SECTIONS.keys()}.", err=True)
             raise typer.Exit(1)
         getattr(self, f"_parse_{self._path.suffix.strip('.')}")()
 
