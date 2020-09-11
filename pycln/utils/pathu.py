@@ -4,7 +4,7 @@ import sys
 from distutils import sysconfig
 from functools import lru_cache
 from pathlib import Path
-from typing import Generator, List, Pattern, Set, Optional
+from typing import Generator, List, Optional, Pattern, Set
 
 from pathspec import PathSpec
 
@@ -63,6 +63,12 @@ def yield_sources(
     :param reporter: a `report.Report` object.
     :returns: generator of `.py` files paths.
     """
+    if path.is_file():
+        if str(path).endswith(PY_EXTENSION):
+            yield path
+            return
+        return
+
     dirs: List[str] = []
     files: List[str] = []
 
@@ -104,16 +110,16 @@ def yield_sources(
 
     for dirname in dirs:
 
-        dir_path = os.path.join(path, dirname)
+        dir_path = Path(os.path.join(path, dirname))
 
         # Compute exclusions.
         if is_excluded(dirname, exclude):
-            reporter.ignored_path(dir_path, EXCLUDE)
+            reporter.ignored_path(str(dir_path), EXCLUDE)
             continue
 
         # Compute `.gitignore`.
         if gitignore.match_file(dirname):
-            reporter.ignored_path(dir_path, GITIGNORE)
+            reporter.ignored_path(str(dir_path), GITIGNORE)
             continue
 
         yield from yield_sources(dir_path, include, exclude, gitignore, reporter)
