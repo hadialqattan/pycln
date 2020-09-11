@@ -1,0 +1,7 @@
+- id: pycln
+  name: pycln
+  description: "Find and remove all unused import statements from your Python files."
+  entry: pycln
+  language: python
+  language_version: python3
+  types: [python]
