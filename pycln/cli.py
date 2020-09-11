@@ -8,10 +8,6 @@ from . import __doc__, __name__, version_callback
 from .utils import pathu, refactor, regexu, report
 from .utils.config import Config
 
-# Constants.
-DOT = "."
-EMPTY = ""
-
 app = typer.Typer(name=__name__, add_completion=True)
 
 
@@ -139,7 +135,7 @@ def main(
     )
     reporter = report.Report(configs)
     session_maker = refactor.Refactor(configs, reporter)
-    gitignore = regexu.get_gitignore(Path(DOT), configs.no_gitignore)
+    gitignore = regexu.get_gitignore(Path("."), configs.no_gitignore)
     sources: Generator = pathu.yield_sources(
         configs.path, configs.include, configs.exclude, gitignore, reporter
     )
