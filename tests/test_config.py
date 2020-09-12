@@ -38,12 +38,22 @@ class TestConfig:
 
     """`config.Config` class tests."""
 
+    @pytest.mark.parametrize(
+        "config_",
+        [
+            pytest.param(None, id="no config file"),
+            pytest.param(Path(CONFIG_DIR).joinpath("setup.cfg"), id="with config file"),
+        ],
+    )
+    @mock.patch("pycln.utils.config.ParseConfigFile.__init__")
     @mock.patch("pycln.utils.config.Config._check_path")
     @mock.patch("pycln.utils.config.Config._check_regex")
-    def test__post_init_normal_config(self, _check_regex, _check_path):
+    def test_post_init(self, _check_regex, _check_path, init, config_):
         # Test `__post_init__` method.
+        init.return_value = None
         configs = config.Config(
             path=Path("."),
+            config=config_,
             include=CONFIG["include"],
             exclude=CONFIG["exclude"],
             expand_stars=True,
@@ -56,29 +66,24 @@ class TestConfig:
                 assert getattr(configs, attr) == val
         assert configs.path == Path(".")
 
-    @mock.patch("pycln.utils.config.ParseConfigFile.__init__")
-    @mock.patch("pycln.utils.config.Config._check_path")
+    @pytest.mark.parametrize(
+        "path, expec_err",
+        [
+            pytest.param(None, "No Path provided. Nothing to do 😴\n", id="empty path"),
+            pytest.param(
+                Path("not_exists"),
+                (
+                    "'not_exists' is not a directory or a file."
+                    " Maybe it does not exist 😅\n"
+                ),
+                id="not exists path",
+            ),
+        ],
+    )
     @mock.patch("pycln.utils.config.Config._check_regex")
-    def test_post_init_file_config(self, _check_regex, _check_path, init):
-        # Test `__post_init__` method.
-        configs = config.Config(
-            path=Path("."),
-            include=CONFIG["include"],
-            exclude=CONFIG["exclude"],
-            expand_stars=True,
-            verbose=True,
-            diff=True,
-            all_=True,
-        )
-        for attr, val in CONFIG.items():
-            if attr != "all":
-                assert getattr(configs, attr) == val
-
-    @mock.patch("pycln.utils.config.Config._check_regex")
-    def test_check_path_empty_path(self, _check_regex):
+    def test_check_path(self, _check_regex, path, expec_err):
         # Test `_check_path` method.
-        path = None
-        expected_err = "No Path provided. Nothing to do 😴\n"
+        err_type, err_msg = None, None
         with std.redirect(std.STD.ERR) as stderr:
             try:
                 config.Config(path=path)
@@ -86,23 +91,7 @@ class TestConfig:
                 err_type = Exit
             err_msg = stderr.getvalue()
         assert err_type == Exit
-        assert err_msg == expected_err
-
-    @mock.patch("pycln.utils.config.Config._check_regex")
-    def test_check_path_invalid_path(self, _check_regex):
-        # Test `_check_path` method.
-        path = "invalid"
-        expected_err = (
-            f"{path!r} is not a directory or a file. Maybe it does not exist 😅\n"
-        )
-        with std.redirect(std.STD.ERR) as stderr:
-            try:
-                config.Config(path=Path(path))
-            except Exit:
-                err_type = Exit
-            err_msg = stderr.getvalue()
-        assert err_type == Exit
-        assert err_msg == expected_err
+        assert err_msg == expec_err
 
 
 class TestParseConfigFile:
@@ -114,11 +103,30 @@ class TestParseConfigFile:
     def setup_method(self, method, post_init, init):
         self.configs = config.Config(path=Path("."))
 
+    @pytest.mark.parametrize(
+        "path, expec_err",
+        [
+            pytest.param(
+                Path("not_exists_path.cfg"),
+                "Config file 'not_exists_path.cfg' does not exist 😅\n",
+                id="not exists path",
+            ),
+            pytest.param(
+                CONFIG_DIR.joinpath("invalid_type.invalid"),
+                (
+                    "Config file "
+                    f"{str(CONFIG_DIR.joinpath('invalid_type.invalid'))!r}"
+                    " is not supported 😅\n"
+                    f"Supported types: {CONFIG_SECTIONS.keys()}.\n"
+                ),
+                id="not supported type",
+            ),
+        ],
+    )
     @mock.patch("pycln.utils.config.Config.__post_init__")
-    def test_parse_invalid_path(self, post_init):
+    def test_parse(self, post_init, path, expec_err):
         # Test `parse` method.
-        path = Path("invalide_path.cfg")
-        expected_err = f"Config file {str(path)!r} does not exist 😅\n"
+        err_type, err_msg = None, None
         with std.redirect(std.STD.ERR) as stderr:
             try:
                 config.ParseConfigFile(path, self.configs)
@@ -126,47 +134,30 @@ class TestParseConfigFile:
                 err_type = Exit
             err_msg = stderr.getvalue()
         assert err_type == Exit
-        assert err_msg == expected_err
+        assert err_msg == expec_err
 
-    @mock.patch("pycln.utils.config.Config.__post_init__")
-    def test_parse_invaid_file_type(self, post_init):
-        # Test `parse` method.
-        path = CONFIG_DIR.joinpath("invalid_type.invalid")
-        expected_err = (
-            f"Config file {str(path)!r} is not supported 😅\n"
-            f"Supported types: {CONFIG_SECTIONS.keys()}.\n"
-        )
-        with std.redirect(std.STD.ERR) as stderr:
-            try:
-                config.ParseConfigFile(path, self.configs)
-            except Exit:
-                err_type = Exit
-            err_msg = stderr.getvalue()
-        assert err_type == Exit
-        assert err_msg == expected_err
-
+    @pytest.mark.parametrize(
+        "configs",
+        [
+            pytest.param(CONFIG, id="valid"),
+            pytest.param({**CONFIG, **{"Invalid": "data"}}, id="invalid"),
+        ],
+    )
     @mock.patch("pycln.utils.config.Config.__post_init__")
     @mock.patch("pycln.utils.config.ParseConfigFile.parse")
-    def test_config_loader_valid_args(self, parse, post_init):
+    def test_config_loader(self, parse, post_init, configs):
         # Test `_config_loader` method.
         config_parser = config.ParseConfigFile(Path(""), self.configs)
-        config_parser._config_loader(CONFIG)
+        config_parser._config_loader(configs)
         for attr, val in CONFIG.items():
             if attr != "all":
                 print(attr, getattr(self.configs, attr), val)
                 assert getattr(self.configs, attr) == val
+        assert getattr(self.configs, "Invalid", None) is None
 
-    @mock.patch("pycln.utils.config.Config.__post_init__")
-    @mock.patch("pycln.utils.config.ParseConfigFile.parse")
-    def test_config_loader_invalide_args(self, parse, post_init):
-        # Test `_config_loader` method.
-        config_parser = config.ParseConfigFile(Path(""), self.configs)
-        config_parser._config_loader({"invalid": "value"})
-        for attr, val in self.configs.__dict__.items():
-            assert getattr(self.configs, attr) == val
-        assert getattr(self.configs, "invalid", None) is None
-
-    @pytest.mark.parametrize("file_path", CONFIG_FILES)
+    @pytest.mark.parametrize(
+        "file_path", [pytest.param(path, id=path.parts[-1]) for path in CONFIG_FILES]
+    )
     @mock.patch("pycln.utils.config.Config.__post_init__")
     def test_parse_methods(self, post_init, file_path):
         # Test `_parse_*` methods:
