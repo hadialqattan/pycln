@@ -73,7 +73,7 @@ def get_gitignore(root: Path, no_gitignore: bool) -> PathSpec:
     lines: List[str] = []
     if not no_gitignore:
         path = os.path.join(root, GITIGNORE)
-        if os.path.isfile(path) and root:
+        if os.path.isfile(path):
             if os.access(path, os.R_OK):
                 with tokenize.open(path) as ignore_file:
                     lines = ignore_file.readlines()
