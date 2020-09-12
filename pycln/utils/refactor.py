@@ -128,7 +128,7 @@ class Refactor:
         :param source_code: python source code.
         :returns: fixed source code.
         """
-        # Skip any file that has `# nopycln: file`.
+        # Skip any file that has `nopycln: file` comment.
         if regexu.skip_file(source_code):
             self.reporter.ignored_path(self._path, NOPYCLN)
             return source_code
