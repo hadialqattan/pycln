@@ -1,7 +1,9 @@
+from pathlib import Path
+
 import toml
 import typer
 
-PYPROJECT_PATH = "./pyproject.toml"
+PYPROJECT_PATH = Path(__file__).parent.parent.joinpath("pyproject.toml")
 pycln = toml.load(PYPROJECT_PATH)["tool"]["poetry"]
 
 __name__ = pycln["name"]
