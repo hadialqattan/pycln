@@ -8,10 +8,10 @@ from typer import Exit
 
 from pycln.utils import config
 
+from . import CONFIG_DIR
 from .utils import std
 
 # Constants.
-CONFIG_DIR = Path(__file__).parent.joinpath(Path("config"))
 CONFIG_SECTIONS = config.CONFIG_SECTIONS
 CONFIG_FILES = {
     CONFIG_DIR.joinpath(path)
