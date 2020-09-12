@@ -1,0 +1,12 @@
+[tool.black]
+line_length=88
+verbose=true
+
+[tool.pycln]
+include=".*_util.py$"
+exclude=".*_test.py$"
+expand_stars=true
+verbose=true
+diff=true
+all=true
+

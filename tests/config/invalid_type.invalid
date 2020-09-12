@@ -1,0 +1,3 @@
+[pycln]
+all = True
+diff = True

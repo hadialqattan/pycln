@@ -1,7 +1,6 @@
 """Pycln configuration management utility."""
 import configparser
 import json
-import os
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
@@ -39,8 +38,8 @@ class Config:
 
     path: Path
     config: Optional[Path] = None
-    include: Pattern[str] = regexu.INCLUDE_REGEX
-    exclude: Pattern[str] = regexu.EXCLUDE_REGEX
+    include: Pattern[str] = regexu.INCLUDE_REGEX  # type: ignore
+    exclude: Pattern[str] = regexu.EXCLUDE_REGEX  # type: ignore
     all_: bool = False
     check: bool = False
     diff: bool = False
@@ -77,18 +76,6 @@ class Config:
         self.exclude: Pattern[str] = regexu.safe_compile(
             str(self.exclude), regexu.EXCLUDE
         )
-
-    def get_relpath(self, src: Union[Path, str]) -> Path:
-        """Get relative path from the given `src`.
-
-        :param src: an absolute path.
-        :returns: a relative path (relative to `self.configs.path`).
-        """
-        relpath = Path(src)
-        if not relpath.is_file():
-            os_relpath = os.path.relpath(relpath, self.path)
-            relpath = Path(os.path.join(self.path, os_relpath))
-        return relpath
 
 
 class ParseConfigFile:
@@ -127,7 +114,16 @@ class ParseConfigFile:
         # Parse `.cfg` file.
         parser = configparser.ConfigParser(allow_no_value=True)
         parser.read(self._path)
-        configs = parser._sections.get(self._section, {})  # type: ignore
+        cfg_data = parser._sections.get(self._section, {})  # type: ignore
+
+        def cast_bool(v: str) -> Union[str, bool]:
+            if v.lower() == "true":
+                return True
+            elif v.lower() == "false":
+                return False
+            return v
+
+        configs = {k: cast_bool(v) for k, v in cfg_data.items()}
         self._config_loader(configs)
 
     def _parse_toml(self) -> None:

@@ -1,6 +1,6 @@
 """Pycln CLI implementation."""
 from pathlib import Path
-from typing import Generator, Optional, Pattern
+from typing import Generator, Optional
 
 import typer
 
@@ -17,7 +17,7 @@ def main(
     config: Optional[Path] = typer.Option(
         None, "--config", show_default=False, help="Read configuration from a file."
     ),
-    include: Pattern[str] = typer.Option(
+    include: str = typer.Option(
         regexu.INCLUDE_REGEX,
         "--include",
         "-i",
@@ -30,7 +30,7 @@ def main(
             " Exclusions are calculated first, inclusions later."
         ),
     ),
-    exclude: Pattern[str] = typer.Option(
+    exclude: str = typer.Option(
         regexu.EXCLUDE_REGEX,
         "--exclude",
         "-e",
@@ -122,8 +122,8 @@ def main(
     configs = Config(
         path=path,
         config=config,
-        include=include,
-        exclude=exclude,
+        include=include,  # type: ignore
+        exclude=exclude,  # type: ignore
         all_=all_,
         check=check,
         diff=diff,
@@ -140,7 +140,7 @@ def main(
         configs.path, configs.include, configs.exclude, gitignore, reporter
     )
     for source in sources:
-        session_maker.session(configs.get_relpath(source))
+        session_maker.session(source)
     # Print the report.
     typer.echo(str(reporter), nl=False)
     # Set the correct exit code and exit.
