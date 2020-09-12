@@ -40,7 +40,7 @@ class TestConfig:
 
     @patch("pycln.utils.config.Config._check_path")
     @patch("pycln.utils.config.Config._check_regex")
-    def test_normal_config(self, _check_regex, _check_path):
+    def test__post_init_normal_config(self, _check_regex, _check_path):
         # Test `__post_init__` method.
         configs = config.Config(
             path=Path("."),
@@ -59,7 +59,7 @@ class TestConfig:
     @patch("pycln.utils.config.ParseConfigFile.__init__")
     @patch("pycln.utils.config.Config._check_path")
     @patch("pycln.utils.config.Config._check_regex")
-    def test_file_config(self, _check_regex, _check_path, init):
+    def test_post_init_file_config(self, _check_regex, _check_path, init):
         # Test `__post_init__` method.
         configs = config.Config(
             path=Path("."),
@@ -75,7 +75,7 @@ class TestConfig:
                 assert getattr(configs, attr) == val
 
     @patch("pycln.utils.config.Config._check_regex")
-    def test_empty_path(self, _check_regex):
+    def test_check_path_empty_path(self, _check_regex):
         # Test `_check_path` method.
         path = None
         expected_err = "No Path provided. Nothing to do 😴\n"
@@ -89,7 +89,7 @@ class TestConfig:
         assert err_msg == expected_err
 
     @patch("pycln.utils.config.Config._check_regex")
-    def test_invalid_path(self, _check_regex):
+    def test_check_path_invalid_path(self, _check_regex):
         # Test `_check_path` method.
         path = "invalid"
         expected_err = (
@@ -105,7 +105,7 @@ class TestConfig:
         assert err_msg == expected_err
 
     @patch("pycln.utils.config.Config._check_path")
-    def test_valid_regex(self, _check_path):
+    def test_check_regex_valid_regex(self, _check_path):
         # Test `_check_regex` method.
         configs = config.Config(
             path=None, include=r".*_util.py$", exclude=r".*_test.py$"
@@ -114,7 +114,7 @@ class TestConfig:
             assert getattr(configs, r) == CONFIG[r]
 
     @patch("pycln.utils.config.Config._check_path")
-    def test_invalid_regex(self, _check_path):
+    def test_check_regex_invalid_regex(self, _check_path):
         # Test `_check_regex` method.
         regex = r"**invalid**"
         expected_err = f"Invalid regular expression for include given: {regex!r} ⛔\n"
@@ -138,7 +138,7 @@ class TestParseConfigFile:
         self.configs = config.Config(path=Path("."))
 
     @patch("pycln.utils.config.Config.__post_init__")
-    def test_invalid_path(self, post_init):
+    def test_parse_invalid_path(self, post_init):
         # Test `parse` method.
         path = Path("invalide_path.cfg")
         expected_err = f"Config file {str(path)!r} does not exist 😅\n"
@@ -152,7 +152,7 @@ class TestParseConfigFile:
         assert err_msg == expected_err
 
     @patch("pycln.utils.config.Config.__post_init__")
-    def test_invaid_file_type(self, post_init):
+    def test_parse_invaid_file_type(self, post_init):
         # Test `parse` method.
         path = CONFIG_DIR.joinpath("invalid_type.invalid")
         expected_err = (
@@ -170,7 +170,7 @@ class TestParseConfigFile:
 
     @patch("pycln.utils.config.Config.__post_init__")
     @patch("pycln.utils.config.ParseConfigFile.parse")
-    def test_valid_args(self, parse, post_init):
+    def test_config_loader_valid_args(self, parse, post_init):
         # Test `_config_loader` method.
         config_parser = config.ParseConfigFile(Path(""), self.configs)
         config_parser._config_loader(CONFIG)
@@ -181,7 +181,7 @@ class TestParseConfigFile:
 
     @patch("pycln.utils.config.Config.__post_init__")
     @patch("pycln.utils.config.ParseConfigFile.parse")
-    def test_invalide_args(self, parse, post_init):
+    def test_config_loader_invalide_args(self, parse, post_init):
         # Test `_config_loader` method.
         config_parser = config.ParseConfigFile(Path(""), self.configs)
         config_parser._config_loader({"invalid": "value"})

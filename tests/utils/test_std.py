@@ -5,14 +5,14 @@ from . import std
 
 
 class TestSTD:
-    def test_stdout(self):
+    def test_redirect_stdout(self):
         # Test `redirect` function.
         with std.redirect(std.STD.OUT) as stdout:
             out = "Test stdout.\n"
             print(out, end="", file=sys.stdout)
             assert stdout.getvalue() == out
 
-    def test_stderr(self):
+    def test_redirect_stderr(self):
         # Test `redirect` function.
         with std.redirect(std.STD.ERR) as stderr:
             err = "Test stderr.\n"
