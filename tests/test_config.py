@@ -14,11 +14,14 @@ from .utils import std
 CONFIG_DIR = Path(__file__).parent.joinpath(Path("config"))
 CONFIG_SECTIONS = config.CONFIG_SECTIONS
 CONFIG_FILES = {
-    CONFIG_DIR.joinpath("setup.cfg"),
-    CONFIG_DIR.joinpath("pyproject.toml"),
-    CONFIG_DIR.joinpath("settings.json"),
-    CONFIG_DIR.joinpath("pycln.yaml"),
-    CONFIG_DIR.joinpath("pycln.yml"),
+    CONFIG_DIR.joinpath(path)
+    for path in (
+        "setup.cfg",
+        "pyproject.toml",
+        "settings.json",
+        "pycln.yaml",
+        "pycln.yml",
+    )
 }
 CONFIG = {
     "include": re.compile(r".*_util.py$", re.IGNORECASE),
