@@ -21,32 +21,64 @@ class TestRegexU:
 
     """`regexu.py` functions test case."""
 
-    @pytest.mark.parametrize("regex", [INCLUDE_REGEX, COMPILED_INCLUDE_REGEX])
-    def test_safe_compile_valid_regex(self, regex):
-        # Test `safe_compile` function.
-        compiled_regex = regexu.safe_compile(regex, "include")
-        assert compiled_regex == COMPILED_INCLUDE_REGEX
-
-    def test_safe_compile_invalid_regex(self):
+    @pytest.mark.parametrize(
+        "regex, expec_err_type, expec_err",
+        [
+            pytest.param(INCLUDE_REGEX, None, "", id="valid, regex: str"),
+            pytest.param(
+                COMPILED_INCLUDE_REGEX, None, "", id="valid, regex: Pattern[str]"
+            ),
+            pytest.param(
+                r"**invalid**",
+                Exit,
+                "Invalid regular expression for include given: '**invalid**' ⛔\n",
+                id="invalid: regex: str",
+            ),
+        ],
+    )
+    def test_safe_compile(self, regex, expec_err_type, expec_err):
         # Test `safe_comile` function.
-        regex = r"**invalid**"
-        expected_err = f"Invalid regular expression for include given: {regex!r} ⛔\n"
+        err_type, err_msg = None, ""
         with std.redirect(std.STD.ERR) as stderr:
             try:
                 regexu.safe_compile(regex, "include")
             except Exit:
                 err_type = Exit
             err_msg = stderr.getvalue()
-        assert err_type == Exit
-        assert err_msg == expected_err
+        assert err_type == expec_err_type
+        assert err_msg == expec_err
 
     @pytest.mark.parametrize(
         "type_, name, regex, expec",
         [
-            ("included", "pycln_util.py", COMPILED_INCLUDE_REGEX, True),
-            ("excluded", "pycln_test.py", COMPILED_EXCLUDE_REGEX, True),
-            ("included", "main.py", COMPILED_INCLUDE_REGEX, False),
-            ("excluded", "cli.py", COMPILED_EXCLUDE_REGEX, False),
+            pytest.param(
+                "included",
+                "pycln_util.py",
+                COMPILED_INCLUDE_REGEX,
+                True,
+                id="include -> True",
+            ),
+            pytest.param(
+                "excluded",
+                "pycln_test.py",
+                COMPILED_EXCLUDE_REGEX,
+                True,
+                id="exclude -> True",
+            ),
+            pytest.param(
+                "included",
+                "main.py",
+                COMPILED_INCLUDE_REGEX,
+                False,
+                id="include -> False",
+            ),
+            pytest.param(
+                "excluded",
+                "cli.py",
+                COMPILED_EXCLUDE_REGEX,
+                False,
+                id="exclude -> False",
+            ),
         ],
     )
     def test_is_(self, type_, name, regex, expec):
@@ -56,9 +88,9 @@ class TestRegexU:
     @pytest.mark.parametrize(
         "root, no_gitignore, expec",
         [
-            (CONFIG_DIR, False, True),
-            (Path("NotExists"), False, False),
-            (Path("NoMatter"), True, False),
+            pytest.param(CONFIG_DIR, False, True, id="valid path"),
+            pytest.param(Path("NotExists"), False, False, id="not exists path"),
+            pytest.param(Path("NoMatter"), True, False, id="no gitignore"),
         ],
     )
     def test_get_gitignore(self, root, no_gitignore, expec):
@@ -70,9 +102,9 @@ class TestRegexU:
     @pytest.mark.parametrize(
         "line, expec",
         [
-            ("import os  # nopycln: import", True),
-            ("import sys  # noqa", True),
-            ("import time", False),
+            pytest.param("import os  # nopycln: import", True, id="nopycln: import"),
+            pytest.param("import sys  # noqa", True, id="noqa"),
+            pytest.param("import time", False, id="no comment"),
         ],
     )
     def test_skip_import(self, line, expec):
@@ -81,7 +113,12 @@ class TestRegexU:
 
     @pytest.mark.parametrize(
         "src_code, expec",
-        [("#" + " nopycln: file\n source code...", True), ("source code...", False)],
+        [
+            pytest.param(
+                "#" + " nopycln: file\n source code...", True, id="nopycln: file"
+            ),
+            pytest.param("source code...", False, id="no comment"),
+        ],
     )
     def test_skip_file(self, src_code, expec):
         # Test `skip_file` function.
