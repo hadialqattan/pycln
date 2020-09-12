@@ -1,20 +1,28 @@
 """Test `tests/utils/std.py`."""
 import sys
 
+import pytest
+
 from . import std
 
 
 class TestSTD:
-    def test_redirect_stdout(self):
-        # Test `redirect` function.
-        with std.redirect(std.STD.OUT) as stdout:
-            out = "Test stdout.\n"
-            print(out, end="", file=sys.stdout)
-            assert stdout.getvalue() == out
 
-    def test_redirect_stderr(self):
+    """`std.py` functions test case."""
+
+    @pytest.mark.parametrize(
+        "std_type",
+        [
+            pytest.param(std.STD.OUT, id="stdout"),
+            pytest.param(std.STD.ERR, id="stderr"),
+        ],
+    )
+    def test_redirect(self, std_type):
         # Test `redirect` function.
-        with std.redirect(std.STD.ERR) as stderr:
-            err = "Test stderr.\n"
-            print(err, end="", file=sys.stderr)
-            assert stderr.getvalue() == err
+        with std.redirect(std_type) as std_stream:
+            out = "Test std stream.\n"
+            if std_type is std.STD.OUT:
+                print(out, end="", file=sys.stdout)
+            else:
+                print(out, end="", file=sys.stderr)
+            assert std_stream.getvalue() == out
