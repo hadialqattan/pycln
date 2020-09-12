@@ -170,7 +170,7 @@ class TestParseConfigFile:
 
     @patch("pycln.utils.config.Config.__post_init__")
     @patch("pycln.utils.config.ParseConfigFile.parse")
-    def test_valid_arg(self, parse, post_init):
+    def test_valid_args(self, parse, post_init):
         # Test `_config_loader` method.
         config_parser = config.ParseConfigFile(Path(""), self.configs)
         config_parser._config_loader(CONFIG)
