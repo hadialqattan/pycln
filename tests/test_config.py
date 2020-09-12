@@ -104,29 +104,6 @@ class TestConfig:
         assert err_type == Exit
         assert err_msg == expected_err
 
-    @patch("pycln.utils.config.Config._check_path")
-    def test_check_regex_valid_regex(self, _check_path):
-        # Test `_check_regex` method.
-        configs = config.Config(
-            path=None, include=r".*_util.py$", exclude=r".*_test.py$"
-        )
-        for r in ("include", "exclude"):
-            assert getattr(configs, r) == CONFIG[r]
-
-    @patch("pycln.utils.config.Config._check_path")
-    def test_check_regex_invalid_regex(self, _check_path):
-        # Test `_check_regex` method.
-        regex = r"**invalid**"
-        expected_err = f"Invalid regular expression for include given: {regex!r} ⛔\n"
-        with std.redirect(std.STD.ERR) as stderr:
-            try:
-                config.Config(path=None, include=regex, exclude=regex)
-            except Exit:
-                err_type = Exit
-            err_msg = stderr.getvalue()
-        assert err_type == Exit
-        assert err_msg == expected_err
-
 
 class TestParseConfigFile:
 
