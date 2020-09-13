@@ -106,16 +106,6 @@ def yield_sources(
 
         dir_path = Path(os.path.join(path, dirname))
 
-        # Compute exclusions.
-        if is_excluded(dirname, exclude):
-            reporter.ignored_path(dir_path, EXCLUDE)
-            continue
-
-        # Compute `.gitignore`.
-        if gitignore.match_file(dirname):
-            reporter.ignored_path(dir_path, GITIGNORE)
-            continue
-
         yield from yield_sources(dir_path, include, exclude, gitignore, reporter)
 
 
@@ -210,7 +200,7 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
     names = module.split(".")
 
     # Test different levels.
-    for i in (None, -1, -2, -3):
+    for i in [None] + list(range(-10, -0)):  # type: ignore
 
         # If it's a file.
         fpath = os.path.join(*dirnames[:i], *names[:-1], f"{names[-1]}{PY_EXTENSION}")
@@ -245,8 +235,7 @@ def get_local_import_from_path(
     packages = package.split(".") if package else []
 
     # Test different levels.
-    for i in (None, -1, -2, -3):
-
+    for i in [None] + list(range(-10, -0)):  # type: ignore
         # If it's a file.
         if modules:
             fpath = os.path.join(
