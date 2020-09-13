@@ -188,9 +188,8 @@ class SourceAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_arg(self, node: ast.arg):
-        # Support Python > 3.8 type comments.
-        if PY38_PLUS:
-            self._visit_type_comment(node)
+        # Support Python ^3.8 type comments.
+        self._visit_type_comment(node)
         #: Support arg string type annotations.
         #: >>> from typing import Tuple
         #: >>> def foo(bar: "Tuple[str, int]"):
@@ -199,18 +198,16 @@ class SourceAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_FunctionDef(self, node: FunctionDefT):
-        # Support Python > 3.8 type comments.
-        if PY38_PLUS:
-            self._visit_type_comment(node)
+        # Support Python ^3.8 type comments.
+        self._visit_type_comment(node)
 
     # Support `ast.AsyncFunctionDef`.
     visit_AsyncFunctionDef = visit_FunctionDef
 
     @recursive
     def visit_Assign(self, node: ast.Assign):
-        # Support Python > 3.8 type comments.
-        if PY38_PLUS:
-            self._visit_type_comment(node)
+        # Support Python ^3.8 type comments.
+        self._visit_type_comment(node)
         id_ = getattr(node.targets[0], "id", None)
         # These names will be skipped on import `*` case.
         if id_ in NAMES_TO_SKIP:
@@ -219,7 +216,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 for constant in node.value.elts:
-                    k = "value" if PY38_PLUS else "s"
+                    k = "s" if hasattr(constant, "s") else "value"
                     value = getattr(constant, k, "")
                     if value and isinstance(value, str):
                         self._source_stats.name_.add(value)
@@ -227,25 +224,26 @@ class SourceAnalyzer(ast.NodeVisitor):
     def _visit_type_comment(
         self, node: Union[ast.Assign, ast.arg, FunctionDefT]
     ) -> None:
-        #: Support Python > 3.8 type comments.
+        #: Support Python ^3.8 type comments.
         #:
-        #: This feature is only available for python > 3.8.
+        #: This feature is only available for Python ^3.8.
         #: PEP 526 -- Syntax for Variable Annotations.
         #: For more information:
         #:     - https://www.python.org/dev/peps/pep-0526/
         #:     - https://docs.python.org/3.8/library/ast.html#ast.parse
-        if node.type_comment:
+        type_comment = getattr(node, "type_comment", None)
+        if type_comment:
             if isinstance(node, (ast.Assign, ast.arg)):
                 mode = "eval"
             else:
                 mode = "func_type"
-            tree = parse_ast(node.type_comment, mode=mode)
+            tree = parse_ast(type_comment, mode=mode)
             self._add_name_attr(tree)
 
     def _visit_string_type_annotation(self, node: Union[ast.AnnAssign, ast.arg]):
         # Support string type annotations.
         if isinstance(node.annotation, (ast.Constant, ast.Str)):
-            if PY38_PLUS:
+            if hasattr(node.annotation, "value"):
                 value = node.annotation.value
             else:
                 value = node.annotation.s
@@ -264,7 +262,7 @@ class SourceAnalyzer(ast.NodeVisitor):
     def _get_py38_import_node(self, node: ast.Import) -> _nodes.Import:
         # Convert any Python < 3.8 `ast.Import`
         # to `_nodes.Import` in order to support `end_lineno`.
-        if PY38_PLUS:
+        if hasattr(node, "end_lineno"):
             end_lineno = node.end_lineno
         else:
             line = self._lines[node.lineno - 1]
@@ -278,7 +276,7 @@ class SourceAnalyzer(ast.NodeVisitor):
     def _get_py38_import_from_node(self, node: ast.ImportFrom) -> _nodes.ImportFrom:
         # Convert any Python < 3.8 `ast.ImportFrom`
         # to `_nodes.ImportFrom` in order to support `end_lineno`.
-        if PY38_PLUS:
+        if hasattr(node, "end_lineno"):
             end_lineno = node.end_lineno
         else:
             line = self._lines[node.lineno - 1]
