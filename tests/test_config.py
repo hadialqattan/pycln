@@ -31,6 +31,7 @@ CONFIG = {
     "diff": True,
     "all": True,  # For `TestParserConfigFile`.
     "all_": True,  # For `TestConfig`.
+    "no_gitignore": False,
 }
 
 

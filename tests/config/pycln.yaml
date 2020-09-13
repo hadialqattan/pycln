@@ -5,3 +5,4 @@ pycln:
   verbose: true
   diff: true
   all: true
+  no_gitignore: false

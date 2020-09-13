@@ -9,4 +9,5 @@ expand_stars=true
 verbose=true
 diff=true
 all=true
+no_gitignore=false
 
