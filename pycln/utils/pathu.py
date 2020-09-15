@@ -341,5 +341,11 @@ def get_import_from_path(
     if module in get_standard_lib_names():
         return get_module_path(get_standard_lib_paths(), module)
 
+    elif package in get_standard_lib_names():
+        return get_module_path(get_standard_lib_paths(), package)
+
     else:
-        return get_module_path(get_third_party_lib_paths(), module)
+        path = get_module_path(get_third_party_lib_paths(), module)
+        if not path and module != package:
+            path = get_module_path(get_third_party_lib_paths(), package)
+        return path
