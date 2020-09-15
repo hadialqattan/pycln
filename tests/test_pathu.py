@@ -100,7 +100,7 @@ class TestPathu:
             pytest.param(
                 "test_pathu", Path("tests/test_pathu.py"), id="import file : lvl 0"
             ),
-            pytest.param("not_exists", None, id="not exists"),
+            pytest.param("not-exists", None, id="not exists"),
         ],
     )
     def test_get_local_import_path(self, module, expec_path):
@@ -149,7 +149,7 @@ class TestPathu:
                 Path("pycln/tests/test_pathu.py"),
                 id="from .file import *",
             ),
-            pytest.param("not_exists", "", 1, None, id="not exists"),
+            pytest.param("not-exists", "", 1, None, id="not exists"),
         ],
     )
     def test_get_local_import_from_path(self, module, package, level, expec_path):
@@ -205,7 +205,7 @@ class TestPathu:
             pytest.param(
                 "typer", Path("typer/__init__.py"), id="import module : third party"
             ),
-            pytest.param("not_exists", None, id="not exists"),
+            pytest.param("not-exists", None, id="not exists"),
         ],
     )
     def test_get_import_path(self, module, expec_path):
@@ -223,65 +223,67 @@ class TestPathu:
                 "utils",
                 "pycln",
                 2,
-                Path("pycln/utils/__init__.py"),
+                Path("utils/__init__.py"),
                 id="from ..package import module : local",
             ),
             pytest.param(
                 "*",
                 "pycln",
                 2,
-                Path("pycln/pycln/__init__.py"),
+                Path("pycln/__init__.py"),
                 id="from ..package import * : local",
             ),
             pytest.param(
                 "std",
                 "utils",
                 1,
-                Path("tests/utils/std.py"),
+                Path("utils/std.py"),
                 id="from .package import file : local",
             ),
             pytest.param(
                 "*",
                 "test_pathu",
                 1,
-                Path("pycln/tests/test_pathu.py"),
+                Path("tests/test_pathu.py"),
                 id="from .file import * : local",
             ),
             pytest.param(
                 "AST",
                 "ast",
                 0,
-                Path(f"lib/{PYVER}/ast.py"),
+                Path(f"{PYVER}/ast.py"),
                 id="from package import file : standard",
             ),
             pytest.param(
                 "*",
                 "distutils",
                 0,
-                Path(f"{PYVER}/distutils/__init__.py"),
+                Path("distutils/__init__.py"),
                 id="from package import * : standard",
             ),
             pytest.param(
                 "colors",
                 "typer",
                 0,
-                Path("dist-packages/typer/__init__.py"),
+                Path("typer/__init__.py"),
                 id="from package import file : third party",
             ),
             pytest.param(
                 "*",
                 "typer",
                 0,
-                Path("dist-packages/typer/__init__.py"),
+                Path("typer/__init__.py"),
                 id="from package import * : third party",
             ),
-            pytest.param("not_exists", "", 1, None, id="not exists"),
+            pytest.param("not-exists", "", 0, None, id="not exists"),
         ],
     )
     def test_get_import_from_path(self, module, package, level, expec_path):
         # Test `get_import_from_path` function.
+        if not expec_path:
+            print()
         path = pathu.get_import_from_path(Path(__file__), module, package, level)
         if expec_path:
-            assert path.parts[-3:] == expec_path.parts
+            assert path.parts[-2:] == expec_path.parts
         else:
             assert path is None

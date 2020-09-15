@@ -346,6 +346,6 @@ def get_import_from_path(
 
     else:
         path = get_module_path(get_third_party_lib_paths(), module)
-        if not path and module != package:
+        if not path and package:
             path = get_module_path(get_third_party_lib_paths(), package)
         return path
