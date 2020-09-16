@@ -41,7 +41,6 @@ class TestIOU:
         ],
     )
     def test_safe_read(self, content, expectations, chmod):
-        # Test `safe_read` function.
         source_code, err_type = None, None
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".py") as tmp:
             try:
@@ -78,7 +77,6 @@ class TestIOU:
         expectations: tuple,
         chmod: int,
     ) -> None:
-        # Test `safe_write` function.
         source_code, err_type = None, None
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".py") as tmp:
             try:

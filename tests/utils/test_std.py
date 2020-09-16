@@ -18,7 +18,6 @@ class TestSTD:
         ],
     )
     def test_redirect(self, std_type):
-        # Test `redirect` function.
         with std.redirect(std_type) as std_stream:
             out = "Test std stream.\n"
             if std_type is std.STD.OUT:

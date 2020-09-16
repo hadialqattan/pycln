@@ -37,7 +37,6 @@ class TestRegexU:
         ],
     )
     def test_safe_compile(self, regex, expec_err_type, expec_err):
-        # Test `safe_comile` function.
         err_type, err_msg = None, ""
         with std.redirect(std.STD.ERR) as stderr:
             try:
@@ -94,7 +93,6 @@ class TestRegexU:
         ],
     )
     def test_get_gitignore(self, root, no_gitignore, expec):
-        # Test `get_gitignore` function.
         gitignore = regexu.get_gitignore(root, no_gitignore)
         assert gitignore.match_file("test.ignore") == expec
         assert gitignore.match_file("test_ignore/") == expec
@@ -108,7 +106,6 @@ class TestRegexU:
         ],
     )
     def test_skip_import(self, line, expec):
-        # Test `skip_import` function.
         assert regexu.skip_import(line) == expec
 
     @pytest.mark.parametrize(
@@ -121,5 +118,4 @@ class TestRegexU:
         ],
     )
     def test_skip_file(self, src_code, expec):
-        # Test `skip_file` function.
         assert regexu.skip_file(src_code) == expec

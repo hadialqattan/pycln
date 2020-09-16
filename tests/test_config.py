@@ -50,7 +50,6 @@ class TestConfig:
     @mock.patch("pycln.utils.config.Config._check_path")
     @mock.patch("pycln.utils.config.Config._check_regex")
     def test_post_init(self, _check_regex, _check_path, init, config_):
-        # Test `__post_init__` method.
         init.return_value = None
         configs = config.Config(
             path=Path("."),
@@ -83,7 +82,6 @@ class TestConfig:
     )
     @mock.patch("pycln.utils.config.Config._check_regex")
     def test_check_path(self, _check_regex, path, expec_err):
-        # Test `_check_path` method.
         err_type, err_msg = None, None
         with std.redirect(std.STD.ERR) as stderr:
             try:
@@ -126,7 +124,6 @@ class TestParseConfigFile:
     )
     @mock.patch("pycln.utils.config.Config.__post_init__")
     def test_parse(self, post_init, path, expec_err):
-        # Test `parse` method.
         err_type, err_msg = None, None
         with std.redirect(std.STD.ERR) as stderr:
             try:
@@ -147,7 +144,6 @@ class TestParseConfigFile:
     @mock.patch("pycln.utils.config.Config.__post_init__")
     @mock.patch("pycln.utils.config.ParseConfigFile.parse")
     def test_config_loader(self, parse, post_init, configs):
-        # Test `_config_loader` method.
         config_parser = config.ParseConfigFile(Path(""), self.configs)
         config_parser._config_loader(configs)
         for attr, val in CONFIG.items():

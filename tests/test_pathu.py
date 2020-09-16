@@ -53,13 +53,11 @@ class TestPathu:
     def test_yield_sources(
         self, ignored_path, path, include, exclude, gitignore, expec
     ):
-        # Test `yield_sources` function.
         sources = pathu.yield_sources(path, include, exclude, gitignore, Report(None))
         for source in sources:
             assert source.parts[-1] in expec
 
     def test_get_standard_lib_paths(self):
-        # Test `get_standard_lib_paths` function.
         standard_paths = pathu.get_standard_lib_paths()
         dirs = set([path.parts[-2] for path in standard_paths])
         expected_dirs = {PYVER, pathu.LIB_DYNLOAD}
@@ -67,7 +65,6 @@ class TestPathu:
         assert len(standard_paths) > 180
 
     def test_get_standard_lib_names(self):
-        # Test `get_standard_lib_names` function.
         standard_names = pathu.get_standard_lib_names()
         # Test some random standard lib names.
         for name in {"ast", "unittest", "pathlib"}:
@@ -81,7 +78,6 @@ class TestPathu:
         assert len(standard_names) > 180
 
     def test_get_third_party_lib_paths(self):
-        # Test `get_third_party_lib_paths` function.
         third_paths = pathu.get_third_party_lib_paths()
         dirs = set([path.parts[-2] for path in third_paths])
         expected_dirs = {"site-packages", "dist-packages"}
@@ -104,7 +100,6 @@ class TestPathu:
         ],
     )
     def test_get_local_import_path(self, module, expec_path):
-        # Test `get_local_import_path` function.
         path = pathu.get_local_import_path(Path(__file__), module)
         if expec_path:
             assert path.parts[-2:] == expec_path.parts
@@ -153,7 +148,6 @@ class TestPathu:
         ],
     )
     def test_get_local_import_from_path(self, module, package, level, expec_path):
-        # Test `get_local_import_from_path` function.
         path = pathu.get_local_import_from_path(Path(__file__), module, package, level)
         if expec_path:
             assert path.parts[-3:] == expec_path.parts
@@ -184,7 +178,6 @@ class TestPathu:
         ],
     )
     def test_get_module_path(self, paths, module, expec_path):
-        # Test `get_module_path` functions.
         path = pathu.get_module_path(paths, module)
         assert path == expec_path
 
@@ -209,7 +202,6 @@ class TestPathu:
         ],
     )
     def test_get_import_path(self, module, expec_path):
-        # Test `get_import_path` function.
         path = pathu.get_import_path(Path(__file__), module)
         if expec_path:
             assert path.parts[-2:] == expec_path.parts
@@ -279,7 +271,6 @@ class TestPathu:
         ],
     )
     def test_get_import_from_path(self, module, package, level, expec_path):
-        # Test `get_import_from_path` function.
         if not expec_path:
             print()
         path = pathu.get_import_from_path(Path(__file__), module, package, level)
