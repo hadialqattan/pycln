@@ -1,4 +1,4 @@
-"""pycln/utils/pathu.py unit tests."""
+"""pycln/utils/pathu.py tests."""
 import re
 import sys
 from pathlib import Path

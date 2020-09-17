@@ -1,4 +1,4 @@
-"""pycln/utils/config.py unit tests."""
+"""pycln/utils/config.py tests."""
 import re
 from pathlib import Path
 

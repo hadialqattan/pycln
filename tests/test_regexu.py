@@ -1,4 +1,4 @@
-"""pycln/utils/regexu.py unit tests."""
+"""pycln/utils/regexu.py tests."""
 import re
 from pathlib import Path
 

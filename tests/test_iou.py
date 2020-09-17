@@ -1,4 +1,4 @@
-"""pycln/utils/iou.py unit tests."""
+"""pycln/utils/iou.py tests."""
 import os
 import tempfile
 from pathlib import Path
