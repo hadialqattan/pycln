@@ -8,7 +8,7 @@ from typer import Exit
 from pycln.utils import regexu
 
 from . import CONFIG_DIR
-from .utils import std
+from .utils import sysu
 
 # Constants.
 INCLUDE_REGEX = r".*_util.py$"
@@ -38,7 +38,7 @@ class TestRegexU:
     )
     def test_safe_compile(self, regex, expec_err_type, expec_err):
         err_type, err_msg = None, ""
-        with std.redirect(std.STD.ERR) as stderr:
+        with sysu.std_redirect(sysu.STD.ERR) as stderr:
             try:
                 regexu.safe_compile(regex, "include")
             except Exit:

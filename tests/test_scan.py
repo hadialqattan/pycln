@@ -488,7 +488,6 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
             pytest.param(
                 "typer", 0, set(dir(import_module("typer"))), id="third party"
             ),
-            pytest.param("pycln", 2, set(dir(import_module("pycln"))), id="local"),
             pytest.param("not-exists", 0, None, id="not exists"),
         ],
     )

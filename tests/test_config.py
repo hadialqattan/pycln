@@ -9,7 +9,7 @@ from typer import Exit
 from pycln.utils import config
 
 from . import CONFIG_DIR
-from .utils import std
+from .utils import sysu
 
 # Constants.
 CONFIG_SECTIONS = config.CONFIG_SECTIONS
@@ -83,7 +83,7 @@ class TestConfig:
     @mock.patch("pycln.utils.config.Config._check_regex")
     def test_check_path(self, _check_regex, path, expec_err):
         err_type, err_msg = None, None
-        with std.redirect(std.STD.ERR) as stderr:
+        with sysu.std_redirect(sysu.STD.ERR) as stderr:
             try:
                 config.Config(path=path)
             except Exit:
@@ -125,7 +125,7 @@ class TestParseConfigFile:
     @mock.patch("pycln.utils.config.Config.__post_init__")
     def test_parse(self, post_init, path, expec_err):
         err_type, err_msg = None, None
-        with std.redirect(std.STD.ERR) as stderr:
+        with sysu.std_redirect(sysu.STD.ERR) as stderr:
             try:
                 config.ParseConfigFile(path, self.configs)
             except Exit:

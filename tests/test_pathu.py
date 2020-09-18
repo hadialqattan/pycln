@@ -28,7 +28,7 @@ class TestPathu:
                 re.compile(r"test_.*\.py$"),
                 re.compile(r"(.*_re.*\.py|.git/|pycln/)$"),
                 PathSpec.from_lines("gitwildmatch", ["*u.py", "utils/"]),
-                {"test_config.py", "test_scan.py", "test_transform.py"},
+                {"test_config.py", "test_scan.py", "test_transform.py", "test_main.py"},
                 id="path: directory",
             ),
             pytest.param(
@@ -131,10 +131,10 @@ class TestPathu:
                 id="from ..package import *",
             ),
             pytest.param(
-                "std",
+                "sysu",
                 "utils",
                 1,
-                Path("tests/utils/std.py"),
+                Path("tests/utils/sysu.py"),
                 id="from .package import file",
             ),
             pytest.param(
@@ -158,14 +158,14 @@ class TestPathu:
         "paths, module, expec_path",
         [
             pytest.param(
-                [Path("pycln/pycln/utils/pathu.py"), Path("pycln/tests/utils/std.py")],
-                "std",
-                Path("pycln/tests/utils/std.py"),
+                [Path("pycln/pycln/utils/pathu.py"), Path("pycln/tests/utils/sysu.py")],
+                "sysu",
+                Path("pycln/tests/utils/sysu.py"),
                 id="module",
             ),
             pytest.param(
                 [Path("pycln/pycln/utils/pathu.py"), Path("pycln/tests/utils")],
-                "utils.std",
+                "utils.sysu",
                 Path("pycln/tests/utils/__init__.py"),
                 id="package.module",
             ),
@@ -226,10 +226,10 @@ class TestPathu:
                 id="from ..package import * : local",
             ),
             pytest.param(
-                "std",
+                "sysu",
                 "utils",
                 1,
-                Path("utils/std.py"),
+                Path("utils/sysu.py"),
                 id="from .package import file : local",
             ),
             pytest.param(

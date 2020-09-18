@@ -1,4 +1,4 @@
-"""STD OUT/ERR redirecting utility."""
+"""System hacks utility."""
 import sys
 from contextlib import contextmanager
 from enum import Enum, unique
@@ -13,7 +13,7 @@ class STD(Enum):
 
 
 @contextmanager
-def redirect(type_: STD) -> Generator:
+def std_redirect(type_: STD) -> Generator:
     """Redirect stdout/err to a variable.
 
     :param type_: `STD.OUT` or `STD.ERR`.
@@ -31,3 +31,12 @@ def redirect(type_: STD) -> Generator:
         sys.stdout = default_std
     else:
         sys.stderr = default_std
+
+
+@contextmanager
+def hide_sys_argv():
+    """Hide `sys.argv`"""
+    sys_argv = sys.argv.copy()
+    sys.argv.clear()
+    yield
+    sys.argv = sys_argv
