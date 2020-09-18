@@ -55,6 +55,9 @@ class UnparsableFile(Exception):
                 text = text.replace("\n", "").lstrip()
                 postfix = f" {text!r}"
 
+        elif type_ == ValueError:
+            setattr(err, "msg", str(err))
+
         elif type_ == UnicodeEncodeError:
             start, reason = err.start, err.reason  # type: ignore
             encoding, object_ = err.encoding, str(err.object)  # type: ignore

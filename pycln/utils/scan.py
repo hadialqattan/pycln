@@ -200,6 +200,11 @@ class SourceAnalyzer(ast.NodeVisitor):
     def visit_FunctionDef(self, node: FunctionDefT):
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)
+        #: Support string type annotations.
+        #: >>> from typing import List
+        #: >>> def foo() -> 'List[str]':
+        #: >>>     pass
+        self._visit_string_type_annotation(node)
 
     # Support `ast.AsyncFunctionDef`.
     visit_AsyncFunctionDef = visit_FunctionDef
@@ -221,6 +226,23 @@ class SourceAnalyzer(ast.NodeVisitor):
                     if value and isinstance(value, str):
                         self._source_stats.name_.add(value)
 
+    def _visit_string_type_annotation(
+        self, node: Union[ast.AnnAssign, ast.arg, FunctionDefT]
+    ) -> None:
+        # Support string type annotations.
+        if isinstance(node, (ast.AnnAssign, ast.arg)):
+            annotation = node.annotation
+        else:
+            annotation = node.returns
+        if isinstance(annotation, (ast.Constant, ast.Str)):
+            if hasattr(annotation, "value"):
+                value = annotation.value
+            else:
+                value = annotation.s
+            if value:
+                tree = parse_ast(value, mode="eval")
+                self._add_name_attr(tree)
+
     def _visit_type_comment(
         self, node: Union[ast.Assign, ast.arg, FunctionDefT]
     ) -> None:
@@ -240,18 +262,8 @@ class SourceAnalyzer(ast.NodeVisitor):
             tree = parse_ast(type_comment, mode=mode)
             self._add_name_attr(tree)
 
-    def _visit_string_type_annotation(self, node: Union[ast.AnnAssign, ast.arg]):
-        # Support string type annotations.
-        if isinstance(node.annotation, (ast.Constant, ast.Str)):
-            if hasattr(node.annotation, "value"):
-                value = node.annotation.value
-            else:
-                value = node.annotation.s
-            tree = parse_ast(value, mode="eval")
-            self._add_name_attr(tree)
-
     def _add_name_attr(self, tree: ast.AST):
-        # Add any `node` `ast.Name` or `ast.Attribute`
+        # Add any `ast.Name` or `ast.Attribute`
         # child to `self._source_stats`.
         for node in ast.walk(tree):
             if isinstance(node, ast.Name):
@@ -266,7 +278,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             end_lineno = node.end_lineno
         else:
             line = self._lines[node.lineno - 1]
-            multiline = self._is_parentheses(line) is not None
+            multiline = SourceAnalyzer._is_parentheses(line) is not None
             end_lineno = node.lineno + (1 if multiline else 0)
         start = _nodes.NodePosition(node.lineno, node.col_offset)
         end = _nodes.NodePosition(end_lineno)
@@ -280,7 +292,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             end_lineno = node.end_lineno
         else:
             line = self._lines[node.lineno - 1]
-            is_parentheses = self._is_parentheses(line)
+            is_parentheses = SourceAnalyzer._is_parentheses(line)
             multiline = is_parentheses is not None
             end_lineno = (
                 node.lineno
@@ -297,7 +309,8 @@ class SourceAnalyzer(ast.NodeVisitor):
             level=node.level,
         )
 
-    def _is_parentheses(self, import_from_line: str) -> Optional[bool]:
+    @staticmethod
+    def _is_parentheses(import_from_line: str) -> Optional[bool]:
         # Return importFrom multi-line type.
         # ('(' => True), ('\\' => False) else None.
         if "(" in import_from_line:
@@ -373,7 +386,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
     def __init__(self, path: Path):
         super(ImportablesAnalyzer, self).__init__()
-        self._not_importables: Set[ast.Name] = set()
+        self._not_importables: Set[Union[ast.Name, str]] = set()
         self._importables: Set[str] = set()
         self._has_all = False
         self._path = path
@@ -387,7 +400,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
                 self._has_all = True
                 self._importables.clear()
                 for constant in node.value.elts:
-                    k = "value" if PY38_PLUS else "s"
+                    k = "s" if hasattr(constant, "s") else "value"
                     value = getattr(constant, k, "")
                     if value and isinstance(value, str):
                         self._importables.add(value)
@@ -409,14 +422,15 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             for alias in node.names:
                 name = alias.asname if alias.asname else alias.name
                 self._importables.add(name)
-        except UnexpandableImportStar:
+        except UnexpandableImportStar:  # pragma: no cover
             # * We shouldn't do anything because it's not importable.
-            pass
+            pass  # pragma: no cover
 
     @recursive
     def visit_FunctionDef(self, node: FunctionDefT):
         # Add function name as importable name.
-        self._importables.add(node.name)
+        if node.name not in self._not_importables:
+            self._importables.add(node.name)
         self._compute_not_importables(node)
 
     # Support `ast.AsyncFunctionDef`.
@@ -425,7 +439,8 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     @recursive
     def visit_ClassDef(self, node: ast.ClassDef):
         # Add class name as importable name.
-        self._importables.add(node.name)
+        if node.name not in self._not_importables:
+            self._importables.add(node.name)
         self._compute_not_importables(node)
 
     @recursive
@@ -439,12 +454,19 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         # Compute class/function not-importables.
         for node_ in ast.iter_child_nodes(node):
 
-            if isinstance(node_, ast.Assign):
+            if isinstance(node_, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                self._not_importables.add(cast(str, node_.name))
 
+            if isinstance(node_, ast.Assign):
                 for target in node_.targets:
                     self._not_importables.add(cast(ast.Name, target))
 
     def get_stats(self) -> Set[str]:
+        if self._path.name == "__init__.py":
+            for path in os.listdir(self._path.parent):
+                file_path = self._path.parent.joinpath(path)
+                if file_path.is_dir() or path.endswith(".py"):
+                    self._importables.add(path.split(".")[0])
         return self._importables
 
     def generic_visit(self, node):
@@ -488,28 +510,34 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
 
     def __init__(self, *args, **kwargs):
         super(SideEffectsAnalyzer, self).__init__(*args, **kwargs)
-        self._not_side_effect: Set[ast.Call] = set()
+        self._not_side_effects: Set[ast.Call] = set()
         self._has_side_effects = HasSideEffects.NO
 
     @recursive
-    def visit_FunctionDef(self, node: ast.FunctionDef):
+    def visit_FunctionDef(self, node: FunctionDefT):
         # Mark any call inside a function as not-side-effect.
-        for node_ in ast.iter_child_nodes(node):
-            if isinstance(node_, ast.Expr):
-                if isinstance(node_.value, ast.Call):
-                    self._not_side_effect.add(node_.value)
+        self._compute_not_side_effects(node)
+
+    # Support `ast.AsyncFunctionDef`.
+    visit_AsyncFunctionDef = visit_FunctionDef
 
     @recursive
     def visit_ClassDef(self, node: ast.ClassDef):
         # Mark any call inside a class as not-side-effect.
+        self._compute_not_side_effects(node)
+
+    def _compute_not_side_effects(
+        self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef]
+    ) -> None:
+        # Mark any call inside the given `node` as not-side-effect.
         for node_ in ast.iter_child_nodes(node):
             if isinstance(node_, ast.Expr):
                 if isinstance(node_.value, ast.Call):
-                    self._not_side_effect.add(node_.value)
+                    self._not_side_effects.add(node_.value)
 
     @recursive
     def visit_Call(self, node: ast.Call):
-        if node not in self._not_side_effect:
+        if node not in self._not_side_effects:
             self._has_side_effects = HasSideEffects.YES
 
     @recursive
@@ -525,11 +553,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
             self._has_side_effects = self._check_names(node.names)
 
     def _check_names(self, names: List[ast.alias]) -> HasSideEffects:
-        """Check if imported names has side effects or not.
-
-        :param names: list of imported names.
-        :returns: `HasSideEffects` value.
-        """
+        # Check if imported names has side effects or not.
         for alias in names:
 
             # All standard lib modules doesn't has side effects
