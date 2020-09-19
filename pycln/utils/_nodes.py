@@ -1,7 +1,7 @@
 """Pycln import statements nodes utility."""
 import ast
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
 @dataclass(frozen=True)
@@ -21,16 +21,18 @@ class NodePosition:
         return hash(self.line)
 
 
-@dataclass(frozen=True)
+@dataclass
 class NodeLocation:
 
-    """Node location class."""
+    """Node location class.
 
-    #: Line - Column.
-    start: NodePosition
+    :param start: tuple of start line and col_offset.
+    :param end: tuple of end line.
+    """
 
-    #: Line - None.
-    end: NodePosition
+    def __init__(self, start: Tuple[int, int], end: int):
+        self.start = NodePosition(*start)
+        self.end = NodePosition(end)
 
     def __hash__(self):
         return hash(hash(self.start) + hash(self.end))

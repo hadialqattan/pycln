@@ -52,13 +52,12 @@ class TestSourceAnalyzer(AnalyzerTestCase):
 
     def _get_import(self, import_stmnt: str, expec_end_lineno: Optional[int]) -> tuple:
         ast_impt = ast.parse(import_stmnt).body[0]
-        start = _nodes.NodePosition(ast_impt.lineno, ast_impt.col_offset)
         if expec_end_lineno:
             end_lineno = expec_end_lineno
         else:
             end_lineno = ast_impt.end_lineno
-        end = _nodes.NodePosition(end_lineno)
-        location = _nodes.NodeLocation(start, end)
+        start = (ast_impt.lineno, ast_impt.col_offset)
+        location = _nodes.NodeLocation(start, end_lineno)
         return ast_impt, location
 
     def _assert_import_equal_py38(

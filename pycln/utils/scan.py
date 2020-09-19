@@ -280,9 +280,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             line = self._lines[node.lineno - 1]
             multiline = SourceAnalyzer._is_parentheses(line) is not None
             end_lineno = node.lineno + (1 if multiline else 0)
-        start = _nodes.NodePosition(node.lineno, node.col_offset)
-        end = _nodes.NodePosition(end_lineno)
-        location = _nodes.NodeLocation(start, end)
+        location = _nodes.NodeLocation((node.lineno, node.col_offset), end_lineno)
         return _nodes.Import(location=location, names=node.names)
 
     def _get_py38_import_from_node(self, node: ast.ImportFrom) -> _nodes.ImportFrom:
@@ -299,9 +297,7 @@ class SourceAnalyzer(ast.NodeVisitor):
                 if not multiline
                 else self._get_end_lineno(node.lineno, is_parentheses)
             )
-        start = _nodes.NodePosition(node.lineno, node.col_offset)
-        end = _nodes.NodePosition(end_lineno)
-        location = _nodes.NodeLocation(start, end)
+        location = _nodes.NodeLocation((node.lineno, node.col_offset), end_lineno)
         return _nodes.ImportFrom(
             location=location,
             names=node.names,
@@ -626,9 +622,9 @@ def expand_import_star(
         if hasattr(node, "location"):
             location = node.location  # type: ignore
         else:
-            start = _nodes.NodePosition(node.lineno, node.col_offset)  # type: ignore
-            end = _nodes.NodePosition(node.end_lineno)  # type: ignore
-            location = _nodes.NodeLocation(start, end)
+            location = _nodes.NodeLocation(
+                (node.lineno, node.col_offset), node.end_lineno  # type: ignore
+            )
         raise UnexpandableImportStar(path, location, str(msg))
 
     # Create `ast.alias` for each name.
