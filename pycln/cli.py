@@ -15,7 +15,10 @@ app = typer.Typer(name=__name__, add_completion=True)
 def main(
     path: Path = typer.Argument(None, help="Directory or a file path."),
     config: Optional[Path] = typer.Option(
-        None, "--config", show_default=False, help="Read configuration from a file."
+        None,
+        "--config",
+        show_default=False,
+        help="Read configuration from a file.",
     ),
     include: str = typer.Option(
         regexu.INCLUDE_REGEX,

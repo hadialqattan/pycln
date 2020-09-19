@@ -40,7 +40,9 @@ class UnparsableFile(Exception):
     contains null bytes."""
 
     def __init__(
-        self, path: Path, err: Union[SyntaxError, ValueError, UnicodeDecodeError]
+        self,
+        path: Path,
+        err: Union[SyntaxError, ValueError, UnicodeDecodeError],
     ):
         location = str(path)
         postfix = ""

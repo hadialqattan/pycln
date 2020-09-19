@@ -28,7 +28,12 @@ class TestPathu:
                 re.compile(r"test_.*\.py$"),
                 re.compile(r"(.*_re.*\.py|.git/|pycln/)$"),
                 PathSpec.from_lines("gitwildmatch", ["*u.py", "utils/"]),
-                {"test_config.py", "test_scan.py", "test_transform.py", "test_main.py"},
+                {
+                    "test_config.py",
+                    "test_scan.py",
+                    "test_transform.py",
+                    "test_main.py",
+                },
                 id="path: directory",
             ),
             pytest.param(
@@ -94,7 +99,9 @@ class TestPathu:
                 "utils", Path("utils/__init__.py"), id="import module : lvl +1"
             ),
             pytest.param(
-                "test_pathu", Path("tests/test_pathu.py"), id="import file : lvl 0"
+                "test_pathu",
+                Path("tests/test_pathu.py"),
+                id="import file : lvl 0",
             ),
             pytest.param("not-exists", None, id="not exists"),
         ],
@@ -158,19 +165,28 @@ class TestPathu:
         "paths, module, expec_path",
         [
             pytest.param(
-                [Path("pycln/pycln/utils/pathu.py"), Path("pycln/tests/utils/sysu.py")],
+                [
+                    Path("pycln/pycln/utils/pathu.py"),
+                    Path("pycln/tests/utils/sysu.py"),
+                ],
                 "sysu",
                 Path("pycln/tests/utils/sysu.py"),
                 id="module",
             ),
             pytest.param(
-                [Path("pycln/pycln/utils/pathu.py"), Path("pycln/tests/utils")],
+                [
+                    Path("pycln/pycln/utils/pathu.py"),
+                    Path("pycln/tests/utils"),
+                ],
                 "utils.sysu",
                 Path("pycln/tests/utils/__init__.py"),
                 id="package.module",
             ),
             pytest.param(
-                [Path("pycln/pycln/setup.py"), Path("pycln/tests/utils/temp.py")],
+                [
+                    Path("pycln/pycln/setup.py"),
+                    Path("pycln/tests/utils/temp.py"),
+                ],
                 "std",
                 None,
                 id="not exists",
@@ -188,7 +204,9 @@ class TestPathu:
                 "pycln", Path("pycln/__init__.py"), id="import module : local"
             ),
             pytest.param(
-                "test_pathu", Path("tests/test_pathu.py"), id="import file : local"
+                "test_pathu",
+                Path("tests/test_pathu.py"),
+                id="import file : local",
             ),
             pytest.param(
                 "distutils",
@@ -196,7 +214,9 @@ class TestPathu:
                 id="import module : standard",
             ),
             pytest.param(
-                "typer", Path("typer/__init__.py"), id="import module : third party"
+                "typer",
+                Path("typer/__init__.py"),
+                id="import module : third party",
             ),
             pytest.param("not-exists", None, id="not exists"),
         ],

@@ -22,13 +22,22 @@ class TestIOU:
         "content, expectations, chmod",
         [
             pytest.param(
-                "print('Hello')", ("print('Hello')", None), 0o0644, id="base case"
+                "print('Hello')",
+                ("print('Hello')", None),
+                0o0644,
+                id="base case",
             ),
             pytest.param(
-                "code...", (None, ReadPermissionError), 0o000, id="no read permission"
+                "code...",
+                (None, ReadPermissionError),
+                0o000,
+                id="no read permission",
             ),
             pytest.param(
-                "code...", (None, WritePermissionError), 0o444, id="no read write"
+                "code...",
+                (None, WritePermissionError),
+                0o444,
+                id="no read write",
             ),
             pytest.param(
                 #: Make conflict between BOM and encoding Cookie.

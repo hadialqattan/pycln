@@ -170,7 +170,9 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         "code, expec_attrs",
         [
             pytest.param(
-                ("i.x, j.y, m.z\n" "import k.r\n"), {"x", "y", "z"}, id="normal attrs"
+                ("i.x, j.y, m.z\n" "import k.r\n"),
+                {"x", "y", "z"},
+                id="normal attrs",
             ),
             pytest.param("import k.r\n", None, id="no attrs"),
         ],
@@ -287,7 +289,9 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         [
             pytest.param("foo: 'List[str]' = []\n", {"List", "str"}, id="assign"),
             pytest.param(
-                ("def foo(bar: 'List[str]'):\n" "    pass\n"), {"List", "str"}, id="arg"
+                ("def foo(bar: 'List[str]'):\n" "    pass\n"),
+                {"List", "str"},
+                id="arg",
             ),
             pytest.param(
                 ("def foo() -> 'Tuple[int]':\n" "    pass\n"),
@@ -310,7 +314,8 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         self._assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.skipif(
-        not PY38_PLUS, reason="This feature is only available for Python >=3.8."
+        not PY38_PLUS,
+        reason="This feature is only available for Python >=3.8.",
     )
     @pytest.mark.parametrize(
         "code, expec_names",
@@ -396,7 +401,8 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 ("from x import y, \\\n" "    z\n"), id="multi line, backslash"
             ),
             pytest.param(
-                ("from x import (\n" "    y\n" ")\n"), id="multi line, parentheses"
+                ("from x import (\n" "    y\n" ")\n"),
+                id="multi line, parentheses",
             ),
         ],
     )
@@ -410,10 +416,14 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         [
             pytest.param("from x import y\n", 1, id="single line"),
             pytest.param(
-                ("from x import y, \\\n" "    z\n"), 2, id="multi line, backslash"
+                ("from x import y, \\\n" "    z\n"),
+                2,
+                id="multi line, backslash",
             ),
             pytest.param(
-                ("from x import (\n" "    y\n" ")\n"), 3, id="multi line, parentheses"
+                ("from x import (\n" "    y\n" ")\n"),
+                3,
+                id="multi line, parentheses",
             ),
         ],
     )
@@ -553,7 +563,10 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
         "code, expec_importables, expec_not_importables",
         [
             pytest.param(
-                ("def foo():\n" "    bar = 'x'\n"), {"foo"}, {"bar"}, id="function"
+                ("def foo():\n" "    bar = 'x'\n"),
+                {"foo"},
+                {"bar"},
+                id="function",
             ),
             pytest.param(
                 ("async def foo():\n" "    bar = 'x'\n"),
@@ -899,7 +912,11 @@ class TestScanFunctions(AnalyzerTestCase):
             ),
             pytest.param("print()\n", "exec", None, None, id="normal code"),
             pytest.param(
-                "@print(SyntaxError)\n", "exec", UnparsableFile, None, id="syntax error"
+                "@print(SyntaxError)\n",
+                "exec",
+                UnparsableFile,
+                None,
+                id="syntax error",
             ),
             pytest.param(
                 b"\x00print('Hello')",
@@ -919,10 +936,16 @@ class TestScanFunctions(AnalyzerTestCase):
         [
             pytest.param("print()\n", "exec", None, id="normal code"),
             pytest.param(
-                "@print(SyntaxError)\n", "exec", UnparsableFile, id="syntax error"
+                "@print(SyntaxError)\n",
+                "exec",
+                UnparsableFile,
+                id="syntax error",
             ),
             pytest.param(
-                b"\x00print('Hello')", "exec", UnparsableFile, id="contain null bytes"
+                b"\x00print('Hello')",
+                "exec",
+                UnparsableFile,
+                id="contain null bytes",
             ),
         ],
     )

@@ -153,7 +153,8 @@ class TestParseConfigFile:
         assert getattr(self.configs, "Invalid", None) is None
 
     @pytest.mark.parametrize(
-        "file_path", [pytest.param(path, id=path.parts[-1]) for path in CONFIG_FILES]
+        "file_path",
+        [pytest.param(path, id=path.parts[-1]) for path in CONFIG_FILES],
     )
     @mock.patch("pycln.utils.config.Config.__post_init__")
     def test_parse_methods(self, post_init, file_path):

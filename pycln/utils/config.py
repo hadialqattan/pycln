@@ -97,7 +97,9 @@ class ParseConfigFile:
         """Get conifg from a `cfg`/`toml`/`json`/`yaml`/`yml` file."""
         if not self._path.is_file():
             typer.secho(
-                f"Config file {str(self._path)!r} does not exist 😅", bold=True, err=True
+                f"Config file {str(self._path)!r} does not exist 😅",
+                bold=True,
+                err=True,
             )
             raise typer.Exit(1)
         if self._section is None:

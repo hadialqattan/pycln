@@ -26,7 +26,10 @@ class TestRegexU:
         [
             pytest.param(INCLUDE_REGEX, None, "", id="valid, regex: str"),
             pytest.param(
-                COMPILED_INCLUDE_REGEX, None, "", id="valid, regex: Pattern[str]"
+                COMPILED_INCLUDE_REGEX,
+                None,
+                "",
+                id="valid, regex: Pattern[str]",
             ),
             pytest.param(
                 r"**invalid**",
@@ -112,7 +115,9 @@ class TestRegexU:
         "src_code, expec",
         [
             pytest.param(
-                "#" + " nopycln: file\n source code...", True, id="nopycln: file"
+                "#" + " nopycln: file\n source code...",
+                True,
+                id="nopycln: file",
             ),
             pytest.param("source code...", False, id="no comment"),
         ],
