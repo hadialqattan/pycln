@@ -15,6 +15,19 @@ from pycln.utils._exceptions import UnexpandableImportStar, UnparsableFile
 PY38_PLUS = sys.version_info >= (3, 8)
 
 
+class TestDataclasses:
+
+    """`scan.py` dataclasses test case."""
+
+    def test_import_stats_iter(self):
+        import_stats = scan.ImportStats({"import"}, {"from"})
+        assert [i for i in import_stats] == [{"import"}, {"from"}]
+
+    def test_source_stats_iter(self):
+        source_stats = scan.SourceStats({"name"}, {"attr"}, {"skip"})
+        assert [i for i in source_stats] == [{"name"}, {"attr"}]
+
+
 class AnalyzerTestCase:
 
     """`scan.*Analyzer` test case."""

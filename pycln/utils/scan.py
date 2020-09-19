@@ -623,7 +623,7 @@ def expand_import_star(
             location = node.location  # type: ignore
         else:
             location = _nodes.NodeLocation(
-                (node.lineno, node.col_offset), node.end_lineno  # type: ignore
+                (node.lineno, node.col_offset), 0  # type: ignore
             )
         raise UnexpandableImportStar(path, location, str(msg))
 
