@@ -1,4 +1,4 @@
-"""Pycln CST utility."""
+"""Pycln CST transforming utility."""
 from pathlib import Path
 from typing import List, Optional, Set, TypeVar, Union, cast
 
@@ -68,7 +68,8 @@ class ImportTransformer(cst.CSTTransformer):
         """
         used_aliases: List[cst.ImportAlias] = []
         for alias in updated_node.names:  # type: ignore
-            if self._get_alias_name(alias.name) in self._used_names:
+            name = alias.asname.name if alias.asname else alias.name
+            if self._get_alias_name(name) in self._used_names:
                 used_aliases.append(alias)
         return self._stylize(updated_node, used_aliases)
 
@@ -86,7 +87,7 @@ class ImportTransformer(cst.CSTTransformer):
             return self.refactor_import(updated_node)
 
     def _get_alias_name(
-        self, node: Optional[Union[cst.Name, cst.Attribute]], name: str = ""
+        self, node: Optional[Union[cst.Name, cst.Attribute]], name=""
     ) -> str:
         # Recursion function that calculates `node` string dotted name.
         if isinstance(node, cst.Name):
@@ -145,8 +146,7 @@ class ImportTransformer(cst.CSTTransformer):
         node = cast(ImportT, node.with_changes(names=used_aliases))
         # Preserving multiline nodes style.
         if isinstance(node, cst.ImportFrom):
-            start, end = self._location.start.line, self._location.end.line
-            if force_multiline or (node.rpar and start != end):
+            if force_multiline or (node.rpar and len(self._location) != 1):
                 rpar, lpar = self._multiline_rpar(), self._multiline_lpar()
                 node = cast(ImportT, node.with_changes(rpar=rpar, lpar=lpar))
         return node
@@ -183,14 +183,14 @@ def rebuild_import(
         cst_tree = cst.parse_module(stripped_stmnt)  # May raise cst.ParserSyntaxError.
         fixed_lines = cst_tree.visit(transformer).code.splitlines(keepends=True)
 
-    # Replace each removed import with a pass statement.
     if not fixed_lines:
-        return [f"{indentation}pass\n" if indentation else ""]
+        # Replace the removed import with a pass statement.
+        fixed_lines = [f"{indentation}pass\n" if indentation else ""]
+    else:
+        # Reinsert the removed indentation.
+        fixed_lines[0] = indentation + fixed_lines[0]
 
-    # Reinsert the removed indentation.
-    fixed_lines[0] = indentation + fixed_lines[0]
-
-    # Reinsert the removed `"\n"`.
-    fixed_lines[-1] = fixed_lines[-1] + "\n"
+        # Reinsert the removed `"\n"`.
+        fixed_lines[-1] = fixed_lines[-1] + "\n"
 
     return fixed_lines
