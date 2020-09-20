@@ -42,14 +42,14 @@ class UnparsableFile(Exception):
     def __init__(
         self,
         path: Path,
-        err: Union[SyntaxError, ValueError, UnicodeDecodeError],
+        err: Union[SyntaxError, IndentationError, ValueError, UnicodeDecodeError],
     ):
         location = str(path)
         postfix = ""
         type_ = type(err)
         UnparsableFile._type_check(type_)
 
-        if type_ == SyntaxError:
+        if type_ in {SyntaxError, IndentationError}:
             lineno, col, text = err.lineno, err.offset, err.text  # type: ignore
             if lineno:
                 location = f"{path}:{lineno}:{col}"
@@ -82,9 +82,9 @@ class UnparsableFile(Exception):
         :param type_: err type.
         :raises ValueError: if `type_` not in allowed types.
         """
-        allowed_types = {SyntaxError, ValueError, UnicodeDecodeError}
+        allowed_types = {SyntaxError, IndentationError, ValueError, UnicodeDecodeError}
         if type_ not in allowed_types:
-            raise ValueError(
+            raise ValueError(  # pragma: nocover
                 f"UnparsableFile exception only takes {allowed_types}"
                 + f" as err parameter but {type_!r} where given."
             )

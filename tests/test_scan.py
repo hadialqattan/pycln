@@ -938,6 +938,13 @@ class TestScanFunctions(AnalyzerTestCase):
                 None,
                 id="contain null bytes",
             ),
+            pytest.param(
+                ("if x:\n" "    # type: x + y\n" "    x = 'y'\n"),
+                "exec",
+                UnparsableFile,
+                None,
+                id="indentation error",
+            ),
         ],
     )
     def test_parse_ast_py38_plus(self, code, mode, expec_err_type, type_comment):
