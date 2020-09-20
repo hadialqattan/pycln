@@ -532,3 +532,18 @@ class TestTransformFunctions:
         except UnsupportedCase:
             err_type = UnsupportedCase
         assert err_type == expec_err
+
+    @mock.patch(MOCK % "ImportTransformer.__init__")
+    def test_rebuild_import_invalid_syntax(self, init):
+        err_type = None
+        init.return_value = None
+        try:
+            transform.rebuild_import(
+                "@invalid_syntax",
+                {""},
+                Path(__file__),
+                NodeLocation((1, 0), 0),
+            )
+        except cst.ParserSyntaxError:
+            err_type = cst.ParserSyntaxError
+        assert err_type == cst.ParserSyntaxError
