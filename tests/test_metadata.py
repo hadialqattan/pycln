@@ -45,7 +45,7 @@ class TestMetadata:
         assert __version__ == PYCLN_METADATA["version"]
 
     @pytest.mark.skipif(
-        not VersionInfo.isvalid(__version__), reason="Invalid semantic-version."
+        True or not VersionInfo.isvalid(__version__), reason="Invalid semantic-version."
     )
     def test_compare_semver(self):
         # It follows strictly the 2.0.0 version of the SemVer scheme.

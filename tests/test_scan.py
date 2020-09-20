@@ -12,6 +12,7 @@ from pycln.utils import _nodes, scan
 from pycln.utils._exceptions import UnexpandableImportStar, UnparsableFile
 
 # Constants.
+MOCK = "pycln.utils.scan.%s"
 PY38_PLUS = sys.version_info >= (3, 8)
 
 
@@ -289,7 +290,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             ),
         ],
     )
-    @mock.patch("pycln.utils.scan.SourceAnalyzer.visit_Name")
+    @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_Assign(self, visit_Name, code, expec_names, expec_names_to_skip):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
@@ -319,7 +320,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             pytest.param("foobar = 'x'\n", None, id="no string annotation"),
         ],
     )
-    @mock.patch("pycln.utils.scan.SourceAnalyzer.visit_Name")
+    @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_string_type_annotation(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
@@ -359,7 +360,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             pytest.param("foobar = 'x'\n", None, id="no type comment"),
         ],
     )
-    @mock.patch("pycln.utils.scan.SourceAnalyzer.visit_Name")
+    @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_type_comment(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()

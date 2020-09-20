@@ -12,7 +12,8 @@ from pycln.utils.report import Report
 
 from . import CONFIG_DIR
 
-# Constatns.
+# Constants.
+MOCK = "pycln.utils.report.%s"
 PYVER = f"python{sys.version_info[0]}.{sys.version_info[1]}"
 
 
@@ -56,7 +57,7 @@ class TestPathu:
             ),
         ],
     )
-    @mock.patch("pycln.utils.report.Report.ignored_path")
+    @mock.patch(MOCK % "Report.ignored_path")
     def test_yield_sources(
         self, ignored_path, path, include, exclude, gitignore, expec
     ):

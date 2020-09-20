@@ -10,6 +10,9 @@ from pycln.utils import transform
 from pycln.utils._exceptions import UnsupportedCase
 from pycln.utils._nodes import NodeLocation
 
+# Constants.
+MOCK = "pycln.utils.transform.%s"
+
 
 class TestImportTransformer:
 
@@ -369,7 +372,7 @@ class TestImportTransformer:
         self._assert_import_equal(impt_stmnt, endlineno, used_names, expec_impt)
 
     @pytest.mark.parametrize("name", ["x", "x.y", "x.y.z"])
-    @mock.patch("pycln.utils.transform.ImportTransformer.__init__")
+    @mock.patch(MOCK % "ImportTransformer.__init__")
     def test_get_alias_name(self, init, name):
         init.return_value = None
 
@@ -387,7 +390,7 @@ class TestImportTransformer:
         assert transformer._get_alias_name(node) == name
 
     @pytest.mark.parametrize("indent", [" " * 0, " " * 2, " " * 4, " " * 8])
-    @mock.patch("pycln.utils.transform.ImportTransformer.__init__")
+    @mock.patch(MOCK % "ImportTransformer.__init__")
     def test_multiline_parenthesized_whitespace(self, init, indent):
         init.return_value = None
         transformer = transform.ImportTransformer(None, None)
@@ -395,7 +398,7 @@ class TestImportTransformer:
         assert mpw.last_line.value == indent
 
     @pytest.mark.parametrize("indent", [" " * 0, " " * 2, " " * 4, " " * 8])
-    @mock.patch("pycln.utils.transform.ImportTransformer.__init__")
+    @mock.patch(MOCK % "ImportTransformer.__init__")
     def test_multiline_alias(self, init, indent):
         init.return_value = None
         transformer = transform.ImportTransformer(None, None)
@@ -404,7 +407,7 @@ class TestImportTransformer:
         assert alias.comma.whitespace_after.last_line.value == indent + " " * 4
 
     @pytest.mark.parametrize("indent", [" " * 0, " " * 2, " " * 4, " " * 8])
-    @mock.patch("pycln.utils.transform.ImportTransformer.__init__")
+    @mock.patch(MOCK % "ImportTransformer.__init__")
     def test_multiline_lpar(self, init, indent):
         init.return_value = None
         transformer = transform.ImportTransformer(None, None)
@@ -413,7 +416,7 @@ class TestImportTransformer:
         assert lpar.whitespace_after.last_line.value == indent + " " * 4
 
     @pytest.mark.parametrize("indent", [" " * 0, " " * 2, " " * 4, " " * 8])
-    @mock.patch("pycln.utils.transform.ImportTransformer.__init__")
+    @mock.patch(MOCK % "ImportTransformer.__init__")
     def test_multiline_rpar(self, init, indent):
         init.return_value = None
         transformer = transform.ImportTransformer(None, None)
@@ -502,8 +505,8 @@ class TestTransformFunctions:
             ),
         ],
     )
-    @mock.patch("pycln.utils.transform.ImportTransformer.__init__")
-    @mock.patch("pycln.utils.transform.cst.parse_module")
+    @mock.patch(MOCK % "ImportTransformer.__init__")
+    @mock.patch(MOCK % "cst.parse_module")
     def test_rebuild_import(
         self,
         parse_module,

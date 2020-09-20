@@ -12,6 +12,7 @@ from . import CONFIG_DIR
 from .utils import sysu
 
 # Constants.
+MOCK = "pycln.utils.config.%s"
 CONFIG_SECTIONS = config.CONFIG_SECTIONS
 CONFIG_FILES = {
     CONFIG_DIR.joinpath(path)
@@ -46,9 +47,9 @@ class TestConfig:
             pytest.param(Path(CONFIG_DIR).joinpath("setup.cfg"), id="with config file"),
         ],
     )
-    @mock.patch("pycln.utils.config.ParseConfigFile.__init__")
-    @mock.patch("pycln.utils.config.Config._check_path")
-    @mock.patch("pycln.utils.config.Config._check_regex")
+    @mock.patch(MOCK % "ParseConfigFile.__init__")
+    @mock.patch(MOCK % "Config._check_path")
+    @mock.patch(MOCK % "Config._check_regex")
     def test_post_init(self, _check_regex, _check_path, init, config_):
         init.return_value = None
         configs = config.Config(
@@ -80,7 +81,7 @@ class TestConfig:
             ),
         ],
     )
-    @mock.patch("pycln.utils.config.Config._check_regex")
+    @mock.patch(MOCK % "Config._check_regex")
     def test_check_path(self, _check_regex, path, expec_err):
         err_type, err_msg = None, None
         with sysu.std_redirect(sysu.STD.ERR) as stderr:
@@ -97,8 +98,8 @@ class TestParseConfigFile:
 
     """`config.ParseConfigFile` class tests."""
 
-    @mock.patch("pycln.utils.config.ParseConfigFile.__init__")
-    @mock.patch("pycln.utils.config.Config.__post_init__")
+    @mock.patch(MOCK % "ParseConfigFile.__init__")
+    @mock.patch(MOCK % "Config.__post_init__")
     def setup_method(self, method, post_init, init):
         self.configs = config.Config(path=Path("."))
 
@@ -122,7 +123,7 @@ class TestParseConfigFile:
             ),
         ],
     )
-    @mock.patch("pycln.utils.config.Config.__post_init__")
+    @mock.patch(MOCK % "Config.__post_init__")
     def test_parse(self, post_init, path, expec_err):
         err_type, err_msg = None, None
         with sysu.std_redirect(sysu.STD.ERR) as stderr:
@@ -141,8 +142,8 @@ class TestParseConfigFile:
             pytest.param({**CONFIG, **{"Invalid": "data"}}, id="invalid"),
         ],
     )
-    @mock.patch("pycln.utils.config.Config.__post_init__")
-    @mock.patch("pycln.utils.config.ParseConfigFile.parse")
+    @mock.patch(MOCK % "Config.__post_init__")
+    @mock.patch(MOCK % "ParseConfigFile.parse")
     def test_config_loader(self, parse, post_init, configs):
         config_parser = config.ParseConfigFile(Path(""), self.configs)
         config_parser._config_loader(configs)
@@ -156,7 +157,7 @@ class TestParseConfigFile:
         "file_path",
         [pytest.param(path, id=path.parts[-1]) for path in CONFIG_FILES],
     )
-    @mock.patch("pycln.utils.config.Config.__post_init__")
+    @mock.patch(MOCK % "Config.__post_init__")
     def test_parse_methods(self, post_init, file_path):
         # Test `_parse_*` methods:
         #:  - _parse_cfg.
