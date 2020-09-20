@@ -18,6 +18,6 @@ class TestMain:
                     except ModuleNotFoundError:
                         assert False, msg % "deleted"
                 except SystemExit as err:
-                    assert err.code == 1 and stream.getvalue(), msg % "modified"
+                    assert err.code == 1 and str(stream.getvalue()), msg % "modified"
                 else:
                     assert False, msg % "modified"
