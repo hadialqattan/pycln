@@ -21,7 +21,7 @@ readme = "README.md"
 pycln = "pycln.cli:app"
 
 [tool.poetry.dependencies]
-python = ">=3.6, <=3.10"
+python = ">=3.6, <=3.9"
 typer = "^0.3.1"
 toml = "^0.10.1"
 pathspec = "^0.8.0"
@@ -30,10 +30,11 @@ libcst = "^0.3.10"
 pyyaml = "^5.3.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+requests = "^2.24.0"
 semver = "^2.10.2"
-pytest-mock = "^3.3.1"
+pytest = "^5.2"
 pytest-cov = "^2.10.1"
+pytest-mock = "^3.3.1"
 pytest-randomly = "^3.4.1"
 
 [build-system]
