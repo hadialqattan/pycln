@@ -1,5 +1,5 @@
 """pycln `__init__.py`/`pyproject.toml` metadata tests."""
-import warnings
+from os import getenv
 
 import pytest
 import requests
@@ -45,27 +45,20 @@ class TestMetadata:
         assert __version__ == PYCLN_METADATA["version"]
 
     @pytest.mark.skipif(
-        True or not VersionInfo.isvalid(__version__), reason="Invalid semantic-version."
+        not getenv("publish", None) or not VersionInfo.isvalid(__version__),
+        reason="Invalid semantic-version.",
     )
     def test_compare_semver(self):
         # It follows strictly the 2.0.0 version of the SemVer scheme.
         # For more information: https://semver.org/spec/v2.0.0.html
-        try:
-            pycln_json = requests.get(PYCLN_PYPI_URL, timeout=2)
-            latest_version = pycln_json.json()["info"]["version"]
-            current_version = VersionInfo.parse(__version__)
-            assert current_version.compare(latest_version) > -1, (
-                "Current version can't be less than the "
-                "latest released (https://pypi.org/project/pycln/) version!"
-                "For more information: https://semver.org/spec/v2.0.0.html"
-            )
-        except (requests.ConnectionError, requests.Timeout):
-            warnings.warn(
-                UserWarning(
-                    "Cannot validate the sequentiality of the current "
-                    "semantic version; do to slow or no Internet access."
-                )
-            )
+        pycln_json = requests.get(PYCLN_PYPI_URL, timeout=5)
+        latest_version = pycln_json.json()["info"]["version"]
+        current_version = VersionInfo.parse(__version__)
+        assert current_version.compare(latest_version) > -1, (
+            "Current version can't be less than the "
+            "latest released (https://pypi.org/project/pycln/) version!"
+            "For more information: https://semver.org/spec/v2.0.0.html"
+        )
 
     @pytest.mark.parametrize(
         "value, expec_err, expec_exit_code",
