@@ -13,7 +13,8 @@ from .utils import sysu
 
 # Constants.
 PYCLN_METADATA = toml.load(PYPROJECT_PATH)["tool"]["poetry"]
-PYCLN_PYPI_URL = f"https://pypi.org/pypi/{__name__}/json"
+PYCLN_PYPI_JSON_URL = f"https://pypi.org/pypi/{__name__}/json"
+PYCLN_PYPI_URL = f"https://pypi.org/project/{__name__}/"
 
 
 class TestMetadata:
@@ -45,19 +46,18 @@ class TestMetadata:
         assert __version__ == PYCLN_METADATA["version"]
 
     @pytest.mark.skipif(
-        not getenv("publish", None) or not VersionInfo.isvalid(__version__),
+        getenv("publish", "no") != "yes" or not VersionInfo.isvalid(__version__),
         reason="Invalid semantic-version.",
     )
     def test_compare_semver(self):
         # It follows strictly the 2.0.0 version of the SemVer scheme.
         # For more information: https://semver.org/spec/v2.0.0.html
-        pycln_json = requests.get(PYCLN_PYPI_URL, timeout=5)
+        pycln_json = requests.get(PYCLN_PYPI_JSON_URL, timeout=5)
         latest_version = pycln_json.json()["info"]["version"]
         current_version = VersionInfo.parse(__version__)
         assert current_version.compare(latest_version) > -1, (
-            "Current version can't be less than the "
-            "latest released (https://pypi.org/project/pycln/) version!"
-            "For more information: https://semver.org/spec/v2.0.0.html"
+            f"Current version ({current_version}) can't be less than the "
+            f"latest released ({PYCLN_PYPI_URL}) version ({latest_version})!"
         )
 
     @pytest.mark.parametrize(
