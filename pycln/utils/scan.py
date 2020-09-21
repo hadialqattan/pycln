@@ -653,5 +653,5 @@ def parse_ast(source_code: str, path: Path = Path(""), mode: str = "exec") -> as
         else:
             tree = ast.parse(source_code, mode=mode)
         return tree
-    except (SyntaxError, IndentationError, ValueError, UnicodeError) as err:
+    except (SyntaxError, IndentationError, ValueError) as err:
         raise UnparsableFile(path, err)

@@ -42,7 +42,7 @@ class UnparsableFile(Exception):
     def __init__(
         self,
         path: Path,
-        err: Union[SyntaxError, IndentationError, ValueError, UnicodeDecodeError],
+        err: Union[SyntaxError, IndentationError, ValueError],
     ):
         location = str(path)
         postfix = ""
@@ -60,17 +60,6 @@ class UnparsableFile(Exception):
         elif type_ == ValueError:
             setattr(err, "msg", str(err))
 
-        elif type_ == UnicodeEncodeError:
-            start, reason = err.start, err.reason  # type: ignore
-            encoding, object_ = err.encoding, str(err.object)  # type: ignore
-            if len(object_) > 10:
-                object_ = object_[:11] + ("." * 3)
-            msg = (
-                f"{encoding!r} codec can't decode {object_}"
-                + f" in position {start}: {reason}"
-            )
-            setattr(err, "msg", msg)
-
         msg = err.msg  # type: ignore
         message = f"{location} {type_.__name__}: {msg}{postfix}"
         super(UnparsableFile, self).__init__(message)
@@ -82,7 +71,7 @@ class UnparsableFile(Exception):
         :param type_: err type.
         :raises ValueError: if `type_` not in allowed types.
         """
-        allowed_types = {SyntaxError, IndentationError, ValueError, UnicodeDecodeError}
+        allowed_types = {SyntaxError, IndentationError, ValueError}
         if type_ not in allowed_types:
             raise ValueError(  # pragma: nocover
                 f"UnparsableFile exception only takes {allowed_types}"
@@ -109,6 +98,6 @@ def libcst_parser_syntax_error_message(path: Path, err) -> str:
     :returns: refactored message.
     """
     location = f"{path}:{err.raw_line}:{err.raw_column}"
-    err = err._lines[0].replace("\n", "").lstrip()
-    postfix = f" {err!r}"
+    line = err._lines[0].replace("\n", "").lstrip()
+    postfix = f" {line!r}"
     return f"{location} libcst.ParserSyntaxError: {err.message.rstrip('.')}:{postfix}"
