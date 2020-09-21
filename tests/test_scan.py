@@ -11,6 +11,8 @@ from pytest_mock import mock
 from pycln.utils import _nodes, scan
 from pycln.utils._exceptions import UnexpandableImportStar, UnparsableFile
 
+from .utils import sysu
+
 # Constants.
 MOCK = "pycln.utils.scan.%s"
 PY38_PLUS = sys.version_info >= (3, 8)
@@ -100,35 +102,29 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @pytest.mark.parametrize(
         "source_lines, expec_error",
         [
-            pytest.param([], None, id="with source lines"),
-            pytest.param(None, None, id="without source lines"),
+            pytest.param([], sysu.Pass, id="with source lines"),
+            pytest.param(None, sysu.Pass, id="without source lines"),
         ],
     )
     def test_init_py38_plus(self, source_lines, expec_error):
         # Test `__init__` dunder method for Python >=3.8.
-        err_type = None
-        try:
+        with pytest.raises(expec_error):
             scan.SourceAnalyzer(source_lines)
-        except ValueError as err:
-            err_type = type(err)
-        assert err_type == expec_error
+            raise sysu.Pass()
 
     @pytest.mark.skipif(PY38_PLUS, reason="Python <3.8 class usage.")
     @pytest.mark.parametrize(
         "source_lines, expec_error",
         [
-            pytest.param([], None, id="with source lines"),
+            pytest.param([], sysu.Pass, id="with source lines"),
             pytest.param(None, ValueError, id="without source lines"),
         ],
     )
     def test_init_py37_minus(self, source_lines, expec_error):
         # Test `__init__` dunder method for Python <3.8.
-        err_type = None
-        try:
+        with pytest.raises(expec_error):
             scan.SourceAnalyzer(source_lines)
-        except ValueError as err:
-            err_type = type(err)
-        assert err_type == expec_error
+            raise sysu.Pass()
 
     @pytest.mark.parametrize(
         "code, expec_name",
@@ -840,19 +836,19 @@ class TestScanFunctions(AnalyzerTestCase):
         [
             pytest.param(
                 "from ast import *\n",
-                None,
+                sysu.Pass,
                 set(dir(import_module("ast"))),
                 id="standard module",
             ),
             pytest.param(
                 "from time import *\n",
-                None,
+                sysu.Pass,
                 set(dir(import_module("time"))),
                 id="cpython embedded module",
             ),
             pytest.param(
                 "from pycln import *\n",
-                None,
+                sysu.Pass,
                 set(dir(import_module("pycln")) + ["cli"]),
                 id="local module",
             ),
@@ -865,8 +861,7 @@ class TestScanFunctions(AnalyzerTestCase):
         ],
     )
     def test_expand_import_star(self, code, expec_err_type, some_expec_importables):
-        err_type = None
-        try:
+        with pytest.raises(expec_err_type):
             node = ast.parse(code).body[0]
             expanded_node = scan.expand_import_star(node, Path(__file__))
             names = set(
@@ -875,9 +870,7 @@ class TestScanFunctions(AnalyzerTestCase):
             assert self._normalize_set(names).issuperset(
                 self._normalize_set(some_expec_importables)
             )
-        except UnexpandableImportStar:
-            err_type = UnexpandableImportStar
-        assert err_type == expec_err_type
+            raise sysu.Pass()
 
     def _assert_ast_equal(
         self,
@@ -886,16 +879,13 @@ class TestScanFunctions(AnalyzerTestCase):
         expec_err_type: Exception,
         type_comment: Optional[str] = None,
     ):
-        err_type = None
-        try:
+        with pytest.raises(expec_err_type):
             ast_tree = scan.parse_ast(code, mode=mode)
             assert ast_tree
             if type_comment:
                 tc = ast_tree.body[0].type_comment  # type: ignore
                 assert tc == type_comment
-        except UnparsableFile:
-            err_type = UnparsableFile
-        assert err_type == expec_err_type
+            raise sysu.Pass()
 
     @pytest.mark.skipif(not PY38_PLUS, reason="Python >=3.8 type comment support.")
     @pytest.mark.parametrize(
@@ -904,26 +894,28 @@ class TestScanFunctions(AnalyzerTestCase):
             pytest.param(
                 ("foo = 'bar'  # type: List[str]\n"),
                 "exec",
-                None,
+                sysu.Pass,
                 "List[str]",
                 id="var type comment",
             ),
             pytest.param(
                 ("def foo(bar):\n" "    # type: (str) -> List[str]\n" "    pass\n"),
                 "exec",
-                None,
+                sysu.Pass,
                 "(str) -> List[str]",
                 id="function type comment",
             ),
-            pytest.param("List[str]", "eval", None, None, id="only var type comment"),
+            pytest.param(
+                "List[str]", "eval", sysu.Pass, None, id="only var type comment"
+            ),
             pytest.param(
                 "(str) -> List[str]",
                 "func_type",
-                None,
+                sysu.Pass,
                 None,
                 id="only function type comment",
             ),
-            pytest.param("print()\n", "exec", None, None, id="normal code"),
+            pytest.param("print()\n", "exec", sysu.Pass, None, id="normal code"),
             pytest.param(
                 "@print(SyntaxError)\n",
                 "exec",
@@ -954,7 +946,7 @@ class TestScanFunctions(AnalyzerTestCase):
     @pytest.mark.parametrize(
         "code, mode, expec_err_type",
         [
-            pytest.param("print()\n", "exec", None, id="normal code"),
+            pytest.param("print()\n", "exec", sysu.Pass, id="normal code"),
             pytest.param(
                 "@print(SyntaxError)\n",
                 "exec",

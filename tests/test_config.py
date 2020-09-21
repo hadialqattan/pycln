@@ -67,31 +67,21 @@ class TestConfig:
                 assert getattr(configs, attr) == val
         assert configs.path == Path(".")
 
+    @pytest.mark.xfail(raises=Exit)
     @pytest.mark.parametrize(
-        "path, expec_err",
+        "path",
         [
-            pytest.param(None, "No Path provided. Nothing to do 😴\n", id="empty path"),
+            pytest.param(None, id="empty path"),
             pytest.param(
                 Path("not_exists"),
-                (
-                    "'not_exists' is not a directory or a file."
-                    " Maybe it does not exist 😅\n"
-                ),
                 id="not exists path",
             ),
         ],
     )
     @mock.patch(MOCK % "Config._check_regex")
-    def test_check_path(self, _check_regex, path, expec_err):
-        err_type, err_msg = None, None
-        with sysu.std_redirect(sysu.STD.ERR) as stderr:
-            try:
-                config.Config(path=path)
-            except Exit:
-                err_type = Exit
-            err_msg = stderr.getvalue()
-        assert err_type == Exit
-        assert err_msg == expec_err
+    def test_check_path(self, _check_regex, path):
+        with sysu.std_redirect(sysu.STD.ERR):
+            config.Config(path=path)
 
 
 class TestParseConfigFile:
@@ -103,37 +93,24 @@ class TestParseConfigFile:
     def setup_method(self, method, post_init, init):
         self.configs = config.Config(path=Path("."))
 
+    @pytest.mark.xfail(raises=Exit)
     @pytest.mark.parametrize(
-        "path, expec_err",
+        "path",
         [
             pytest.param(
                 Path("not_exists_path.cfg"),
-                "Config file 'not_exists_path.cfg' does not exist 😅\n",
                 id="not exists path",
             ),
             pytest.param(
                 CONFIG_DIR.joinpath("invalid_type.invalid"),
-                (
-                    "Config file "
-                    f"{str(CONFIG_DIR.joinpath('invalid_type.invalid'))!r}"
-                    " is not supported 😅\n"
-                    f"Supported types: {CONFIG_SECTIONS.keys()}.\n"
-                ),
                 id="not supported type",
             ),
         ],
     )
     @mock.patch(MOCK % "Config.__post_init__")
-    def test_parse(self, post_init, path, expec_err):
-        err_type, err_msg = None, None
-        with sysu.std_redirect(sysu.STD.ERR) as stderr:
-            try:
-                config.ParseConfigFile(path, self.configs)
-            except Exit:
-                err_type = Exit
-            err_msg = stderr.getvalue()
-        assert err_type == Exit
-        assert err_msg == expec_err
+    def test_parse(self, post_init, path):
+        with sysu.std_redirect(sysu.STD.ERR):
+            config.ParseConfigFile(path, self.configs)
 
     @pytest.mark.parametrize(
         "configs",

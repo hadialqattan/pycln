@@ -40,3 +40,7 @@ def hide_sys_argv():
     sys.argv.clear()
     yield
     sys.argv = sys_argv
+
+
+class Pass(Exception):
+    """Raises to pass some tests."""

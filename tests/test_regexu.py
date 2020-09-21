@@ -24,10 +24,10 @@ class TestRegexU:
     @pytest.mark.parametrize(
         "regex, expec_err_type, expec_err",
         [
-            pytest.param(INCLUDE_REGEX, None, "", id="valid, regex: str"),
+            pytest.param(INCLUDE_REGEX, sysu.Pass, "", id="valid, regex: str"),
             pytest.param(
                 COMPILED_INCLUDE_REGEX,
-                None,
+                sysu.Pass,
                 "",
                 id="valid, regex: Pattern[str]",
             ),
@@ -40,15 +40,11 @@ class TestRegexU:
         ],
     )
     def test_safe_compile(self, regex, expec_err_type, expec_err):
-        err_type, err_msg = None, ""
         with sysu.std_redirect(sysu.STD.ERR) as stderr:
-            try:
+            with pytest.raises(expec_err_type):
                 regexu.safe_compile(regex, "include")
-            except Exit:
-                err_type = Exit
-            err_msg = stderr.getvalue()
-        assert err_type == expec_err_type
-        assert err_msg == expec_err
+                raise sysu.Pass()
+            assert stderr.getvalue() == expec_err
 
     @pytest.mark.parametrize(
         "type_, name, regex, expec",

@@ -64,17 +64,16 @@ class TestMetadata:
         "value, expec_err, expec_exit_code",
         [
             pytest.param(True, Exit, 0, id="value=True"),
-            pytest.param(False, None, None, id="value=False"),
+            pytest.param(False, sysu.Pass, None, id="value=False"),
         ],
     )
     def test_version_callback(self, value, expec_err, expec_exit_code):
-        err_type, exit_code = None, None
         with sysu.std_redirect(sysu.STD.OUT) as stream:
-            try:
+            with pytest.raises(expec_err):
                 version_callback(value)
-            except Exit as err:
-                assert __version__ in str(stream.getvalue())
-                err_type = Exit
-                exit_code = err.exit_code
-        assert err_type == expec_err
-        assert exit_code == expec_exit_code
+                raise sysu.Pass()
+            stdout = stream.getvalue()
+            if expec_err is Exit:
+                assert __version__ in stdout
+            else:
+                assert not stdout

@@ -10,6 +10,8 @@ from pycln.utils import transform
 from pycln.utils._exceptions import UnsupportedCase
 from pycln.utils._nodes import NodeLocation
 
+from .utils import sysu
+
 # Constants.
 MOCK = "pycln.utils.transform.%s"
 
@@ -32,19 +34,16 @@ class TestImportTransformer:
             pytest.param(
                 {"x", "y", "z"},
                 NodeLocation((1, 4), 0),
-                None,
+                sysu.Pass,
                 id="pass used_names",
             ),
             pytest.param(set(), None, ValueError, id="pass no used_names"),
         ],
     )
     def test_init(self, used_names, location, expec_err):
-        err_type = None
-        try:
+        with pytest.raises(expec_err):
             transform.ImportTransformer(used_names, location)
-        except ValueError:
-            err_type = ValueError
-        assert err_type == expec_err
+            raise sysu.Pass()
 
     @pytest.mark.parametrize(
         "impt_stmnt, endlineno, used_names, expec_impt",
@@ -479,7 +478,7 @@ class TestTransformFunctions:
                 True,
                 "import x, z",
                 ["import x, z\n"],
-                None,
+                sysu.Pass,
                 id="modified",
             ),
             pytest.param(
@@ -488,11 +487,17 @@ class TestTransformFunctions:
                 False,
                 "",
                 ["    pass\n"],
-                None,
+                sysu.Pass,
                 id="removed, 4-indentation",
             ),
             pytest.param(
-                "import x, y, z", 0, False, "", [""], None, id="removed, no-indentation"
+                "import x, y, z",
+                0,
+                False,
+                "",
+                [""],
+                sysu.Pass,
+                id="removed, no-indentation",
             ),
             pytest.param(
                 "import x; import y",
@@ -518,8 +523,7 @@ class TestTransformFunctions:
         expec_fixed_lines,
         expec_err,
     ):
-        err_type = None
-        try:
+        with pytest.raises(expec_err):
             init.return_value = None
             parse_module.return_value.visit.return_value.code = expec_fixed_code
             fixed_lines = transform.rebuild_import(
@@ -529,21 +533,15 @@ class TestTransformFunctions:
                 NodeLocation((1, col_offset), 0),
             )
             assert fixed_lines == expec_fixed_lines
-        except UnsupportedCase:
-            err_type = UnsupportedCase
-        assert err_type == expec_err
+            raise sysu.Pass()
 
+    @pytest.mark.xfail(raises=cst.ParserSyntaxError)
     @mock.patch(MOCK % "ImportTransformer.__init__")
     def test_rebuild_import_invalid_syntax(self, init):
-        err_type = None
         init.return_value = None
-        try:
-            transform.rebuild_import(
-                "@invalid_syntax",
-                {""},
-                Path(__file__),
-                NodeLocation((1, 0), 0),
-            )
-        except cst.ParserSyntaxError:
-            err_type = cst.ParserSyntaxError
-        assert err_type == cst.ParserSyntaxError
+        transform.rebuild_import(
+            "@invalid_syntax",
+            {""},
+            Path(__file__),
+            NodeLocation((1, 0), 0),
+        )
