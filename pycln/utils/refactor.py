@@ -16,7 +16,7 @@ from ._exceptions import (
     WritePermissionError,
     libcst_parser_syntax_error_message,
 )
-from ._nodes import Import, ImportFrom
+from ._nodes import Import, ImportFrom, NodeLocation
 from .config import Config
 from .report import Report
 
@@ -30,7 +30,11 @@ PYCLN_UTILS = "pycln.utils"
 class LazyLibCSTLoader:
 
     """`transform.py` takes about '0.3s' to be loaded because of LibCST,
-    therefore I've created this class to load it only if necessary."""
+    therefore I've created this class to load it only if necessary.
+
+    THIS CLASS DOES NOT INCLUDED ON THE TESTS SUITE. SO DON'T MODIFY IT
+    FOR ANY REASON!
+    """
 
     def __init__(self):
         self._module = None
@@ -232,7 +236,7 @@ class Refactor:
 
                 # Default and `--diff, -d` option.
                 fixed_lines = self._transform(
-                    node, used_names, original_lines, fixed_lines
+                    node.location, used_names, original_lines, fixed_lines
                 )
 
         return "".join(fixed_lines)
@@ -257,14 +261,14 @@ class Refactor:
 
     def _transform(
         self,
-        node: Union[Import, ImportFrom],
+        location: NodeLocation,
         used_names: Set[str],
         original_lines: List[str],
         updated_lines: List[str],
     ) -> List[str]:
         """Rebuild and replace the import without any unused part.
 
-        :param node: an import statement node.
+        :param location: `node.location`.
         :param used_names: set of all used names.
         :param original_lines: file original code lines.
         :param updated_lines: code lines to modify.
@@ -272,16 +276,18 @@ class Refactor:
         """
         try:
             try:
-                lineno = node.location.start.line - 1
-                end_lineno = node.location.end.line
+                lineno = location.start.line - 1
+                end_lineno = location.end.line
                 import_stmnt = "".join(original_lines[lineno:end_lineno])
                 rebuilt_import = transform.rebuild_import(
                     import_stmnt,
                     used_names,
                     self._path,
-                    node.location,
+                    location,
                 )
-                updated_lines = self._insert(rebuilt_import, updated_lines, node)
+                updated_lines = Refactor._insert(
+                    rebuilt_import, updated_lines, location
+                )
             except UnsupportedCase as errin:
                 self.reporter.failure(str(errin))
         except transform.cst.ParserSyntaxError as err:
@@ -327,8 +333,12 @@ class Refactor:
             if (
                 self.configs.all_
                 or real_name in pathu.get_standard_lib_names()
-                or self._has_side_effects(alias.name, node)
-                in (scan.HasSideEffects.NO, scan.HasSideEffects.NOT_MODULE)
+                or (
+                    self._has_side_effects(alias.name, node)
+                    in (scan.HasSideEffects.NO, scan.HasSideEffects.NOT_MODULE)
+                    and self._has_side_effects(real_name, node)
+                    is scan.HasSideEffects.NO
+                )
             ):
                 return True
         return False
@@ -387,17 +397,17 @@ class Refactor:
             self.reporter.failure(str(err), self._path)
             return scan.HasSideEffects.NOT_KNOWN
 
+    @staticmethod
     def _insert(
-        self,
         rebuilt_import: List[str],
         updated_lines: List[str],
-        node: Union[Import, ImportFrom],
+        location: NodeLocation,
     ) -> List[str]:
         """Insert (replace) rebuilt import statement into `updated_lines`.
 
         :param rebuilt_import: an import statement ot insert.
         :param updated_lines: a list of source lines to modify.
-        :param node: unmodified node.
+        :param location: unmodified node location.
         :returns: fixed list of lines.
         """
         # Shollow copy.
@@ -405,13 +415,11 @@ class Refactor:
 
         # Determine old-new import delta.
         new_len = len(rebuilt_import)
-        old_len = len(node.location)
+        old_len = len(location)
         delta = old_len - new_len
-        if rebuilt_import[0] == "":
-            delta += 1
 
         # Insert the rebuilt import statement.
-        index = node.location.start.line - 1
+        index = location.start.line - 1
         for i in range(new_len):
             if old_len == 1 and i != (new_len - 3):
                 line = "".join(rebuilt_import[i:])

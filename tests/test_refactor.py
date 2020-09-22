@@ -1,16 +1,22 @@
 """pycln/utils/refactor.py tests."""
+import ast
 import tempfile
 from pathlib import Path
 
 import pytest
+from libcst import ParserSyntaxError
 from pytest_mock import mock
 
 from pycln.utils import config, refactor, report
 from pycln.utils._exceptions import (
     ReadPermissionError,
+    UnexpandableImportStar,
     UnparsableFile,
+    UnsupportedCase,
     WritePermissionError,
 )
+from pycln.utils._nodes import Import, ImportFrom, NodeLocation
+from pycln.utils.scan import HasSideEffects, SourceStats
 
 from .utils import sysu
 
@@ -228,3 +234,423 @@ class TestRefactor:
             self.session_maker._output(fixed_lines, original_lines, "utf-8")
             tmp.seek(0)
             assert tmp.readlines() == fixed_lines
+
+    @pytest.mark.parametrize(
+        "_should_remove_return, node, is_star, expec_names",
+        [
+            pytest.param(
+                False,
+                Import(
+                    NodeLocation((1, 0), 1),
+                    [
+                        ast.alias(name="x", asname=None),
+                        ast.alias(name="y", asname=None),
+                    ],
+                ),
+                False,
+                {"x", "y"},
+                id="used",
+            ),
+            pytest.param(
+                True,
+                Import(
+                    NodeLocation((1, 0), 1),
+                    [
+                        ast.alias(name="x", asname=None),
+                        ast.alias(name="y", asname=None),
+                    ],
+                ),
+                False,
+                set(),
+                id="not-used",
+            ),
+            pytest.param(
+                True,
+                Import(
+                    NodeLocation((1, 0), 1),
+                    [
+                        ast.alias(name="x", asname=None),
+                        ast.alias(name="y", asname=None),
+                    ],
+                ),
+                True,
+                set(),
+                id="not-used, star",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._should_remove")
+    def test_get_used_names(
+        self, _should_remove, _should_remove_return, node, is_star, expec_names
+    ):
+        _should_remove.return_value = _should_remove_return
+        with sysu.std_redirect(sysu.STD.OUT):
+            used_names = self.session_maker._get_used_names(node, is_star)
+            assert used_names == expec_names
+
+    @pytest.mark.parametrize(
+        (
+            "rebuild_import_return, rebuild_import_raise, "
+            "location, original_lines, updated_lines"
+        ),
+        [
+            pytest.param(
+                "import x\n",
+                None,
+                NodeLocation((1, 0), 1),
+                ["import x, i\n", "import y\n"],
+                ["import x\n", "import y\n"],
+                id="normal",
+            ),
+            pytest.param(
+                "import x\n",
+                UnsupportedCase(Path(""), NodeLocation((1, 0), 1), ""),
+                NodeLocation((1, 0), 1),
+                ["import x, i\n", "import y\n"],
+                ["import x\n", "import y\n"],
+                id="UnparsableFile",
+            ),
+            pytest.param(
+                "import x\n",
+                ParserSyntaxError("", lines=[""], raw_line=1, raw_column=0),
+                NodeLocation((1, 0), 1),
+                ["import x; import y\n"],
+                ["import x; import y\n"],
+                id="libcst.ParserSyntaxError",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._insert")
+    @mock.patch(MOCK % "transform.rebuild_import")
+    def test_transform(
+        self,
+        rebuild_import,
+        _insert,
+        rebuild_import_return,
+        rebuild_import_raise,
+        location,
+        original_lines,
+        updated_lines,
+    ):
+        rebuild_import.side_effect = rebuild_import_raise
+        rebuild_import.return_value = rebuild_import_return
+        _insert.return_value = updated_lines
+        with sysu.std_redirect(sysu.STD.ERR):
+            fixed_lines = self.session_maker._transform(
+                location, set(), original_lines, updated_lines
+            )
+            assert fixed_lines == updated_lines
+
+    @pytest.mark.parametrize(
+        "expand_import_star_raise, name, expec_is_star",
+        [
+            pytest.param(None, "*", True, id="star"),
+            pytest.param(None, "!*", False, id="not-star"),
+            pytest.param(
+                UnexpandableImportStar(Path(""), NodeLocation((1, 0), 1), ""),
+                "*",
+                None,
+                id="not-star",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "scan.expand_import_star")
+    def test_expand_import_star(
+        self,
+        expand_import_star,
+        expand_import_star_raise,
+        name,
+        expec_is_star,
+    ):
+        node = ImportFrom(NodeLocation((1, 0), 1), [ast.alias(name=name)], "xxx", 0)
+        expand_import_star.return_value = node
+        expand_import_star.side_effect = expand_import_star_raise
+        enode, is_star = self.session_maker._expand_import_star(node)
+        assert (enode, is_star) == (node, expec_is_star)
+
+    @pytest.mark.parametrize(
+        "_has_used_return, _has_side_effects_return, all_, name, expec_val",
+        [
+            pytest.param(True, None, None, "not-matter", False, id="used"),
+            pytest.param(False, None, None, "this", False, id="known side effects"),
+            pytest.param(False, None, True, "not-matter", True, id="--all option"),
+            pytest.param(False, None, False, "os", True, id="standard lib"),
+            pytest.param(
+                False,
+                HasSideEffects.NO,
+                False,
+                "not-matter",
+                True,
+                id="no side-effects",
+            ),
+            pytest.param(
+                False,
+                HasSideEffects.YES,
+                False,
+                "not-matter",
+                False,
+                id="no all",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._has_side_effects")
+    @mock.patch(MOCK % "Refactor._has_used")
+    def test_should_remove(
+        self,
+        _has_used,
+        _has_side_effects,
+        _has_used_return,
+        _has_side_effects_return,
+        all_,
+        name,
+        expec_val,
+    ):
+        _has_used.return_value = _has_used_return
+        _has_side_effects.return_value = _has_side_effects_return
+        setattr(self.configs, "all_", all_)
+        alias = ast.alias(name=name, asname=None)
+        node = Import(NodeLocation((1, 0), 1), [alias])
+        val = self.session_maker._should_remove(node, alias, False)
+        assert val == expec_val
+
+    @pytest.mark.parametrize(
+        "name, is_star, expec_val",
+        [
+            pytest.param("x", False, True, id="used name"),
+            pytest.param("y", False, False, id="not-used name"),
+            pytest.param("x.i", False, True, id="used attr"),
+            pytest.param("x.j", False, False, id="not-used attr"),
+            pytest.param("x", True, True, id="used name, star"),
+            pytest.param("__future__", True, False, id="skip name, star"),
+        ],
+    )
+    def test_has_used(self, name, is_star, expec_val):
+        self.session_maker._source_stats = SourceStats({"x"}, {"i"}, "__future__")
+        val = self.session_maker._has_used(name, is_star)
+        assert val == expec_val
+
+    @pytest.mark.parametrize(
+        (
+            "get_import_return, safe_read_return, safe_read_raise,"
+            "parse_ast_return, parse_ast_raise,"
+            "has_side_effects_return, has_side_effects_raise,"
+        ),
+        [
+            pytest.param(
+                None,
+                ("", ""),
+                None,
+                None,
+                None,
+                HasSideEffects.NOT_MODULE,
+                None,
+                id="no module path",
+            ),
+            pytest.param(
+                Path(""),
+                ("", ""),
+                ReadPermissionError(13, "", Path("")),
+                None,
+                None,
+                HasSideEffects.NOT_KNOWN,
+                None,
+                id="no read permission",
+            ),
+            pytest.param(
+                Path(""),
+                ("", ""),
+                None,
+                ast.Module(),
+                UnparsableFile(Path(""), SyntaxError("")),
+                HasSideEffects.NOT_KNOWN,
+                None,
+                id="Unparsable File",
+            ),
+            pytest.param(
+                Path(""),
+                ("", ""),
+                None,
+                ast.Module(),
+                None,
+                HasSideEffects.NOT_KNOWN,
+                Exception("err"),
+                id="generic err",
+            ),
+            pytest.param(
+                Path(""),
+                ("", ""),
+                None,
+                ast.Module(),
+                None,
+                HasSideEffects.YES,
+                None,
+                id="success",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "scan.SideEffectsAnalyzer.has_side_effects")
+    @mock.patch(MOCK % "scan.SideEffectsAnalyzer.__init__")
+    @mock.patch(MOCK % "scan.SideEffectsAnalyzer.visit")
+    @mock.patch(MOCK % "scan.parse_ast")
+    @mock.patch(MOCK % "iou.safe_read")
+    @mock.patch(MOCK % "pathu.get_import_path")
+    @mock.patch(MOCK % "pathu.get_import_from_path")
+    def test_has_side_effects(
+        self,
+        get_import_from_path,
+        get_import_path,
+        safe_read,
+        parse_ast,
+        visit,
+        init,
+        has_side_effects,
+        get_import_return,
+        safe_read_return,
+        safe_read_raise,
+        parse_ast_return,
+        parse_ast_raise,
+        has_side_effects_return,
+        has_side_effects_raise,
+    ):
+        init.return_value = None
+        get_import_from_path.return_value = get_import_return
+        get_import_path.return_value = get_import_return
+        safe_read.return_value = safe_read_return
+        safe_read.side_effect = safe_read_raise
+        parse_ast.return_value = parse_ast_return
+        parse_ast.side_effect = parse_ast_raise
+        has_side_effects.return_value = has_side_effects_return
+        has_side_effects.side_effect = has_side_effects_raise
+        with sysu.std_redirect(sysu.STD.ERR):
+            node = Import(NodeLocation((1, 0), 1), [])
+            val = self.session_maker._has_side_effects("", node)
+            assert val == has_side_effects_return
+
+    @pytest.mark.parametrize(
+        "rebuilt_import, updated_lines, location, expec_updated_lines",
+        [
+            pytest.param(
+                ["import x\n"],
+                [
+                    "import z\n",
+                    "import x, i\n",
+                    "import y\n",
+                ],
+                NodeLocation((2, 0), 2),
+                [
+                    "import z\n",
+                    "import x\n",
+                    "import y\n",
+                ],
+                id="single:replace",
+            ),
+            pytest.param(
+                "",
+                [
+                    "import z\n",
+                    "import x, i\n",
+                    "import y\n",
+                ],
+                NodeLocation((2, 0), 2),
+                [
+                    "import z\n",
+                    "",
+                    "import y\n",
+                ],
+                id="single:remove",
+            ),
+            pytest.param(
+                [
+                    "from xxx import (\n",
+                    "    x\n",
+                    ")\n",
+                ],
+                [
+                    "import z\n",
+                    "from xxx import (\n",
+                    "    x, y\n",
+                    ")\n",
+                    "import y\n",
+                ],
+                NodeLocation((2, 0), 4),
+                [
+                    "import z\n",
+                    "from xxx import (\n",
+                    "    x\n",
+                    ")\n",
+                    "import y\n",
+                ],
+                id="multi:replace",
+            ),
+            pytest.param(
+                [
+                    "from xxx import (\n",
+                    "    x\n",
+                    ")\n",
+                ],
+                [
+                    "import z\n",
+                    "from xxx import (\n",
+                    "    x,\n",
+                    "    y\n",
+                    ")\n",
+                    "import y\n",
+                ],
+                NodeLocation((2, 0), 5),
+                [
+                    "import z\n",
+                    "from xxx import (\n",
+                    "    x\n",
+                    ")\n",
+                    "",
+                    "import y\n",
+                ],
+                id="multi:remove:part",
+            ),
+            pytest.param(
+                [""],
+                [
+                    "import z\n",
+                    "from xxx import (\n",
+                    "    x,\n",
+                    "    y\n",
+                    ")\n",
+                    "import y\n",
+                ],
+                NodeLocation((2, 0), 5),
+                [
+                    "import z\n",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "import y\n",
+                ],
+                id="multi:remove:all",
+            ),
+            pytest.param(
+                [
+                    "from xxx import (\n",
+                    "    x,\n",
+                    "    y\n",
+                    ")\n",
+                ],
+                [
+                    "import z\n",
+                    "from xxx import *\n",
+                    "import y\n",
+                ],
+                NodeLocation((2, 0), 2),
+                [
+                    "import z\n",
+                    "from xxx import (\n" "    x,\n" "    y\n" ")\n",
+                    "import y\n",
+                ],
+                id="multi:add",
+            ),
+        ],
+    )
+    def test_insert(self, rebuilt_import, updated_lines, location, expec_updated_lines):
+        fixed = refactor.Refactor._insert(rebuilt_import, updated_lines, location)
+        print(repr(fixed))
+        assert fixed == expec_updated_lines
