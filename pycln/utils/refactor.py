@@ -85,13 +85,9 @@ class Refactor:
         """
         tree = ast.parse("".join(source_lines))
         for parent in ast.walk(tree):
-            try:
-                if parent.__dict__.get("body", None):
-                    body_len = len(parent.body)  # type: ignore
-                else:
-                    continue
-            except TypeError:
-                continue
+            body = getattr(parent, "body", None)
+            if body and hasattr(body, "__len__"):
+                body_len = len(body)
             for child in ast.iter_child_nodes(parent):
                 if isinstance(child, ast.Pass):
                     if body_len > 1:
@@ -330,17 +326,17 @@ class Refactor:
             not self._has_used(used_name, is_star)
             and real_name not in pathu.IMPORTS_WITH_SIDE_EFFECTS
         ):
-            if (
-                self.configs.all_
-                or real_name in pathu.get_standard_lib_names()
-                or (
-                    self._has_side_effects(alias.name, node)
-                    in (scan.HasSideEffects.NO, scan.HasSideEffects.NOT_MODULE)
-                    and self._has_side_effects(real_name, node)
-                    is scan.HasSideEffects.NO
-                )
-            ):
+            if self.configs.all_ or real_name in pathu.get_standard_lib_names():
                 return True
+            if self._has_side_effects(alias.name, node) in (
+                scan.HasSideEffects.NO,
+                scan.HasSideEffects.NOT_MODULE,
+            ):
+                if (
+                    not real_name
+                    or self._has_side_effects(real_name, node) is scan.HasSideEffects.NO
+                ):
+                    return True
         return False
 
     def _has_used(self, name: str, is_star: bool) -> bool:

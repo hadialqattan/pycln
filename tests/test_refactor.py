@@ -123,6 +123,15 @@ class TestRefactor:
                 ],
                 id="useless with docs",
             ),
+            pytest.param(
+                [
+                    "x = i if i else y\n",
+                ],
+                [
+                    "x = i if i else y\n",
+                ],
+                id="TypeError",
+            ),
         ],
     )
     def test_remove_useless_passes(self, source_lines, expec_lines):
