@@ -68,8 +68,7 @@ class ImportTransformer(cst.CSTTransformer):
         """
         used_aliases: List[cst.ImportAlias] = []
         for alias in updated_node.names:  # type: ignore
-            name = alias.asname.name if alias.asname else alias.name
-            if self._get_alias_name(name) in self._used_names:
+            if self._get_alias_name(alias.name) in self._used_names:
                 used_aliases.append(alias)
         return self._stylize(updated_node, used_aliases)
 
