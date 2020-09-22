@@ -1,7 +1,6 @@
 """Pycln code refactoring utility."""
 import ast
 import os
-from copy import copy
 from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
@@ -190,7 +189,7 @@ class Refactor:
         :param original_lines: unmodified lines.
         :reutrns: fixed source code.
         """
-        fixed_lines = copy(original_lines)
+        fixed_lines = original_lines.copy()
         for type_ in self._import_stats:
 
             for node in type_:
@@ -369,7 +368,7 @@ class Refactor:
         :returns: side effects status.
         """
         if isinstance(node, ImportFrom):
-            module_source = pathu.get_import_from_path(
+            module_source = pathu.get_import_from_path(  # pragma: nocover
                 self._path, module, node.module, node.level
             )
         else:

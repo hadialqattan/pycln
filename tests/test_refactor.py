@@ -245,6 +245,21 @@ class TestRefactor:
             assert tmp.readlines() == fixed_lines
 
     @pytest.mark.parametrize(
+        "get_stats_raise, expec_val",
+        [
+            pytest.param(None, ("", ""), id="normal"),
+            pytest.param(Exception(""), None, id="error"),
+        ],
+    )
+    @mock.patch(MOCK % "scan.SourceAnalyzer.get_stats")
+    def test_analyze(self, get_stats, get_stats_raise, expec_val):
+        get_stats.return_value = ("", "")
+        get_stats.side_effect = get_stats_raise
+        with sysu.std_redirect(sysu.STD.ERR):
+            val = self.session_maker._analyze(ast.parse(""), [""])
+            assert val == expec_val
+
+    @pytest.mark.parametrize(
         "_should_remove_return, node, is_star, expec_names",
         [
             pytest.param(
