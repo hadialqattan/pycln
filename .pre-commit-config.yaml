@@ -1,4 +1,21 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: check-ast
+      - id: check-toml
+      - id: check-yaml
+      - id: check-json
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-byte-order-marker
+      - id: check-added-large-files
+      - id: check-executables-have-shebangs
+
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.7.2
     hooks:
