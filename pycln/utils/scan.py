@@ -96,7 +96,6 @@ class SourceAnalyzer(ast.NodeVisitor):
     """
 
     def __init__(self, source_lines: Optional[List[str]] = None):
-        super(SourceAnalyzer, self).__init__()
         if not PY38_PLUS and source_lines is None:
             # Bad class usage.
             raise ValueError("Please provide source lines for Python < 3.8.")
@@ -381,7 +380,6 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         raise ModuleNotFoundError(name=module_name)
 
     def __init__(self, path: Path):
-        super(ImportablesAnalyzer, self).__init__()
         self._not_importables: Set[Union[ast.Name, str]] = set()
         self._importables: Set[str] = set()
         self._has_all = False
@@ -504,8 +502,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
     >>> has_side_effects = analyzer.has_side_effects()
     """
 
-    def __init__(self, *args, **kwargs):
-        super(SideEffectsAnalyzer, self).__init__(*args, **kwargs)
+    def __init__(self):
         self._not_side_effects: Set[ast.Call] = set()
         self._has_side_effects = HasSideEffects.NO
 

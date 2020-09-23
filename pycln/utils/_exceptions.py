@@ -11,7 +11,7 @@ class BaseOSError(Exception):
 
     def __init__(self, errno: int, strerror: str, filepath: Path):
         message = f"{filepath} {strerror} [Errno {errno}]"
-        super(BaseOSError, self).__init__(message)
+        super().__init__(message)
 
 
 class ReadPermissionError(BaseOSError):
@@ -31,7 +31,7 @@ class UnexpandableImportStar(Exception):
     def __init__(self, path: Path, location: NodeLocation, msg: str):
         line, col = location.start.line, location.start.col
         message = f"{path}:{line}:{col} {self.__class__.__name__}: {msg}"
-        super(UnexpandableImportStar, self).__init__(message)
+        super().__init__(message)
 
 
 class UnparsableFile(Exception):
@@ -62,7 +62,7 @@ class UnparsableFile(Exception):
 
         msg = err.msg  # type: ignore
         message = f"{location} {type_.__name__}: {msg}{postfix}"
-        super(UnparsableFile, self).__init__(message)
+        super().__init__(message)
 
     @staticmethod
     def _type_check(type_: type) -> None:
@@ -87,7 +87,7 @@ class UnsupportedCase(Exception):
         line, col = location.start.line, location.start.col
         cls_name = self.__class__.__name__
         message = f"{path}:{line}:{col} {cls_name}: {msg}"
-        super(UnsupportedCase, self).__init__(message)
+        super().__init__(message)
 
 
 def libcst_parser_syntax_error_message(path: Path, err) -> str:

@@ -170,13 +170,11 @@ def get_third_party_lib_paths() -> Set[Path]:
     """
     paths: Set[Path] = set()
 
-    packages_paths: Set[str] = set(
-        [
-            path
-            for path in sys.path
-            if path and Path(path).parts[-1] in [DIST_PACKAGES, SITE_PACKAGES]
-        ]
-    )
+    packages_paths: Set[str] = {
+        path
+        for path in sys.path
+        if path and Path(path).parts[-1] in [DIST_PACKAGES, SITE_PACKAGES]
+    }
 
     for path in packages_paths:
 
