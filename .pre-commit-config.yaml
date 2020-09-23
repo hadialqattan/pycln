@@ -16,6 +16,12 @@ repos:
       - id: check-added-large-files
       - id: check-executables-have-shebangs
 
+  - repo: https://github.com/prettier/prettier
+    rev: 2.1.1
+    hooks:
+      - id: prettier
+        args: [--prose-wrap=always, --print-width=88]
+
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.7.2
     hooks:
@@ -65,9 +71,3 @@ repos:
     hooks:
       - id: mypy
         args: [--no-strict-optional, --ignore-missing-imports]
-
-  - repo: https://github.com/prettier/prettier
-    rev: 2.1.1
-    hooks:
-      - id: prettier
-        args: [--prose-wrap=always, --print-width=88]
