@@ -36,8 +36,8 @@ class Report:
     @staticmethod
     def secho(
         message: str,
+        *,  # Force kwargs.
         bold: bool,
-        err: bool = False,
         isedit: bool = False,
         issuccess: bool = False,
         iswarning: bool = False,
@@ -47,11 +47,10 @@ class Report:
 
         :param message: a string message.
         :param bold: is if a bold message.
-        :param err: redirect to stderr instead of stdout.
-        :param isedit: is it an edit message.
-        :param issuccess: is it a success message.
-        :param iswarning: is it a warning message.
-        :param iserror: is it an error message.
+        :param isedit: is it an edit message ~> stdout.
+        :param issuccess: is it a success message  ~> stdout.
+        :param iswarning: is it a warning message ~> stderr.
+        :param iserror: is it an error message ~> stderr.
         """
         if isedit:
             color = typer.colors.BRIGHT_BLUE
@@ -62,11 +61,11 @@ class Report:
         elif iserror:
             color = typer.colors.BRIGHT_RED
         else:
-            color = typer.colors.RESET
+            raise ValueError("Please specify one of the is* args.")
         # Print the colored message
         typer.echo(
             typer.style(" ", bg=color) + " " + typer.style(message, bold=bold),
-            err=err,
+            err=bool(iswarning or iserror),
         )
 
     @staticmethod
@@ -177,6 +176,10 @@ class Report:
     _file_removed_imports: int = 0
     _file_expanded_stars: int = 0
 
+    def _reset_file_counters(self) -> None:
+        self._file_removed_imports = 0
+        self._file_expanded_stars = 0
+
     def changed_file(self, path: Path) -> None:
         """Increment `self._changed_files`. Write a message to stdout.
 
@@ -201,8 +204,7 @@ class Report:
             Report.secho(f"{path} {str_file_report}! 🚀", bold=True, isedit=True)
 
         self._changed_files += 1
-        self._file_removed_imports = 0
-        self._file_expanded_stars = 0
+        self._reset_file_counters()
 
     #: Total unchanged files counter.
     _unchanged_files: int = 0
@@ -216,8 +218,7 @@ class Report:
             Report.secho(f"{path} looks good! ✨", bold=False, issuccess=True)
 
         self._unchanged_files += 1
-        self._file_removed_imports = 0
-        self._file_expanded_stars = 0
+        self._reset_file_counters()
 
     #: Total ignored paths counter.
     _ignored_paths: int = 0
@@ -230,18 +231,17 @@ class Report:
         """
         if self.configs.verbose:
             if type_ == "exclude":
-                type_ = "matches the --exclude regex"
+                type_ = "matches the --exclude regex"  # pragma: nocover.
             elif type_ == "gitignore":
-                type_ = "matches the .gitignore patterns"
+                type_ = "matches the .gitignore patterns"  # pragma: nocover.
             elif type_ == "include":
-                type_ = "does not match the --include regex"
+                type_ = "does not match the --include regex"  # pragma: nocover.
             else:
                 sharp = "#"  # To no skip this file.
                 type_ = f"do to `{sharp} nopycln: file` comment"
             Report.secho(
                 f"{ignored_path} has ignored: {type_}! ⚠️",
                 bold=False,
-                err=True,
                 iswarning=True,
             )
 
@@ -273,7 +273,6 @@ class Report:
             Report.secho(
                 f"{location} {statement!r} has ignored: {reason}! ⚠️",
                 bold=False,
-                err=True,
                 iswarning=True,
             )
         self._ignored_imports += 1
@@ -289,7 +288,7 @@ class Report:
         """
         if not self.configs.silence:
             message = f"{path} {msg} ⛔" if path else f"{msg} ⛔"
-            Report.secho(message, bold=False, err=True, iserror=True)
+            Report.secho(message, bold=False, iserror=True)
         if self._file_removed_imports == 0:
             self._file_removed_imports = -1
         self._failures += 1
@@ -307,9 +306,9 @@ class Report:
             # Internal error.
             return 250
         if self._changed_files and self.configs.check:
-            # File(s) should be refactord.
+            # File(s) should be refactored.
             return 1
-        # Everything is fine.
+        # Has modified or looks good.
         return 0
 
     @property
@@ -318,7 +317,7 @@ class Report:
 
         :returns: `"\n"` or `""`.
         """
-        return (
+        return (  # pragma: nocover.
             "\n"
             if any(
                 [
@@ -361,7 +360,6 @@ class Report:
                 ("\n" if self.configs.verbose and self._ignored_paths else "")
                 + "No Python files are present to be cleaned. Nothing to do 😴",
                 bold=True,
-                err=True,
             )
             raise typer.Exit(1)
 
