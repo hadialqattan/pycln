@@ -16,7 +16,7 @@ from pycln.utils._exceptions import (
     WritePermissionError,
 )
 from pycln.utils._nodes import Import, ImportFrom, NodeLocation
-from pycln.utils.scan import HasSideEffects, SourceStats
+from pycln.utils.scan import HasSideEffects, ImportStats, SourceStats
 
 from .utils import sysu
 
@@ -258,6 +258,149 @@ class TestRefactor:
         with sysu.std_redirect(sysu.STD.ERR):
             val = self.session_maker._analyze(ast.parse(""), [""])
             assert val == expec_val
+
+    @pytest.mark.parametrize(
+        (
+            "skip_import_return, _expand_import_star_return, _get_used_names_return,"
+            "_transform_return, expand_stars, mode, original_lines, expec_fixed_lines"
+        ),
+        [
+            pytest.param(
+                True,
+                None,
+                None,
+                ["import x # nopycln: import"],
+                False,
+                "not-matter",
+                ["import x, y # nopycln: import"],
+                ["import x, y # nopycln: import"],
+                id="nopycln",
+            ),
+            pytest.param(
+                False,
+                (None, None),
+                None,
+                ["import x, y"],
+                False,
+                "not-matter",
+                ["import *"],
+                ["import *"],
+                id="unexpandable star",
+            ),
+            pytest.param(
+                False,
+                (None, True),
+                {"x", "y"},
+                ["import x, y"],
+                False,
+                "not-matter",
+                ["import *"],
+                ["import *"],
+                id="star, used, no -x",
+            ),
+            pytest.param(
+                False,
+                (
+                    Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)]),
+                    True,
+                ),
+                {"x", "y"},
+                ["import x, y"],
+                True,
+                "not-matter",
+                ["import *"],
+                ["import x, y"],
+                id="star, used, -x",
+            ),
+            pytest.param(
+                False,
+                (
+                    Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)]),
+                    True,
+                ),
+                set(),
+                [""],
+                None,
+                "not-matter",
+                ["import *"],
+                [""],
+                id="star, not used",
+            ),
+            pytest.param(
+                False,
+                (
+                    Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)]),
+                    False,
+                ),
+                set("x"),
+                None,
+                False,
+                "not-matter",
+                ["import x"],
+                ["import x"],
+                id="all used, no -x",
+            ),
+            pytest.param(
+                False,
+                (
+                    Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)]),
+                    True,
+                ),
+                set("x"),
+                ["import x, y"],
+                True,
+                "not-matter",
+                ["import x"],
+                ["import x, y"],
+                id="all used, -x",
+            ),
+            pytest.param(
+                False,
+                (
+                    Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)]),
+                    True,
+                ),
+                set("x"),
+                ["import x"],
+                True,
+                "check",
+                ["import x, y"],
+                ["import x, y\n_CHANGED_"],
+                id="check",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._transform")
+    @mock.patch(MOCK % "Refactor._get_used_names")
+    @mock.patch(MOCK % "Refactor._expand_import_star")
+    @mock.patch(MOCK % "regexu.skip_import")
+    def test_refactor(
+        self,
+        skip_import,
+        _expand_import_star,
+        _get_used_names,
+        _transform,
+        skip_import_return,
+        _expand_import_star_return,
+        _get_used_names_return,
+        _transform_return,
+        expand_stars,
+        mode,
+        original_lines,
+        expec_fixed_lines,
+    ):
+        skip_import.return_value = skip_import_return
+        _expand_import_star.return_value = _expand_import_star_return
+        _get_used_names.return_value = _get_used_names_return
+        _transform.return_value = _transform_return
+        setattr(self.configs, "expand_stars", expand_stars)
+        setattr(self.configs, mode, True)
+        node = Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)])
+        self.session_maker._import_stats = ImportStats({node}, set())
+        with sysu.std_redirect(sysu.STD.OUT):
+            with sysu.std_redirect(sysu.STD.ERR):
+                fixed_code = self.session_maker._refactor(original_lines)
+                assert fixed_code == "".join(expec_fixed_lines)
 
     @pytest.mark.parametrize(
         "_should_remove_return, node, is_star, expec_names",
