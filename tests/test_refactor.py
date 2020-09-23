@@ -358,7 +358,7 @@ class TestRefactor:
                 False,
                 (
                     Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)]),
-                    True,
+                    False,
                 ),
                 set("x"),
                 ["import x"],

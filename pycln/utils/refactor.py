@@ -211,10 +211,9 @@ class Refactor:
                 # Depends on `--expand-stars, -x` option.
                 if is_star:
                     if used_names:
-                        if self.configs.expand_stars:
-                            self.reporter.expanded_star(self._path, node)
-                        else:
+                        if not self.configs.expand_stars:
                             continue
+                        self.reporter.expanded_star(self._path, node)
                     else:
                         star_alias = ast.alias(name="*", asname=None)
                         self.reporter.removed_import(self._path, node, star_alias)
