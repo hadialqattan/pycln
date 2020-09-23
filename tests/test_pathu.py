@@ -67,7 +67,7 @@ class TestPathu:
 
     def test_get_standard_lib_paths(self):
         standard_paths = pathu.get_standard_lib_paths()
-        dirs = set([path.parts[-2] for path in standard_paths])
+        dirs = {path.parts[-2] for path in standard_paths}
         expected_dirs = {PYVER, pathu.LIB_DYNLOAD}
         assert dirs == expected_dirs
         assert len(standard_paths) > 180
@@ -87,7 +87,7 @@ class TestPathu:
 
     def test_get_third_party_lib_paths(self):
         third_paths = pathu.get_third_party_lib_paths()
-        dirs = set([path.parts[-2] for path in third_paths])
+        dirs = {path.parts[-2] for path in third_paths}
         expected_dirs = {"site-packages", "dist-packages"}
         assert dirs == expected_dirs
         assert len(third_paths) > 2

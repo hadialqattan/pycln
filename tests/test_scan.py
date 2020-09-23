@@ -43,7 +43,7 @@ class AnalyzerTestCase:
 
     def _normalize_set(self, set_: set) -> set:
         # Remove any dunder name from the given set.
-        return set([i for i in set_ if not i.startswith("__")])
+        return {i for i in set_ if not i.startswith("__")}
 
 
 class TestSourceAnalyzer(AnalyzerTestCase):
@@ -487,7 +487,7 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
     """`ImportablesAnalyzer` class tests."""
 
     def _assert_not_importables(self, not_importables: set, expec_not_importables: set):
-        str_set = set([(n.id if hasattr(n, "id") else n) for n in not_importables])
+        str_set = {(n.id if hasattr(n, "id") else n) for n in not_importables}
         assert str_set == expec_not_importables
 
     def _assert_importables_and_not(
@@ -657,7 +657,7 @@ class TestSideEffectsAnalyzer:
     def _assert_not_side_effects(
         self, not_side_effects: set, expec_not_side_effects: set
     ):
-        str_set = set([call.func.id for call in not_side_effects])
+        str_set = {call.func.id for call in not_side_effects}
         assert str_set == expec_not_side_effects
 
     def _assert_has_side_effects_and_not(
@@ -864,9 +864,7 @@ class TestScanFunctions(AnalyzerTestCase):
         with pytest.raises(expec_err_type):
             node = ast.parse(code).body[0]
             expanded_node = scan.expand_import_star(node, Path(__file__))
-            names = set(
-                [(a.asname if a.asname else a.name) for a in expanded_node.names]
-            )
+            names = {(a.asname if a.asname else a.name) for a in expanded_node.names}
             assert self._normalize_set(names).issuperset(
                 self._normalize_set(some_expec_importables)
             )
