@@ -8,6 +8,7 @@ from typing import Generator, List, Optional, Pattern, Set
 
 from pathspec import PathSpec
 
+from .. import ISWIN
 from . import regexu
 from .report import Report
 
@@ -17,7 +18,7 @@ INCLUDE = "include"
 GITIGNORE = "gitignore"
 PY_EXTENSION = ".py"
 __INIT__ = "__init__.py"
-LIB_DYNLOAD = "lib-dynload"
+LIB_DYNLOAD = "Lib" if ISWIN else "lib-dynload"
 SITE_PACKAGES = "site-packages"
 DIST_PACKAGES = "dist-packages"
 LIB_PY_EXTENSIONS = ("so", "py", "pyc")

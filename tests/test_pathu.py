@@ -7,6 +7,7 @@ import pytest
 from pathspec import PathSpec
 from pytest_mock import mock
 
+from pycln import ISWIN
 from pycln.utils import pathu
 from pycln.utils.report import Report
 
@@ -14,7 +15,11 @@ from . import CONFIG_DIR
 
 # Constants.
 MOCK = "pycln.utils.report.%s"
-PYVER = f"python{sys.version_info[0]}.{sys.version_info[1]}"
+
+if ISWIN:
+    PYVER = "Lib"
+else:
+    PYVER = f"python{sys.version_info[0]}.{sys.version_info[1]}"
 
 
 class TestPathu:
@@ -69,7 +74,10 @@ class TestPathu:
     def test_get_standard_lib_paths(self):
         standard_paths = pathu.get_standard_lib_paths()
         dirs = {path.parts[-2] for path in standard_paths}
-        expected_dirs = {PYVER, pathu.LIB_DYNLOAD}
+        if ISWIN:
+            expected_dirs = {pathu.LIB_DYNLOAD}
+        else:
+            expected_dirs = {PYVER, pathu.LIB_DYNLOAD}
         assert dirs == expected_dirs
         assert len(standard_paths) > 180
 
