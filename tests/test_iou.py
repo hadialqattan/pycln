@@ -2,6 +2,7 @@
 import pytest
 from oschmod import set_mode
 
+from pycln import ISWIN
 from pycln.utils import iou
 from pycln.utils._exceptions import (
     ReadPermissionError,
@@ -32,6 +33,9 @@ class TestIOU:
                 ReadPermissionError,
                 0o000,
                 id="no read permission",
+                marks=pytest.mark.skipif(
+                    ISWIN, reason="os.access doesn't support Windows."
+                ),
             ),
             pytest.param(
                 "code...",
@@ -39,6 +43,9 @@ class TestIOU:
                 WritePermissionError,
                 0o444,
                 id="no read write",
+                marks=pytest.mark.skipif(
+                    ISWIN, reason="os.access doesn't support Windows."
+                ),
             ),
             pytest.param(
                 #: Make conflict between BOM and encoding Cookie.
@@ -76,6 +83,9 @@ class TestIOU:
                 WritePermissionError,
                 0o444,
                 id="no write permission",
+                marks=pytest.mark.skipif(
+                    ISWIN, reason="os.access doesn't support Windows."
+                ),
             ),
         ],
     )
