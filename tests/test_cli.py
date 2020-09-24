@@ -15,12 +15,10 @@ class TestCli:
 
     """some `cli.py` tests."""
 
-    def _assert_code_in(self, expec_out, expec_err, *args):
+    def _assert_code_in(self, expec_out, *args):
         results = self.cli.invoke(cli.app, args)
         if expec_out:
             assert expec_out in results.stdout
-        if expec_err:
-            assert expec_err in results.stderr
         assert results.exit_code == 0
 
     def setup_method(self, method):
@@ -29,10 +27,10 @@ class TestCli:
 
     @pytest.mark.parametrize("flag", ["-h", "--help"])
     def test_help(self, flag):
-        self._assert_code_in(__doc__, None, flag)
+        self._assert_code_in(__doc__, flag)
 
     def test_version(self):
-        self._assert_code_in(__version__, None, "--version")
+        self._assert_code_in(__version__, "--version")
 
     @pytest.mark.parametrize(
         "expec_out, args, expec_change",
@@ -55,7 +53,7 @@ class TestCli:
             tmp.write("import x, y\n" "x\n")
             tmp.seek(0)
             args = [tmp.name] + args
-            self._assert_code_in(expec_out, None, *args)
+            self._assert_code_in(expec_out, *args)
             tmp.seek(0)
             if expec_change:
                 assert tmp.read() == ("import x\n" "x\n")

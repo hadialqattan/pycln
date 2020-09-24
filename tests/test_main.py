@@ -16,8 +16,8 @@ class TestMain:
                     try:
                         import_module("pycln.__main__")
                     except ModuleNotFoundError:
-                        assert False, msg % "deleted"
+                        assert False, msg % "deleted"  # pragma: nocover.
                 except SystemExit as err:
                     assert err.code == 1 and str(stream.getvalue()), msg % "modified"
                 else:
-                    assert False, msg % "modified"
+                    assert False, msg % "modified"  # pragma: nocover.
