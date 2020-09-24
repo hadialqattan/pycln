@@ -38,10 +38,10 @@ class TestCli:
         "expec_out, args, expec_change",
         [
             pytest.param("1 import has removed", ["--all"], True, id="default"),
+            pytest.param("1 file left unchanged", [], False, id="side effects"),
             pytest.param(
                 "1 import would be removed", ["--all", "--check"], False, id="check"
             ),
-            pytest.param("1 file left unchanged", [], False, id="side effects"),
             pytest.param(
                 "import x\n",
                 ["--config", str(CONFIG_FILE)],
