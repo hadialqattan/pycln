@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Generator
 
 import pytest
+from typer import Exit
 
 from pycln.utils import config, report
 from pycln.utils._nodes import Import, ImportFrom, NodeLocation
@@ -260,4 +261,110 @@ class TestReport:
         self.configs.check = check
         assert self.reporter.exit_code == expec_code
 
-    # TODO: test_str_dunder.
+    @pytest.mark.parametrize(
+        "counters, mode, output_mode, err, is_out, expec_in_out",
+        [
+            pytest.param(
+                (0, 0, 0, 0, 0, 0, 0),
+                "not-matter",
+                "silence",
+                sysu.Pass,
+                False,
+                "",
+                id="silence",
+            ),
+            pytest.param(
+                (0, 0, 0, 0, 0, 0, 0),
+                "not-matter",
+                "not-matter",
+                Exit,
+                None,
+                None,
+                id="no-file",
+            ),
+            pytest.param(
+                (1, 0, 1, 0, 0, 0, 0),
+                "check",
+                "default",
+                sysu.Pass,
+                True,
+                "would be",
+                id="check",
+            ),
+            pytest.param(
+                (1, 0, 1, 0, 0, 0, 0),
+                "diff",
+                "default",
+                sysu.Pass,
+                True,
+                "would be",
+                id="diff",
+            ),
+            pytest.param(
+                (1, 0, 1, 0, 0, 0, 0),
+                "default",
+                "default",
+                sysu.Pass,
+                True,
+                "has",
+                id="default",
+            ),
+            pytest.param(
+                (1, 1, 1, 1, 0, 1, 1),
+                "default",
+                "verbose",
+                sysu.Pass,
+                True,
+                "ignored",
+                id="verbose, ignored",
+            ),
+            pytest.param(
+                (1, 1, 1, 1, 0, 0, 0),
+                "default",
+                "default",
+                sysu.Pass,
+                True,
+                "All done!",
+                id="normal",
+            ),
+            pytest.param(
+                (0, 0, 0, 1, 0, 0, 0),
+                "default",
+                "default",
+                sysu.Pass,
+                True,
+                "Looks good!",
+                id="failures",
+            ),
+            pytest.param(
+                (1, 1, 1, 1, 1, 1, 1),
+                "default",
+                "default",
+                sysu.Pass,
+                True,
+                "error",
+                id="failures",
+            ),
+        ],
+    )
+    def test_str_dunder(self, counters, mode, output_mode, err, is_out, expec_in_out):
+        counters_order = (
+            "_removed_imports",
+            "_expanded_stars",
+            "_changed_files",
+            "_unchanged_files",
+            "_failures",
+            "_ignored_imports",
+            "_ignored_paths",
+        )
+        for name, val in zip(counters_order, counters):
+            setattr(self.reporter, name, val)
+        for mod in (mode, output_mode):
+            setattr(self.configs, mod, True)
+        with pytest.raises(err):
+            with sysu.std_redirect(sysu.STD.OUT):
+                report = str(self.reporter)
+            raise sysu.Pass()
+        if err is sysu.Pass:
+            assert bool(report) == is_out
+            assert expec_in_out in report
