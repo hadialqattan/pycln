@@ -56,7 +56,9 @@ def reopenable_temp_file(content: str) -> Generator:
     :yields: tempfile path.
     """
     try:
-        with NamedTemporaryFile(mode="w", suffix=".py", delete=False) as tmp:
+        with NamedTemporaryFile(
+            mode="w", suffix=".py", encoding="utf-8", delete=False
+        ) as tmp:
             tmp_path = Path(tmp.name)
             tmp.write(content)
         yield tmp_path
