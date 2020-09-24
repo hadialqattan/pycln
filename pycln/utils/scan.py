@@ -597,7 +597,7 @@ def expand_import_star(
             else f"{err.name!r} module not found!"
         )
         if hasattr(node, "location"):
-            location = node.location  # type: ignore
+            location = node.location  # type: ignore # pragma: nocover.
         else:
             location = _nodes.NodeLocation(
                 (node.lineno, node.col_offset), 0  # type: ignore
