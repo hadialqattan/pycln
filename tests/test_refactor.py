@@ -1,6 +1,5 @@
 """pycln/utils/refactor.py tests."""
 import ast
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -236,13 +235,11 @@ class TestRefactor:
     def test_output_write(self, x):
         fixed_lines, original_lines = ["import x\n"], ["import x, y\n"]
         x.return_value = fixed_lines
-        with tempfile.NamedTemporaryFile(mode="w+", suffix=".py") as tmp:
-            tmp.writelines(original_lines)
-            tmp.seek(0)
-            self.session_maker._path = Path(tmp.name)
-            self.session_maker._output(fixed_lines, original_lines, "utf-8")
-            tmp.seek(0)
-            assert tmp.readlines() == fixed_lines
+        with sysu.reopenable_temp_file("".join(original_lines)) as tmp_path:
+            with open(tmp_path) as tmp:
+                self.session_maker._path = tmp_path
+                self.session_maker._output(fixed_lines, original_lines, "utf-8")
+                assert tmp.readlines() == fixed_lines
 
     @pytest.mark.parametrize(
         "get_stats_raise, expec_val",

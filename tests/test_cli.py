@@ -1,12 +1,11 @@
 """pycln/utils/cli.py tests."""
-import tempfile
-
 import pytest
 from typer.testing import CliRunner
 
 from pycln import __doc__, __version__, cli
 
 from . import CONFIG_DIR
+from .utils.sysu import reopenable_temp_file
 
 # Constants.
 CONFIG_FILE = CONFIG_DIR.joinpath("setup.cfg")
@@ -50,13 +49,12 @@ class TestCli:
         ],
     )
     def test_integrations(self, expec_out, args, expec_change):
-        with tempfile.NamedTemporaryFile(mode="w+", suffix=".py") as tmp:
-            tmp.write("import x, y\n" "x\n")
-            tmp.seek(0)
-            args = [tmp.name] + args
-            self._assert_code_in(expec_out, *args)
-            tmp.seek(0)
-            if expec_change:
-                assert tmp.read() == ("import x\n" "x\n")
-            else:
-                assert tmp.read() == ("import x, y\n" "x\n")
+        content = "import x, y\n" "x\n"
+        with reopenable_temp_file(content) as tmp_path:
+            with open(tmp_path) as tmp:
+                args = [str(tmp_path)] + args
+                self._assert_code_in(expec_out, *args)
+                if expec_change:
+                    assert tmp.read() == content.replace(", y", "")
+                else:
+                    assert tmp.read() == content

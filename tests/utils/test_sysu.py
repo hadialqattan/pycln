@@ -33,3 +33,10 @@ class TestSTD:
             assert sys.argv == []
         assert sys.argv == ["test", "argv"]
         sys.argv = original_argv
+
+    def test_reopenable_temp_file(self):
+        with sysu.reopenable_temp_file("CODE") as tmp_path:
+            assert tmp_path.is_file()
+            with open(tmp_path) as tmp:
+                assert tmp.read() == "CODE"
+        assert not tmp_path.is_file()
