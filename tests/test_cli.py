@@ -1,14 +1,15 @@
 """pycln/utils/cli.py tests."""
 import tempfile
-from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
 from pycln import __doc__, __version__, cli
 
+from . import CONFIG_DIR
+
 # Constants.
-CONFIG_FILE = Path(__file__).parent.joinpath(Path("config/setup.cfg"))
+CONFIG_FILE = CONFIG_DIR.joinpath("setup.cfg")
 
 
 class TestCli:
