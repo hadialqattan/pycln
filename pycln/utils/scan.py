@@ -363,16 +363,13 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         :raises ModuleNotFoundError: when we can't find the spec of the `module_name`
             and/or can't create the module.
         """
-        dots = "." * level if level else None
-        spec = find_spec(module_name, dots)
-
-        if spec:
-            # Module `__init__.py`.
-            module = spec.loader.create_module(spec)  # type: ignore
-            if module:
-                return set(dir(module))
-
-            # File `foo.py`.
+        if level:
+            spec = find_spec(module_name, "." * level)
+            if spec:
+                module = spec.loader.create_module(spec)  # type: ignore
+                if module:
+                    return set(dir(module))
+        else:
             module = import_module(module_name)
             if module:
                 return set(dir(module))
