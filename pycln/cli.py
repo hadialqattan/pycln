@@ -90,7 +90,7 @@ def main(
         help=(
             "Don't emit both removed/expanded imports and non-error messages to stderr."
             " Errors are still emitted;"
-            " silence those with `-s, --silence` or with 2>/dev/null."
+            " silence those with `-s, --silence`"
         ),
     ),
     silence: bool = typer.Option(
@@ -98,7 +98,12 @@ def main(
         "--silence",
         "-s",
         show_default=True,
-        help="Silence both stdout and stderr. it is not recommended.",
+        help=(
+            "Silence both stdout and stderr."
+            " Uncaught errors are sill emitted;"
+            " silence those with 2>/dev/null."
+            " (not recommended)."
+        ),
     ),
     expand_stars: bool = typer.Option(
         False,

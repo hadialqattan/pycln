@@ -36,6 +36,7 @@ class TestPathu:
                     "test_metadata.py",
                     "test_transform.py",
                     "test_nodes.py",
+                    "test_cli.py",
                 },
                 id="path: directory",
             ),
