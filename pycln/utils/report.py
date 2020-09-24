@@ -302,12 +302,17 @@ class Report:
         # According to http://tldp.org/LDP/abs/html/exitcodes.html
         # exit codes 1 - 2, 126 - 165, and 255 have special meanings,
         # and should therefore be avoided for user-specified exit parameters
-        if self._failures:
-            # Internal error.
-            return 250
-        if self._changed_files and self.configs.check:
-            # File(s) should be refactored.
-            return 1
+        if self.configs.check:
+            if self._failures:
+                # Internal error (check).
+                return 250
+            if self._changed_files:
+                # File(s) should be refactored.
+                return 1
+        else:
+            if self._failures:
+                # Internal error (not-check).
+                return 1
         # Has modified or looks good.
         return 0
 

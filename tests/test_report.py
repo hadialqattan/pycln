@@ -249,9 +249,10 @@ class TestReport:
     @pytest.mark.parametrize(
         "_failures, _changed_files, check, expec_code",
         [
-            pytest.param(1, None, None, 250, id="internal error"),
-            pytest.param(0, 1, True, 1, id="should modify"),
-            pytest.param(0, 1, False, 0, id="has modified"),
+            pytest.param(1, None, True, 250, id="internal error (check)"),
+            pytest.param(1, None, False, 1, id="internal error (not-check)"),
+            pytest.param(0, 1, True, 1, id="changed (check)"),
+            pytest.param(0, 0, False, 0, id="changed (not-check)"),
             pytest.param(0, 0, False, 0, id="looks good"),
         ],
     )
