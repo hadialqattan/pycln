@@ -13,7 +13,6 @@ repos:
       - id: check-docstring-first
       - id: check-byte-order-marker
       - id: check-added-large-files
-      - id: check-executables-have-shebangs
 
   - repo: https://github.com/prettier/prettier
     rev: 2.1.1
