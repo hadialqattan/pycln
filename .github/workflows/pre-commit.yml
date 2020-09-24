@@ -1,0 +1,22 @@
+# This workflow will enforce using pre-commit hooks.
+
+name: pre-commit
+
+on:
+  #: This will work only with the pull requests and the master pushes,
+  #: because maybe the developer wants to commit and push his work without
+  #: triggering the `pre-commit` hooks temporarily!
+  #: ====================================
+  #: Commit without triggering the hooks.
+  #: >>> `git commit --no-verify`
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: pre-commit/action@v2.0.0
