@@ -501,19 +501,17 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
         self._assert_not_importables(analyzer._not_importables, expec_not_importables)
 
     @pytest.mark.parametrize(
-        "module_name, level, expec_names",
+        "module_name, expec_names",
         [
-            pytest.param("time", 0, set(dir(import_module("time"))), id="standard lib"),
-            pytest.param(
-                "typer", 0, set(dir(import_module("typer"))), id="third party"
-            ),
-            pytest.param("not-exists", 0, None, id="not exists"),
+            pytest.param("time", set(dir(import_module("time"))), id="standard lib"),
+            pytest.param("typer", set(dir(import_module("typer"))), id="third party"),
+            pytest.param("not-exists", None, id="not exists"),
         ],
     )
-    def test_handle_c_libs_importables(self, module_name, level, expec_names):
+    def test_handle_c_libs_importables(self, module_name, expec_names):
         try:
             importables = scan.ImportablesAnalyzer.handle_c_libs_importables(
-                module_name, level
+                module_name
             )
             self._assert_set_equal_or_not(importables, expec_names)
         except ModuleNotFoundError:
