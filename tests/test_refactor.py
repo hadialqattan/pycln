@@ -1,4 +1,5 @@
 """pycln/utils/refactor.py tests."""
+# pylint: disable=R0201,W0613
 import ast
 from pathlib import Path
 

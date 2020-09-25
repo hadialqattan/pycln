@@ -1,4 +1,5 @@
 """Test `tests/utils/sysu.py`."""
+# pylint: disable=R0201,W0613
 import sys
 
 import pytest

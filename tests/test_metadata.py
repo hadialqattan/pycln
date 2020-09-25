@@ -1,4 +1,5 @@
 """pycln `__init__.py`/`pyproject.toml` metadata tests."""
+# pylint: disable=R0201,W0613
 from os import getenv
 
 import pytest

@@ -12,7 +12,7 @@ app = typer.Typer(name=__name__, add_completion=True)
 
 
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
-def main(  # pylint: disable=R0913,R0914,C0116
+def main(  # pylint: disable=R0913,R0914
     path: Path = typer.Argument(None, help="Directory or a file path."),
     config: Optional[Path] = typer.Option(
         None,

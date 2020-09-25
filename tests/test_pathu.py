@@ -1,4 +1,5 @@
 """pycln/utils/pathu.py tests."""
+# pylint: disable=R0201,W0613
 import re
 import sys
 from pathlib import Path

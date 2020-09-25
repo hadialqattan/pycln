@@ -33,9 +33,6 @@ disable=all
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once). See also the "--disable" option for examples.
 enable=c-extension-no-member
-    missing-class-docstring,
-    missing-function-docstring,
-    missing-module-docstring,
     deprecated-method,
     deprecated-module,
     deprecated-operator-function,

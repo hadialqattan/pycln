@@ -1,4 +1,5 @@
 """pycln/utils/_nodes.py tests."""
+# pylint: disable=R0201,W0613
 import pytest
 
 from pycln.utils import _nodes

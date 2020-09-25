@@ -1,4 +1,5 @@
 """pycln/utils/report.py tests."""
+# pylint: disable=R0201,W0613
 import ast
 from contextlib import contextmanager
 from pathlib import Path

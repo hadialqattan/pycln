@@ -1,4 +1,3 @@
-# pylint: disable=C0114
 import os
 from pathlib import Path
 

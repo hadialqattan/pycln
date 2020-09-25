@@ -1,4 +1,5 @@
 """pycln/utils/iou.py tests."""
+# pylint: disable=R0201,W0613
 import pytest
 from oschmod import set_mode
 

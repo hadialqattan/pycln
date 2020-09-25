@@ -1,4 +1,5 @@
 """pycln/utils/transform.py tests."""
+# pylint: disable=R0201,W0613
 from pathlib import Path
 from typing import Union
 

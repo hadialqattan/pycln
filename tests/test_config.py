@@ -1,4 +1,5 @@
 """pycln/utils/config.py tests."""
+# pylint: disable=R0201,W0613
 import re
 from pathlib import Path
 

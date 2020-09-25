@@ -1,4 +1,5 @@
 """pycln/utils/cli.py tests."""
+# pylint: disable=R0201,W0613
 import pytest
 from typer.testing import CliRunner
 

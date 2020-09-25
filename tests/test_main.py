@@ -1,4 +1,5 @@
 """`pycln/__main__.py` tests."""
+# pylint: disable=R0201,W0613
 from importlib import import_module
 
 from .utils import sysu

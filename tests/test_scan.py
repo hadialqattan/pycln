@@ -1,4 +1,5 @@
-"""pycln/utils/scan.py  tests."""
+"""pycln/utils/scan.py tests."""
+# pylint: disable=R0201,W0613
 import ast
 import sys
 from importlib import import_module

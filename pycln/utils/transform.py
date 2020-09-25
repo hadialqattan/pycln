@@ -72,12 +72,12 @@ class ImportTransformer(cst.CSTTransformer):
                 used_aliases.append(alias)
         return self._stylize(updated_node, used_aliases)
 
-    def leave_Import(  # pylint: disable=C0116,W0613
+    def leave_Import(  # pylint: disable=W0613
         self, original_node: cst.Import, updated_node: cst.Import
     ) -> Union[cst.Import]:
         return self.refactor_import(updated_node)
 
-    def leave_ImportFrom(  # pylint: disable=C0116,W0613
+    def leave_ImportFrom(  # pylint: disable=W0613
         self, original_node: cst.ImportFrom, updated_node: cst.ImportFrom
     ) -> Union[cst.ImportFrom]:
         if isinstance(updated_node.names, cst.ImportStar):
