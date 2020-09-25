@@ -81,5 +81,5 @@ repos:
     rev: v2.6.0
     hooks:
       - id: pylint
-        name: pylint[only pycln/]
+        name: pylint[only pycln]
         args: [--ignore-patterns=test_*, --rcfile=.pylintrc]

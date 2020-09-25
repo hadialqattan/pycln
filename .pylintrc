@@ -1,5 +1,5 @@
 #: These configurations will be used by:
-#:   - pre-commit-hook[id=pylint, name=pylint[only pycln/]]
+#:   - pre-commit-hook[id=pylint, name=pylint[only pycln]]
 #:   - https://app.codacy.com/manual/hadialqattan/pycln/dashboard
 
 
