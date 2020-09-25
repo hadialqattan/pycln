@@ -8,10 +8,10 @@ coverage:
       default: false
       tests:
         target: 100%
-        paths: "tests/"
+        paths: ["tests/"]
       pycln:
         target: 100%
-        paths: "pycln/"
+        paths: ["pycln/"]
     patch: yes
     changes: yes
 
