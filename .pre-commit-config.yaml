@@ -64,7 +64,12 @@ repos:
     hooks:
       - id: flake8
         additional_dependencies: [pep8-naming]
-        args: [--max-line-length=88, --max-doc-length=88]
+        args:
+          [
+            --max-line-length=88,
+            --max-doc-length=88,
+            "--ignore-names=*visit_*,*leave_*",
+          ]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.782
