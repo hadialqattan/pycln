@@ -72,12 +72,12 @@ class ImportTransformer(cst.CSTTransformer):
                 used_aliases.append(alias)
         return self._stylize(updated_node, used_aliases)
 
-    def leave_Import(
+    def leave_Import(  # pylint: disable=C0116,W0613
         self, original_node: cst.Import, updated_node: cst.Import
     ) -> Union[cst.Import]:
         return self.refactor_import(updated_node)
 
-    def leave_ImportFrom(
+    def leave_ImportFrom(  # pylint: disable=C0116,W0613
         self, original_node: cst.ImportFrom, updated_node: cst.ImportFrom
     ) -> Union[cst.ImportFrom]:
         if isinstance(updated_node.names, cst.ImportStar):
@@ -94,9 +94,8 @@ class ImportTransformer(cst.CSTTransformer):
             return name
         return self._get_alias_name(node.value) + "." + node.attr.value  # type: ignore
 
-    def _multiline_parenthesized_whitespace(
-        self, indent: str
-    ) -> cst.ParenthesizedWhitespace:
+    @staticmethod
+    def _multiline_parenthesized_whitespace(indent: str) -> cst.ParenthesizedWhitespace:
         # Return multiline parenthesized white space.
         return cst.ParenthesizedWhitespace(
             indent=True,
@@ -109,7 +108,7 @@ class ImportTransformer(cst.CSTTransformer):
             name=alias.name,
             asname=alias.asname,
             comma=cst.Comma(
-                whitespace_after=self._multiline_parenthesized_whitespace(
+                whitespace_after=ImportTransformer._multiline_parenthesized_whitespace(
                     self._indentation + SPACE4
                 )
             ),
@@ -118,7 +117,7 @@ class ImportTransformer(cst.CSTTransformer):
     def _multiline_lpar(self) -> cst.LeftParen:
         # Return multiline `cst.LeftParen`.
         return cst.LeftParen(
-            whitespace_after=self._multiline_parenthesized_whitespace(
+            whitespace_after=ImportTransformer._multiline_parenthesized_whitespace(
                 self._indentation + SPACE4
             )
         )
@@ -126,7 +125,7 @@ class ImportTransformer(cst.CSTTransformer):
     def _multiline_rpar(self) -> cst.RightParen:
         # Return multiline `cst.RightParen`.
         return cst.RightParen(
-            whitespace_before=self._multiline_parenthesized_whitespace(
+            whitespace_before=ImportTransformer._multiline_parenthesized_whitespace(
                 self._indentation
             )
         )

@@ -1,3 +1,4 @@
+# pylint: disable=C0114
 import os
 from pathlib import Path
 
@@ -14,6 +15,7 @@ __doc__ = pycln["description"]
 
 
 def version_callback(value: bool):
+    """Show the version and exit with 0."""
     if value:
         typer.echo(f"{__name__}, version {__version__}")
         raise typer.Exit(0)

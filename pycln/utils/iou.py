@@ -31,7 +31,7 @@ def safe_read(path: Path, permissions: tuple = (os.R_OK, os.W_OK)) -> Tuple[str,
             encoding = stream.encoding
         return source_code, encoding
     except SyntaxError as err:
-        raise UnparsableFile(path, err)
+        raise UnparsableFile(path, err) from err
 
 
 def safe_write(path: Path, fixed_lines: List[str], encoding: str) -> None:

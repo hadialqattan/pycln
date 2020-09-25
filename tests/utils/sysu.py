@@ -11,6 +11,8 @@ from typing import Generator
 
 @unique
 class STD(Enum):
+    """STD TYPES."""
+
     OUT: int = 0
     ERR: int = 1
 

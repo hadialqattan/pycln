@@ -30,17 +30,17 @@ def safe_compile(pattern: str, type_: str) -> Pattern[str]:
     :returns: complied regex.
     """
     try:
-        if type(pattern) is str:
+        if isinstance(pattern, str):
             compiled: Pattern[str] = re.compile(pattern, re.IGNORECASE)
             return compiled
         return pattern  # type: ignore
-    except re.error:
+    except re.error as err:
         typer.secho(
             f"Invalid regular expression for {type_} given: {pattern!r} ⛔",
             fg=typer.colors.RED,
             err=True,
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from err
 
 
 def is_included(name: str, regex: Pattern[str]) -> bool:

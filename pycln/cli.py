@@ -12,7 +12,7 @@ app = typer.Typer(name=__name__, add_completion=True)
 
 
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
-def main(
+def main(  # pylint: disable=R0913,R0914,C0116
     path: Path = typer.Argument(None, help="Directory or a file path."),
     config: Optional[Path] = typer.Option(
         None,
@@ -120,7 +120,7 @@ def main(
         show_default=True,
         help="Ignore `.gitignore` patterns. if present.",
     ),
-    version: bool = typer.Option(
+    version: bool = typer.Option(  # pylint: disable=W0613
         None,
         "--version",
         callback=version_callback,

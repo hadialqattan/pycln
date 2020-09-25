@@ -104,24 +104,24 @@ class SourceAnalyzer(ast.NodeVisitor):
         self._source_stats = SourceStats(set(), set(), set())
 
     @recursive
-    def visit_Import(self, node: ast.Import):
+    def visit_Import(self, node: ast.Import):  # pylint: disable=C0116
         if node not in self._imports_to_skip:
             py38_node = self._get_py38_import_node(node)
             self._import_stats.import_.add(py38_node)
 
     @recursive
-    def visit_ImportFrom(self, node: ast.ImportFrom):
+    def visit_ImportFrom(self, node: ast.ImportFrom):  # pylint: disable=C0116
         if node not in self._imports_to_skip:
             py38_node = self._get_py38_import_from_node(node)
             if not str(py38_node.module).startswith("__"):
                 self._import_stats.from_.add(py38_node)
 
     @recursive
-    def visit_Name(self, node: ast.Name):
+    def visit_Name(self, node: ast.Name):  # pylint: disable=C0116
         self._source_stats.name_.add(node.id)
 
     @recursive
-    def visit_Attribute(self, node: ast.Attribute):
+    def visit_Attribute(self, node: ast.Attribute):  # pylint: disable=C0116
         self._source_stats.attr_.add(node.attr)
 
     @recursive
@@ -178,14 +178,14 @@ class SourceAnalyzer(ast.NodeVisitor):
                 add_imports_to_skip(body)
 
     @recursive
-    def visit_AnnAssign(self, node: ast.AnnAssign):
+    def visit_AnnAssign(self, node: ast.AnnAssign):  # pylint: disable=C0116
         #: Support string type annotations.
         #: >>> from typing import List
         #: >>> foo: "List[str]" = []
         self._visit_string_type_annotation(node)
 
     @recursive
-    def visit_arg(self, node: ast.arg):
+    def visit_arg(self, node: ast.arg):  # pylint: disable=C0116
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)
         #: Support arg string type annotations.
@@ -195,7 +195,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         self._visit_string_type_annotation(node)
 
     @recursive
-    def visit_FunctionDef(self, node: FunctionDefT):
+    def visit_FunctionDef(self, node: FunctionDefT):  # pylint: disable=C0116
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)
         #: Support string type annotations.
@@ -208,7 +208,7 @@ class SourceAnalyzer(ast.NodeVisitor):
     visit_AsyncFunctionDef = visit_FunctionDef
 
     @recursive
-    def visit_Assign(self, node: ast.Assign):
+    def visit_Assign(self, node: ast.Assign):  # pylint: disable=C0116
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)
         id_ = getattr(node.targets[0], "id", None)
@@ -368,7 +368,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         self._path = path
 
     @recursive
-    def visit_Assign(self, node: ast.Assign):
+    def visit_Assign(self, node: ast.Assign):  # pylint: disable=C0116
         # Support `__all__` dunder overriding case.
         id_ = getattr(node.targets[0], "id", None)
         if id_ == __ALL__:
@@ -382,14 +382,14 @@ class ImportablesAnalyzer(ast.NodeVisitor):
                         self._importables.add(value)
 
     @recursive
-    def visit_Import(self, node: ast.Import):
+    def visit_Import(self, node: ast.Import):  # pylint: disable=C0116
         # Analyze each import statement.
         for alias in node.names:
             name = alias.asname if alias.asname else alias.name
             self._importables.add(name)
 
     @recursive
-    def visit_ImportFrom(self, node: ast.ImportFrom):
+    def visit_ImportFrom(self, node: ast.ImportFrom):  # pylint: disable=C0116
         # Analyze each importFrom statement.
         try:
             if node.names[0].name == "*":
@@ -403,7 +403,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             pass  # pragma: no cover
 
     @recursive
-    def visit_FunctionDef(self, node: FunctionDefT):
+    def visit_FunctionDef(self, node: FunctionDefT):  # pylint: disable=C0116
         # Add function name as importable name.
         if node.name not in self._not_importables:
             self._importables.add(node.name)
@@ -413,14 +413,14 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     visit_AsyncFunctionDef = visit_FunctionDef
 
     @recursive
-    def visit_ClassDef(self, node: ast.ClassDef):
+    def visit_ClassDef(self, node: ast.ClassDef):  # pylint: disable=C0116
         # Add class name as importable name.
         if node.name not in self._not_importables:
             self._importables.add(node.name)
         self._compute_not_importables(node)
 
     @recursive
-    def visit_Name(self, node: ast.Name):
+    def visit_Name(self, node: ast.Name):  # pylint: disable=C0116
         if isinstance(node.ctx, ast.Store):
             # Except not-importables.
             if node not in self._not_importables:
@@ -437,7 +437,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
                 for target in node_.targets:
                     self._not_importables.add(cast(ast.Name, target))
 
-    def get_stats(self) -> Set[str]:
+    def get_stats(self) -> Set[str]:  # pylint: disable=C0116
         if self._path.name == "__init__.py":
             for path in os.listdir(self._path.parent):
                 file_path = self._path.parent.joinpath(path)
@@ -450,7 +450,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         (override)."""
         # Continue visiting if only if `__all__` has not overridden.
         if not self._has_all:
-            for field, value in ast.iter_fields(node):
+            for _, value in ast.iter_fields(node):
                 if isinstance(value, list):
                     for item in value:
                         if isinstance(item, ast.AST):
@@ -461,6 +461,8 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
 @unique
 class HasSideEffects(Enum):
+    """SideEffects values."""
+
     YES = 1
     MAYBE = 0.5
     NO = 0
@@ -489,7 +491,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
         self._has_side_effects = HasSideEffects.NO
 
     @recursive
-    def visit_FunctionDef(self, node: FunctionDefT):
+    def visit_FunctionDef(self, node: FunctionDefT):  # pylint: disable=C0116
         # Mark any call inside a function as not-side-effect.
         self._compute_not_side_effects(node)
 
@@ -497,7 +499,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
     visit_AsyncFunctionDef = visit_FunctionDef
 
     @recursive
-    def visit_ClassDef(self, node: ast.ClassDef):
+    def visit_ClassDef(self, node: ast.ClassDef):  # pylint: disable=C0116
         # Mark any call inside a class as not-side-effect.
         self._compute_not_side_effects(node)
 
@@ -511,23 +513,24 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
                     self._not_side_effects.add(node_.value)
 
     @recursive
-    def visit_Call(self, node: ast.Call):
+    def visit_Call(self, node: ast.Call):  # pylint: disable=C0116
         if node not in self._not_side_effects:
             self._has_side_effects = HasSideEffects.YES
 
     @recursive
-    def visit_Import(self, node: ast.Import):
-        self._has_side_effects = self._check_names(node.names)
+    def visit_Import(self, node: ast.Import):  # pylint: disable=C0116
+        self._has_side_effects = SideEffectsAnalyzer._check_names(node.names)
 
     @recursive
-    def visit_ImportFrom(self, node: ast.ImportFrom):
+    def visit_ImportFrom(self, node: ast.ImportFrom):  # pylint: disable=C0116
         packages = node.module.split(".") if node.module else []
         packages_aliases = [ast.alias(name=name, asname=None) for name in packages]
-        self._has_side_effects = self._check_names(packages_aliases)
+        self._has_side_effects = SideEffectsAnalyzer._check_names(packages_aliases)
         if self._has_side_effects is HasSideEffects.NO:
-            self._has_side_effects = self._check_names(node.names)
+            self._has_side_effects = SideEffectsAnalyzer._check_names(node.names)
 
-    def _check_names(self, names: List[ast.alias]) -> HasSideEffects:
+    @staticmethod
+    def _check_names(names: List[ast.alias]) -> HasSideEffects:
         # Check if imported names has side effects or not.
         for alias in names:
 
@@ -548,7 +551,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
 
         return HasSideEffects.NO
 
-    def has_side_effects(self) -> HasSideEffects:
+    def has_side_effects(self) -> HasSideEffects:  # pylint: disable=C0116
         return self._has_side_effects
 
     def generic_visit(self, node):
@@ -556,7 +559,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
         (override)."""
         # Continue visiting if only if there's no know side effects.
         if self._has_side_effects is HasSideEffects.NO:
-            for field, value in ast.iter_fields(node):
+            for _, value in ast.iter_fields(node):
                 if isinstance(value, list):
                     for item in value:
                         if isinstance(item, ast.AST):
@@ -602,7 +605,7 @@ def expand_import_star(
             location = _nodes.NodeLocation(
                 (node.lineno, node.col_offset), 0  # type: ignore
             )
-        raise UnexpandableImportStar(path, location, str(msg))
+        raise UnexpandableImportStar(path, location, str(msg)) from err
 
     # Create `ast.alias` for each name.
     node.names.clear()
@@ -631,4 +634,4 @@ def parse_ast(source_code: str, path: Path = Path(""), mode: str = "exec") -> as
             tree = ast.parse(source_code, mode=mode)
         return tree
     except (SyntaxError, IndentationError, ValueError) as err:
-        raise UnparsableFile(path, err)
+        raise UnparsableFile(path, err) from err

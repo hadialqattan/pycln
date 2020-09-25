@@ -807,7 +807,7 @@ class TestRefactor:
                 NodeLocation((2, 0), 2),
                 [
                     "import z\n",
-                    "from xxx import (\n" "    x,\n" "    y\n" ")\n",
+                    "from xxx import (\n    x,\n    y\n)\n",
                     "import y\n",
                 ],
                 id="multi:add",

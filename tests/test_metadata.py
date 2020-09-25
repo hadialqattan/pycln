@@ -26,19 +26,19 @@ class TestMetadata:
         assert str(PYPROJECT_PATH).endswith("pyproject.toml")
 
     def test_doc(self):
-        assert type(__doc__) is str
+        assert isinstance(__doc__, str)
         assert len(__doc__) > 30, "Too short description!"
         assert len(__doc__) <= 100, "Too long description!"
         assert __doc__ == PYCLN_METADATA["description"]
 
     def test_name(self):
-        assert type(__name__) is str
+        assert isinstance(__name__, str)
         assert __name__ == PYCLN_METADATA["name"] == "pycln"
 
     def test_validate_semver(self):
         # It follows strictly the 2.0.0 version of the SemVer scheme.
         # For more information: https://semver.org/spec/v2.0.0.html
-        assert type(__version__) is str
+        assert isinstance(__version__, str)
         assert VersionInfo.isvalid(__version__), (
             "Invalid semantic-version."
             "For more information: https://semver.org/spec/v2.0.0.html"

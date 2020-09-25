@@ -76,3 +76,10 @@ repos:
     hooks:
       - id: mypy
         args: [--no-strict-optional, --ignore-missing-imports]
+
+  - repo: https://github.com/pre-commit/mirrors-pylint
+    rev: v2.6.0
+    hooks:
+      - id: pylint
+        name: pylint[only pycln/]
+        args: [--ignore-patterns=test_*, --rcfile=.pylintrc]

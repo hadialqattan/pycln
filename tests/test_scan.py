@@ -24,24 +24,24 @@ class TestDataclasses:
 
     def test_import_stats_iter(self):
         import_stats = scan.ImportStats({"import"}, {"from"})
-        assert [i for i in import_stats] == [{"import"}, {"from"}]
+        assert list(import_stats) == [{"import"}, {"from"}]
 
     def test_source_stats_iter(self):
         source_stats = scan.SourceStats({"name"}, {"attr"}, {"skip"})
-        assert [i for i in source_stats] == [{"name"}, {"attr"}]
+        assert list(source_stats) == [{"name"}, {"attr"}]
 
 
 class AnalyzerTestCase:
 
     """`scan.*Analyzer` test case."""
 
-    def _assert_set_equal_or_not(self, set_: set, expec_set: set):
+    def assert_set_equal_or_not(self, set_: set, expec_set: set):
         if expec_set:
             assert set_ == expec_set
         else:
             assert not set_
 
-    def _normalize_set(self, set_: set) -> set:
+    def normalize_set(self, set_: set) -> set:
         # Remove any dunder name from the given set.
         return {i for i in set_ if not i.startswith("__")}
 
@@ -64,7 +64,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             assert imports
             assert imports[0].names[0].name == expec_name
         else:
-            not imports
+            assert not imports
 
     def _get_import(self, import_stmnt: str, expec_end_lineno: Optional[int]) -> tuple:
         ast_impt = ast.parse(import_stmnt).body[0]
@@ -173,7 +173,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     def test_visit_Name(self, code, expec_names):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
-        self._assert_set_equal_or_not(source_stats.name_, expec_names)
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
         "code, expec_attrs",
@@ -189,7 +189,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     def test_visit_Attribute(self, code, expec_attrs):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
-        self._assert_set_equal_or_not(source_stats.attr_, expec_attrs)
+        self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
     @pytest.mark.parametrize(
         "code, expec_name",
@@ -290,8 +290,8 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     def test_visit_Assign(self, visit_Name, code, expec_names, expec_names_to_skip):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
-        self._assert_set_equal_or_not(source_stats.name_, expec_names)
-        self._assert_set_equal_or_not(source_stats.names_to_skip, expec_names_to_skip)
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+        self.assert_set_equal_or_not(source_stats.names_to_skip, expec_names_to_skip)
 
     @pytest.mark.parametrize(
         "code, expec_names",
@@ -320,7 +320,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     def test_visit_string_type_annotation(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
-        self._assert_set_equal_or_not(source_stats.name_, expec_names)
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.skipif(
         not PY38_PLUS,
@@ -360,7 +360,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     def test_visit_type_comment(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
-        self._assert_set_equal_or_not(source_stats.name_, expec_names)
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
         "code, expec_names, expec_attrs",
@@ -374,8 +374,8 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         analyzer = scan.SourceAnalyzer([])
         analyzer._add_name_attr(ast.parse(code))
         source_stats, _ = analyzer.get_stats()
-        self._assert_set_equal_or_not(source_stats.name_, expec_names)
-        self._assert_set_equal_or_not(source_stats.attr_, expec_attrs)
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+        self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
     @pytest.mark.skipif(not PY38_PLUS, reason="Test Python >=3.8 ast nodes.")
     @pytest.mark.parametrize(
@@ -491,11 +491,11 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
         assert str_set == expec_not_importables
 
     def _assert_importables_and_not(
-        self, code: str, expec_importables: set, expec_not_importables=set()
+        self, code: str, expec_importables: set, expec_not_importables=frozenset()
     ):
         analyzer = scan.ImportablesAnalyzer(Path(__file__))
         analyzer.visit(ast.parse(code))
-        assert self._normalize_set(analyzer.get_stats()) == self._normalize_set(
+        assert self.normalize_set(analyzer.get_stats()) == self.normalize_set(
             expec_importables
         )
         self._assert_not_importables(analyzer._not_importables, expec_not_importables)
@@ -513,7 +513,7 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
             importables = scan.ImportablesAnalyzer.handle_c_libs_importables(
                 module_name
             )
-            self._assert_set_equal_or_not(importables, expec_names)
+            self.assert_set_equal_or_not(importables, expec_names)
         except ModuleNotFoundError:
             assert module_name == "not-exists"
 
@@ -662,7 +662,7 @@ class TestSideEffectsAnalyzer:
         self,
         code: str,
         expec_has_side_effects: scan.HasSideEffects,
-        expec_not_side_effects=set(),
+        expec_not_side_effects=frozenset(),
     ):
         analyzer = scan.SideEffectsAnalyzer()
         analyzer.visit(ast.parse(code))
@@ -863,8 +863,8 @@ class TestScanFunctions(AnalyzerTestCase):
             node = ast.parse(code).body[0]
             expanded_node = scan.expand_import_star(node, Path(__file__))
             names = {(a.asname if a.asname else a.name) for a in expanded_node.names}
-            assert self._normalize_set(names).issuperset(
-                self._normalize_set(some_expec_importables)
+            assert self.normalize_set(names).issuperset(
+                self.normalize_set(some_expec_importables)
             )
             raise sysu.Pass()
 

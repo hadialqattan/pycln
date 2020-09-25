@@ -1,0 +1,151 @@
+#: These configurations will be used by:
+#:   - pre-commit-hook[id=pylint, name=pylint[only pycln/]]
+#:   - https://app.codacy.com/manual/hadialqattan/pycln/dashboard
+
+
+[MASTER]
+
+# Specify a score threshold to be exceeded before program exits with error.
+fail-under=10.0
+
+
+[SPELLING]
+
+# Limits count of emitted suggestions for spelling mistakes.
+max-spelling-suggestions=3
+
+
+[MESSAGES CONTROL]
+
+# Disable the message, report, category or checker with the given id(s). You
+# can either give multiple identifiers separated by comma (,) or put this
+# option multiple times (only on the command line, not in the configuration
+# file where it should appear only once). You can also use "--disable=all" to
+# disable everything first and then reenable specific checks. For example, if
+# you want to run only the similarities checker, you can use "--disable=all
+# --enable=similarities". If you want to run only the classes checker, but have
+# no Warning level messages displayed, use "--disable=all --enable=classes
+# --disable=W".
+disable=all
+
+# Enable the message, report, category or checker with the given id(s). You can
+# either give multiple identifier separated by comma (,) or put this option
+# multiple time (only on the command line, not in the configuration file where
+# it should appear only once). See also the "--disable" option for examples.
+enable=c-extension-no-member
+    missing-class-docstring,
+    missing-function-docstring,
+    missing-module-docstring,
+    deprecated-method,
+    deprecated-module,
+    deprecated-operator-function,
+    deprecated-str-translate-call,
+    deprecated-string-function,
+    deprecated-sys-function,
+    deprecated-types-field,
+    consider-using-dict-comprehension,
+    consider-using-in,
+    consider-using-join,
+    consider-using-set-comprehension,
+    no-self-argument,
+    no-self-use,
+    unnecessary-semicolon,
+    unused-argument,
+    abstract-class-instantiated,
+    access-member-before-definition,
+    arguments-differ,
+    assert-on-tuple,
+    assignment-from-no-return,
+    bad-except-order,
+    bad-exception-context,
+    bad-format-character,
+    bad-format-string,
+    bad-format-string-key,
+    bad-super-call,
+    bare-except,
+    binary-op-exception,
+    catching-non-exception,
+    confusing-with-statement,
+    consider-using-enumerate,
+    continue-in-finally,
+    dangerous-default-value,
+    duplicate-argument-name,
+    duplicate-bases,
+    duplicate-except,
+    duplicate-key,
+    exec-used,
+    expression-not-assigned,
+    format-combined-specification,
+    format-needs-mapping,
+    function-redefined,
+    global-at-module-level,
+    global-variable-not-assigned,
+    global-variable-undefined,
+    inconsistent-mro,
+    inherit-non-class,
+    init-is-generator,
+    invalid-all-object,
+    invalid-format-index,
+    invalid-sequence-index,
+    invalid-slice-index,
+    invalid-slots,
+    invalid-slots-object,
+    invalid-star-assignment-target,
+    logging-format-truncated,
+    logging-too-few-args,
+    logging-too-many-args,
+    logging-unsupported-format,
+    lost-exception,
+    method-hidden,
+    misplaced-bare-raise,
+    misplaced-future,
+    missing-format-argument-key,
+    missing-format-attribute,
+    missing-format-string-key,
+    missing-kwoa,
+    mixed-format-string,
+    no-classmethod-decorator,
+    no-method-argument,
+    no-staticmethod-decorator,
+    no-value-for-parameter,
+    non-iterator-returned,
+    non-parent-init-called,
+    nonexistent-operator,
+    nonlocal-and-global,
+    nonlocal-without-binding,
+    not-callable,
+    not-in-loop,
+    notimplemented-raised,
+    pointless-statement,
+    pointless-string-statement,
+    raise-missing-from,
+    raising-bad-type,
+    raising-non-exception,
+    redefine-in-handler,
+    redundant-keyword-arg,
+    reimported,
+    repeated-keyword,
+    return-arg-in-generator,
+    return-in-init,
+    return-outside-function,
+    signature-differs,
+    star-needs-assignment-target,
+    too-few-format-args,
+    too-many-format-args,
+    too-many-function-args,
+    too-many-star-expressions,
+    trailing-whitespace,
+    truncated-format-string,
+    undefined-all-variable,
+    unexpected-keyword-arg,
+    unexpected-special-method-signature,
+    unidiomatic-typecheck,
+    unnecessary-lambda,
+    unnecessary-pass,
+    unreachable,
+    unused-format-string-key,
+    unused-import,
+    unused-variable,
+    used-before-assignment,
+    useless-else-on-loop,
+    yield-outside-function

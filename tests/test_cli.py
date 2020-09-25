@@ -49,7 +49,7 @@ class TestCli:
         ],
     )
     def test_integrations(self, expec_out, args, expec_change):
-        content = "import x, y\n" "x\n"
+        content = "import x, y\nx\n"
         with reopenable_temp_file(content) as tmp_path:
             with open(tmp_path) as tmp:
                 args = [str(tmp_path)] + args

@@ -364,8 +364,8 @@ class TestReport:
             setattr(self.configs, mod, True)
         with pytest.raises(err):
             with sysu.std_redirect(sysu.STD.OUT):
-                report = str(self.reporter)
+                str_report = str(self.reporter)
             raise sysu.Pass()
         if err is sysu.Pass:
-            assert bool(report) == is_out
-            assert expec_in_out in report
+            assert bool(str_report) == is_out
+            assert expec_in_out in str_report
