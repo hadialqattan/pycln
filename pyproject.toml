@@ -16,6 +16,7 @@ classifiers = [
 ]
 license = "MIT"
 readme = "README.md"
+include = ["pyproject.toml"]
 
 [tool.poetry.scripts]
 pycln = "pycln.cli:app"
