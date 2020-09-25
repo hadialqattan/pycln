@@ -13,9 +13,10 @@ repos:
       - id: check-docstring-first
       - id: check-byte-order-marker
       - id: check-added-large-files
+      - id: check-executables-have-shebangs
 
   - repo: https://github.com/prettier/prettier
-    rev: 2.1.1
+    rev: 2.1.2
     hooks:
       - id: prettier
         args: [--prose-wrap=always, --print-width=88]
@@ -27,7 +28,7 @@ repos:
         args: [--py36-plus]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.5.1
+    rev: 5.5.3
     hooks:
       - id: isort
         files: "\\.(py)$"
