@@ -1,0 +1,76 @@
+########[CD PIPELINE FLOW]########
+# Run ci_succeed:                #
+#   | failure ~> stop.           #
+#   | pass:                      #
+#       Run create_release:      #
+#          | failure ~> stop.    #
+#          | pass:               #
+#             Build & Publish.   #
+##################################
+# Requiered Github secrets:      #
+#   - GITHUB_TOKEN               #
+#   - PYPI_TOKEN                 #
+##################################
+
+name: CD
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  ci_succeed:
+    name: Check CI Status
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check the last master push CI status
+        uses: actions/setup-python@v2
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests
+          python .github/ci_status.py
+
+  create_release:
+    name: Create Release
+    needs: ci_succeed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version from tag
+        id: tag_name
+        run: |
+          echo ::set-output name=current_version::${GITHUB_REF#refs/tags/v}
+        shell: bash
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          version: ${{ steps.tag_name.outputs.current_version }}
+          path: ./docs/CHANGELOG.md
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # This pulls from the "Get Changelog Entry" step above,
+          # referencing it's ID to get its outputs object.
+          tag_name: ${{ steps.changelog_reader.outputs.version }}
+          release_name: Release ${{ steps.changelog_reader.outputs.version }}
+          body: ${{ steps.changelog_reader.outputs.changes }}
+          prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
+          draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
+
+  publish:
+    name: Build & Publish
+    needs: [ci_succeed, create_release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and publish to pypi
+        uses: JRubics/poetry-publish@v1
+        with:
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
