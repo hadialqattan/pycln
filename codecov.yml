@@ -28,3 +28,7 @@ comment:
   layout: "reach, diff, files"
   behavior: default
   require_changes: no
+
+ignore:
+  - "ci_status.py"
+  - "test_ci_status.py"
