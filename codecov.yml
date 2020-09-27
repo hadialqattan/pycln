@@ -12,17 +12,8 @@ coverage:
       pycln:
         target: 100%
         paths: ["pycln/"]
-      github:
-        target: 100%
-        paths: [".github/"]
     patch: yes
     changes: yes
-
-  notify:
-    gitter:
-      default:
-        url: "https://webhooks.gitter.im/e/268b41dd9f6fef5e68a4"
-        threshold: 1%
 
 comment:
   layout: "reach, diff, files"
