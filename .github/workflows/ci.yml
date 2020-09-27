@@ -50,7 +50,7 @@ jobs:
 
       - name: Test with pytest by poetry
         run: |
-          python -m poetry run pytest tests/ .github/
+          python -m poetry run pytest
 
       - name: Generate coverage report
         run: |
