@@ -33,7 +33,7 @@ class TestPathu:
             pytest.param(
                 Path(__file__).parent.parent,
                 re.compile(r"test_.*\.py$"),
-                re.compile(r"(.*_re.*\.py|.git/|pycln/)$"),
+                re.compile(r"(.*_re.*\.py|.*s\.py|.git/|pycln/)$"),
                 PathSpec.from_lines("gitwildmatch", ["*u.py", "utils/"]),
                 {
                     "test_main.py",
@@ -41,7 +41,6 @@ class TestPathu:
                     "test_config.py",
                     "test_metadata.py",
                     "test_transform.py",
-                    "test_nodes.py",
                     "test_cli.py",
                 },
                 id="path: directory",
