@@ -6,6 +6,6 @@
 
 # Pycln <small>0.0.1-alpha.0</small>
 
-> Find and remove all unused import statements from your Python files.
+> A formatter for finding and removing unused import statements.
 
 [GitHub](https://github.com/hadialqattan/pycln) [Get Started](#coming-soon)
