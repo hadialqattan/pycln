@@ -2,7 +2,7 @@
 name = "pycln"
 version = "0.0.0"
 description = "Find and remove all unused import statements from your Python files."
-authors = ["Hadi Zaki Alqattan <alqattanhadizaki@gmail.com>"]
+authors = ["Hadi Alqattan <alqattanhadizaki@gmail.com>"]
 repository = "https://github.com/hadialqattan/pycln"
 keywords = ["formatter", "linter", "quality-assurance", "tools", "cli"]
 classifiers = [
