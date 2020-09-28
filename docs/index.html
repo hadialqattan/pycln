@@ -12,8 +12,6 @@
       name="viewport"
       content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
     />
-    <!-- docsify css -->
-    <!--<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/themes/vue.css"/>-->
     <!-- docsify-darklight-theme css -->
     <link
       rel="stylesheet"
@@ -31,19 +29,19 @@
         "Reading Terms and Conditions for you...",
         "Pushing pixels...",
         "Unix is user-friendly. It's just very selective about who its friends are.",
-        "Never let a computer know you're in a hurry.",
+        "Never let a computer know you're in a hurry...",
         "When nothing is going right, go left!",
         "Ordering 1s and 0s...",
         "A commit a day keeps the mobs away!",
         "I think I am, therefore, I am. I think.",
         "I’ve got problem for your solution…..",
         "Life is Short – Talk Fast!!!!",
-        "All I really need is a kilobit.",
+        "All I really need is a kilobit...",
         "I feel like im supposed to be loading something. . .",
-        "Just count to 10",
-        "The bits are flowing slowly today",
-        "We're testing your patience",
-        "The server is powered by a lemon and two electrodes.",
+        "Just count to 10...",
+        "The bits are flowing slowly today...",
+        "We're testing your patience...",
+        "The server is powered by a lemon and two electrodes...",
       ];
       let index = Math.floor(Math.random() * loading_messages.length);
       this.document.getElementById("app").textContent = loading_messages[index];
@@ -83,6 +81,7 @@
           repoName: "pycln",
           branch: "master",
           docsPath: "docs",
+          editText: "📝 EDIT DOCUMENT",
         },
         darklightTheme: {
           defaultTheme: "light",
@@ -122,12 +121,14 @@
         },
       };
     </script>
+    <!-- ====================== Third Party ====================== -->
     <!-- docsify main JS -->
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
     <!-- search -->
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-    <!-- prism -->
+    <!-- prism-bash -->
     <script src="//cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
+    <!-- prism-python -->
     <script src="//cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
     <!-- docsify-darklight-theme -->
     <script src="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js"></script>
@@ -135,9 +136,6 @@
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
     <!-- image medium-zoom -->
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
-    <!-- editdoc -->
-    <script src="https://rawcdn.githack.com/hadialqattan/pycln/b4449570ef9ca6ce91c2b475e39ee9252864d0f0/docs/plugins/docsify_edit.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0-0/axios.min.js"></script>
     <!-- click to copy -->
     <script src="//cdn.jsdelivr.net/npm/docsify-copy-code"></script>
     <!-- docsify-pagination -->
@@ -146,5 +144,9 @@
     <script src="//cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
     <!-- docsify-share -->
     <script src="//unpkg.com/docsify-share/build/index.min.js"></script>
+
+    <!-- ===================== Local Plugins ===================== -->
+    <!-- edit-button -->
+    <script src="plugins/edit_button.js"></script>
   </body>
 </html>
