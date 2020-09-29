@@ -4,14 +4,7 @@ coverage:
   range: "95...100"
 
   status:
-    project:
-      default: false
-      tests:
-        target: 100%
-        paths: ["tests/"]
-      pycln:
-        target: 100%
-        paths: ["pycln/"]
+    project: yes
     patch: yes
     changes: yes
 
