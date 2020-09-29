@@ -1,6 +1,6 @@
 <!-- background image -->
 
-![logo](_media/icon.png ":size=50%")
+![logo](_media/logo-cover.png ":size=40%")
 
 <!-- Title & body -->
 
