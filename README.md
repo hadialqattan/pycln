@@ -1,8 +1,10 @@
-<p align="center"><img src="docs/_media/logo-background.png" alt="Logo"></p>
-
-<p align="center"><strong>A formatter for finding and removing unused import statements.</strong></p>
+<p align="center">
+    <img src="docs/_media/logo-background.png" alt="Logo">
+    <quote>A formatter for finding and removing unused import statements.</quote>
+</p>
 
 <p align="center"><a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://github.com/hadialqattan/pycln/workflows/CI/badge.svg?branch=master" alt="CI"></a>
+<a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/For%20More%20Information%20See-Pycln%20Docs-34495e.svg" alt="Code style: prettier"></a>
 <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACD"><img src="https://github.com/hadialqattan/pycln/workflows/CD/badge.svg?branch=master" alt="CD"></a></p>
 
 <p align="center"><img src="https://img.shields.io/pypi/pyversions/pycln" alt="PYPI - Python Version">
@@ -27,5 +29,3 @@
 
 <p align="center"><a href="https://pepy.tech/project/pycln"><img src="https://pepy.tech/badge/pycln" alt="Downloads"></a>
 <a href="_blank"><img src="https://img.shields.io/tokei/lines/github.com/hadialqattan/pycln" alt="Lines Of Code"></a></p>
-
-<p align="center"><a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/For%20More%20Information%20See-Pycln%20Docs-B3FEFF.svg" alt="Code style: prettier"></a></p>
