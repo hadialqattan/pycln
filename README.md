@@ -1,6 +1,6 @@
 <p align="center">
     <img src="docs/_media/logo-background.png" alt="Logo">
-    <quote>A formatter for finding and removing unused import statements.</quote>
+    <quote><bold>A formatter for finding and removing unused import statements.</bold></quote>
 </p>
 
 <p align="center"><a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://github.com/hadialqattan/pycln/workflows/CI/badge.svg?branch=master" alt="CI"></a>
