@@ -1,6 +1,6 @@
-<p align="center"><img src="docs/_media/logo-background.png" alt="Logo"></p>
-
+<p align="center"><img src="docs/_media/logo-background.png" alt="Logo">
 <h3 align="center">A formatter for finding and removing unused import statements.</h3>
+</p>
 
 <p align="center"><a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://github.com/hadialqattan/pycln/workflows/CI/badge.svg?branch=master" alt="CI"></a>
 <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACD"><img src="https://github.com/hadialqattan/pycln/workflows/CD/badge.svg?branch=master" alt="CD"></a></p>
