@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-<a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/For%20More%20Information%20See-Pycln%20Docs-34495e.svg?style=flat-square" alt="Code style: prettier"></a>
+<a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/For%20More%20Information%20See-Pycln%20Docs-B5FFB3.svg?style=flat-square" alt="Code style: prettier"></a>
 <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://img.shields.io/github/workflow/status/hadialqattan/pycln/CI/master?label=CI&logo=github&style=flat-square" alt="CI"></a>
 <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACD"><img src="https://img.shields.io/github/workflow/status/hadialqattan/pycln/CD/master?label=CD&logo=github&style=flat-square" alt="CD"></a>
 <a href="https://www.codacy.com/manual/hadialqattan/pycln/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hadialqattan/pycln&amp;utm_campaign=Badge_Grade"><img src="https://img.shields.io/codacy/grade/e7c6c290c3c149e484634ac1905800d6/master?style=flat-square" alt="Codacy Badge"></a>
