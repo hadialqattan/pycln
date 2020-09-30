@@ -3,9 +3,8 @@
     <quote>A formatter for finding and removing unused import statements.</quote>
 </p>
 
-<p align="center"><a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/For%20More%20Information%20See-Pycln%20Docs-B3FEFF.svg" alt="Code style: prettier"></a></p>
-
 <p align="center"><a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://github.com/hadialqattan/pycln/workflows/CI/badge.svg?branch=master" alt="CI"></a>
+<a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/For%20More%20Information%20See-Pycln%20Docs-B3FEFF.svg" alt="Code style: prettier"></a>
 <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACD"><img src="https://github.com/hadialqattan/pycln/workflows/CD/badge.svg?branch=master" alt="CD"></a></p>
 
 <p align="center"><img src="https://img.shields.io/pypi/pyversions/pycln" alt="PYPI - Python Version">
