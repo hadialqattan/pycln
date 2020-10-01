@@ -155,7 +155,7 @@ After adding a new feature or fixing a bug please:
   [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 - Or you can perform any script manually by convering it to a Windows commands.
 
-### License
+## License
 
 Pycln is MIT licensed, as found in the
 [LICENSE](https://github.com/hadialqattan/pycln/tree/master/LICENSE) file.

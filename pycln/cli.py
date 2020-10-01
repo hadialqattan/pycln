@@ -59,7 +59,7 @@ def main(  # pylint: disable=R0913,R0914
         "-c",
         show_default=True,
         help=(
-            "Don't write the files back, just return the status."
+            "Do not write the files back, just return the status."
             " Return code 0 means nothing would change."
             " Return code 1 means some files would be changed."
             " Return code 250 means there was an internal error."
@@ -70,7 +70,7 @@ def main(  # pylint: disable=R0913,R0914
         "--diff",
         "-d",
         show_default=True,
-        help="Don't write the files back, just output a diff for each file on stdout.",
+        help="Do not write the files back, just output a diff for each file on stdout.",
     ),
     verbose: bool = typer.Option(
         False,
@@ -88,7 +88,8 @@ def main(  # pylint: disable=R0913,R0914
         "-q",
         show_default=True,
         help=(
-            "Don't emit both removed/expanded imports and non-error messages to stderr."
+            "Do not emit both removed and expanded imports "
+            "and non-error messages to stderr."
             " Errors are still emitted;"
             " silence those with `-s, --silence`"
         ),
@@ -111,14 +112,14 @@ def main(  # pylint: disable=R0913,R0914
         "-x",
         help=(
             "Expand wildcard star imports."
-            " it works if only if the module is importable."
+            " It works if only if the module is importable."
         ),
     ),
     no_gitignore: bool = typer.Option(
         False,
         "--no-gitignore",
         show_default=True,
-        help="Ignore `.gitignore` patterns. if present.",
+        help="Do not ignore `.gitignore` patterns. if present.",
     ),
     version: bool = typer.Option(  # pylint: disable=W0613
         None,
