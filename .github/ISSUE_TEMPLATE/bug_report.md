@@ -15,7 +15,7 @@ A clear and concise description of what the bug is.
 $ pycln /exmaple/
 ```
 
-**Code snippet to test**
+**Code snippet**
 ```python
 import x
 
@@ -25,11 +25,9 @@ y = x
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Operating System:**
- - OS: [e.g. Ubuntu]
+**Operating System:** [e.g. Ubuntu]
 
-**Pycln Version:**
-- Version: [e.g. v0.0.1-alpha.0]
+**Pycln Version:** [e.g. v0.0.1-alpha.0]
 
 **Additional context**
 Add any other context about the problem here.
