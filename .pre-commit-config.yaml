@@ -1,4 +1,10 @@
 repos:
+  - repo: https://github.com/hadialqattan/pycln
+    rev: stable # To specify a release: https://github.com/hadialqattan/pycln/tags
+    hooks:
+      - id: pycln
+        args: [--config=pyproject.toml]
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
