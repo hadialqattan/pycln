@@ -125,7 +125,7 @@ After adding a new feature or fixing a bug please:
 - Report your changes to [CHANGELOG.md](CHANGELOG).
 - Write your name, GitHub username, and email on the [AUTHORS.md](AUTHORS) file.
 
-## Q & A
+## FAQ
 
 ### How To Update My Local Forked Repository?
 
@@ -147,6 +147,23 @@ After adding a new feature or fixing a bug please:
    $ git push origin {branch_name} --force
    ```
 
+### How Can I See My Doc Updates Locally?
+
+Once you have [npm installed](https://www.npmjs.com/get-npm):
+
+1. Install [docsify-cli](https://www.npmjs.com/package/docsify-cli) via
+   [npm](https://www.npmjs.com/) globally:
+
+   ```bash
+   $ npm i docsify-cli -g
+   ```
+
+2. On the Pycln root directory run:
+
+   ```bash
+   $ docsify serve docs/ --open
+   ```
+
 ### How Can I Run Pycln Scripts Using Windows?
 
 - You can install [Git for Windows](https://gitforwindows.org/) to use the bash
@@ -155,7 +172,7 @@ After adding a new feature or fixing a bug please:
   [Windows Subsystem for Linux (WSL)](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
 - Or you can perform any script manually by convering it to a Windows commands.
 
-### License
+## License
 
 Pycln is MIT licensed, as found in the
 [LICENSE](https://github.com/hadialqattan/pycln/tree/master/LICENSE) file.

@@ -215,7 +215,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         # These names will be skipped on import `*` case.
         if id_ in NAMES_TO_SKIP:
             self._source_stats.names_to_skip.add(id_)
-        # Support `__all__` dunder overriding case
+        # Support `__all__` dunder overriding case.
         if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 for constant in node.value.elts:
@@ -466,6 +466,8 @@ class HasSideEffects(Enum):
     YES = 1
     MAYBE = 0.5
     NO = 0
+
+    #: Some names aren't modules.
     NOT_MODULE = -1
 
     #: Just in case an exception has raised

@@ -3,7 +3,7 @@ const editButton = (hook, vm) => {
     let editButton = window.$docsify.editButton;
     let url = `https://github.com/${editButton.username}/${editButton.repoName}/tree/${editButton.branch}/${editButton.docsPath}/${vm.route.file}`;
     let editHtml = "[" + editButton.editText + "](" + url + ")";
-    return editHtml + "<br/><br/>\n" + html;
+    return editHtml + "<br/>\n" + html;
   });
 };
 window.$docsify.plugins.push(editButton);
