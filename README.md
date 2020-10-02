@@ -1,4 +1,4 @@
-<img src="docs/_media/logo-background.png" width="100%" alt="Logo">
+<img src="https://raw.githubusercontent.com/hadialqattan/pycln/master/docs/_media/logo-background.png" width="100%" alt="Logo">
 
 <p align="center">
     <quote>A formatter for finding and removing unused import statements.</quote>
