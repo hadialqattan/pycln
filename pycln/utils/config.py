@@ -53,7 +53,7 @@ class Config:
         # Validate `self.paths`.
         if self.paths:
             for path in self.paths.copy():
-                if not path.is_dir() and not path.is_file():
+                if not (path.is_dir() or path.is_file()):
                     self.paths.remove(path)
 
         if not self.paths:
