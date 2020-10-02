@@ -50,22 +50,15 @@ class Config:
     no_gitignore: bool = False
 
     def _check_path(self) -> None:
-        # Validate `self.path`.
+        # Validate `self.paths`.
+        if self.paths:
+            for path in self.paths.copy():
+                if not path.is_dir() and not path.is_file():
+                    self.paths.remove(path)
+
         if not self.paths:
             typer.secho(
                 "No Path provided. Nothing to do 😴",
-                bold=True,
-                err=True,
-            )
-            raise typer.Exit(1)
-
-        for path in self.paths.copy():
-            if not (path.is_dir() or path.is_file()):
-                self.paths.remove(path)
-
-        if not self.paths:
-            typer.secho(
-                "No valid Path provided. Nothing to do 😴",
                 bold=True,
                 err=True,
             )
