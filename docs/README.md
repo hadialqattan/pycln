@@ -847,10 +847,10 @@ __all__ = ["os", "time"]
 
   ```yaml
   - repo: https://github.com/hadialqattan/pycln
-      rev: stable  # To specify a release: https://github.com/hadialqattan/pycln/tags
-      hooks:
+    rev: stable # To specify a release: https://github.com/hadialqattan/pycln/tags
+    hooks:
       - id: pycln
-          args: [--config=pyproject.toml]
+        args: [--config=pyproject.toml]
   ```
 
   - [stable](https://github.com/hadialqattan/pycln/tree/stable) is a branch that tracks
