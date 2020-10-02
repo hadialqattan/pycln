@@ -39,6 +39,21 @@ pytest-mock = "^3.3.1"
 pytest-randomly = "^3.4.1"
 oschmod = "^0.3.9"
 
+# Pre-commit hooks related config.
+[tool.isort]
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.black]
+line-length = 88
+
+[tool.pycln]
+all = true
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
