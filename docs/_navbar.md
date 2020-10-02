@@ -1,10 +1,10 @@
-- User guide
+- User's guide
 
   - [README](README)
   - [CHANGELOG](CHANGELOG)
   - [AUTHORS](AUTHORS)
 
-- Developer guide
+- Developer's guide
 
   - [ISSUES TRACKER](https://github.com/hadialqattan/pycln/issues)
   - [PROJECTS](https://github.com/hadialqattan/pycln/projects)
@@ -13,5 +13,6 @@
   - [AUTHORS](AUTHORS)
   - [CODE OF CONDUCT](CODE_OF_CONDUCT)
 
-- Contact me
-  - [Flow page](https://flow.page/hadialqattan)
+- Contact
+  - [Us (On Gitter)](https://gitter.im/pycln/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+  - [Me (Author)](https://flow.page/hadialqattan)

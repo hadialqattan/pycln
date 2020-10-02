@@ -125,7 +125,7 @@ After adding a new feature or fixing a bug please:
 - Report your changes to [CHANGELOG.md](CHANGELOG).
 - Write your name, GitHub username, and email on the [AUTHORS.md](AUTHORS) file.
 
-## Q & A
+## FAQ
 
 ### How To Update My Local Forked Repository?
 
@@ -146,6 +146,17 @@ After adding a new feature or fixing a bug please:
    ```bash
    $ git push origin {branch_name} --force
    ```
+
+### How Can I See My Doc Updates Locally?
+Once you have [npm installed](https://www.npmjs.com/get-npm):
+  1. Install [docsify-cli](https://www.npmjs.com/package/docsify-cli) via [npm](https://www.npmjs.com/) globally:
+    ```bash
+    $ npm i docsify-cli -g
+    ```
+  2. On the Pycln root directory run:
+    ```bash
+    $ docsify serve docs/ --open
+    ```
 
 ### How Can I Run Pycln Scripts Using Windows?
 
