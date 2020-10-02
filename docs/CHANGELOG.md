@@ -10,6 +10,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.1-alpha.1] - 2020-10-02
+
+### Changed
+
+- [Handle multiple paths by @hadialqattan](https://github.com/hadialqattan/pycln/pull/12)
+
 ### Fixed
 
 - [CD badge always shows 'no status' by @hadialqattan](https://github.com/hadialqattan/pycln/pull/11)
