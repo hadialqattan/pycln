@@ -40,9 +40,6 @@ pytest-randomly = "^3.4.1"
 oschmod = "^0.3.9"
 
 # Pre-commit hooks related config.
-[tool.pycln]
-all = true
-
 [tool.isort]
 line_length = 88
 multi_line_output = 3
