@@ -1,6 +1,6 @@
 """Pycln CLI implementation."""
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator, List, Optional
 
 import typer
 
@@ -13,7 +13,7 @@ app = typer.Typer(name=__name__, add_completion=True)
 
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main(  # pylint: disable=R0913,R0914
-    path: Path = typer.Argument(None, help="Directory or a file path."),
+    paths: List[Path] = typer.Argument(None, help="Directories or files paths."),
     config: Optional[Path] = typer.Option(
         None,
         "--config",
@@ -129,7 +129,7 @@ def main(  # pylint: disable=R0913,R0914
     ),
 ):
     configs = Config(
-        path=path,
+        paths=paths,
         config=config,
         include=include,  # type: ignore
         exclude=exclude,  # type: ignore
@@ -145,11 +145,12 @@ def main(  # pylint: disable=R0913,R0914
     reporter = report.Report(configs)
     session_maker = refactor.Refactor(configs, reporter)
     gitignore = regexu.get_gitignore(Path("."), configs.no_gitignore)
-    sources: Generator = pathu.yield_sources(
-        configs.path, configs.include, configs.exclude, gitignore, reporter
-    )
-    for source in sources:
-        session_maker.session(source)
+    for path in configs.paths:
+        sources: Generator = pathu.yield_sources(
+            path, configs.include, configs.exclude, gitignore, reporter
+        )
+        for source in sources:
+            session_maker.session(source)
     # Print the report.
     typer.echo(str(reporter), nl=False)
     # Set the correct exit code and exit.

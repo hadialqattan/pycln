@@ -4,7 +4,7 @@ import json
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Pattern, Union
+from typing import List, Optional, Pattern, Union
 
 import toml
 import typer
@@ -36,7 +36,7 @@ class Config:
             self._check_path()
             self._check_regex()
 
-    path: Path
+    paths: List[Path]
     config: Optional[Path] = None
     include: Pattern[str] = regexu.INCLUDE_REGEX  # type: ignore
     exclude: Pattern[str] = regexu.EXCLUDE_REGEX  # type: ignore
@@ -51,7 +51,7 @@ class Config:
 
     def _check_path(self) -> None:
         # Validate `self.path`.
-        if not self.path:
+        if not self.paths:
             typer.secho(
                 "No Path provided. Nothing to do 😴",
                 bold=True,
@@ -59,10 +59,13 @@ class Config:
             )
             raise typer.Exit(1)
 
-        if not (self.path.is_dir() or self.path.is_file()):
+        for path in self.paths.copy():
+            if not (path.is_dir() or path.is_file()):
+                self.paths.remove(path)
+
+        if not self.paths:
             typer.secho(
-                f"'{self.path}' is not a directory or a file."
-                + " Maybe it does not exist 😅",
+                "No valid Path provided. Nothing to do 😴",
                 bold=True,
                 err=True,
             )

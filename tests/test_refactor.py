@@ -29,7 +29,7 @@ class TestRefactor:
     """`Refactor` methods test case."""
 
     def setup_method(self, method):
-        self.configs = config.Config(Path(""))
+        self.configs = config.Config(paths=[Path("")])
         self.reporter = report.Report(self.configs)
         self.session_maker = refactor.Refactor(self.configs, self.reporter)
 

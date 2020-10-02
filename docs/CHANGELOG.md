@@ -16,6 +16,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - [Add Pycln hook to `pre-commit-config.yaml` by @hadialqattan](https://github.com/hadialqattan/pycln/pull/12)
 
+### Changed
+
+- [Handle multiple paths by @hadialqattan](https://github.com/hadialqattan/pycln/pull/12)
+
 ### Fixed
 
 - [CD badge always shows 'no status' by @hadialqattan](https://github.com/hadialqattan/pycln/pull/11)

@@ -54,7 +54,7 @@ class TestConfig:
     def test_post_init(self, _check_regex, _check_path, init, config_):
         init.return_value = None
         configs = config.Config(
-            path=Path("."),
+            paths=[Path(".")],
             config=config_,
             include=CONFIG["include"],
             exclude=CONFIG["exclude"],
@@ -66,23 +66,50 @@ class TestConfig:
         for attr, val in CONFIG.items():
             if attr != "all":
                 assert getattr(configs, attr) == val
-        assert configs.path == Path(".")
+        assert configs.paths == [Path(".")]
+
+    @pytest.mark.parametrize(
+        "paths, expec_paths",
+        [
+            pytest.param([Path(".")], [Path(".")], id="single directory"),
+            pytest.param([Path(__file__)], [Path(__file__)], id="single file"),
+            pytest.param(
+                [Path("."), Path("..")],
+                [Path("."), Path("..")],
+                id="multiple directories",
+            ),
+            pytest.param([Path(__file__)], [Path(__file__)], id="single file"),
+            pytest.param(
+                [Path(__file__), Path(__file__).parent.joinpath("test_cli.py")],
+                [Path(__file__), Path(__file__).parent.joinpath("test_cli.py")],
+                id="mltiple files",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Config._check_regex")
+    def test_check_path(self, _check_regex, paths, expec_paths):
+        configs = config.Config(paths=paths)
+        assert configs.paths == expec_paths
 
     @pytest.mark.xfail(raises=Exit)
     @pytest.mark.parametrize(
-        "path",
+        "paths",
         [
             pytest.param(None, id="empty path"),
             pytest.param(
-                Path("not_exists"),
+                [Path("not_exists1"), Path("not_exists2")],
+                id="multiple not exist paths",
+            ),
+            pytest.param(
+                [Path("not_exists")],
                 id="not exists path",
             ),
         ],
     )
     @mock.patch(MOCK % "Config._check_regex")
-    def test_check_path(self, _check_regex, path):
+    def test_check_path_xfail(self, _check_regex, paths):
         with sysu.std_redirect(sysu.STD.ERR):
-            config.Config(path=path)
+            config.Config(paths=paths)
 
 
 class TestParseConfigFile:
@@ -92,7 +119,7 @@ class TestParseConfigFile:
     @mock.patch(MOCK % "ParseConfigFile.__init__")
     @mock.patch(MOCK % "Config.__post_init__")
     def setup_method(self, method, post_init, init):
-        self.configs = config.Config(path=Path("."))
+        self.configs = config.Config(paths=[Path(".")])
 
     @pytest.mark.xfail(raises=Exit)
     @pytest.mark.parametrize(
