@@ -51,9 +51,6 @@ ensure_newline_before_comments = true
 [tool.black]
 line-length = 88
 
-[tool.pycln]
-all = true
-
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

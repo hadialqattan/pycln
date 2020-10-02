@@ -148,15 +148,21 @@ After adding a new feature or fixing a bug please:
    ```
 
 ### How Can I See My Doc Updates Locally?
+
 Once you have [npm installed](https://www.npmjs.com/get-npm):
-  1. Install [docsify-cli](https://www.npmjs.com/package/docsify-cli) via [npm](https://www.npmjs.com/) globally:
-    ```bash
-    $ npm i docsify-cli -g
-    ```
-  2. On the Pycln root directory run:
-    ```bash
-    $ docsify serve docs/ --open
-    ```
+
+1. Install [docsify-cli](https://www.npmjs.com/package/docsify-cli) via
+   [npm](https://www.npmjs.com/) globally:
+
+   ```bash
+   $ npm i docsify-cli -g
+   ```
+
+2. On the Pycln root directory run:
+
+   ```bash
+   $ docsify serve docs/ --open
+   ```
 
 ### How Can I Run Pycln Scripts Using Windows?
 

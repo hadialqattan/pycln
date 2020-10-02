@@ -187,7 +187,7 @@ $ pycln [PATH]
 
 <details>
   <summary><code>.cfg</code></summary>
-  
+
 ```cfg
 [pycln]
 path = /project/path/
@@ -199,11 +199,12 @@ diff = True
 all = True
 no_gitignore = False
 ```
+
 </details>
 
 <details>
   <summary><code>.toml</code></summary>
-  
+
 ```toml
 [tool.pycln]
 path = "/project/path/"
@@ -215,11 +216,12 @@ diff=true
 all=true
 no_gitignore=false
 ```
+
 </details>
 
 <details>
   <summary><code>.yaml</code>/<code>.yml</code></summary>
-  
+
 ```yaml
 pycln:
   path: /project/path/
@@ -231,11 +233,12 @@ pycln:
   all: true
   no_gitignore: false
 ```
+
 </details>
 
 <details>
   <summary><code>.json</code></summary>
-  
+
 ```json
 {
   "pycln": {
@@ -250,6 +253,7 @@ pycln:
   }
 }
 ```
+
 </details>
 
 ### `-i, --include TEXT` option
@@ -302,7 +306,8 @@ $ pycln /path_to/project/ --exclude test_.*  # or -e test_.*
 
 ### `-a, --all` flag
 
-> Remove all unused imports (not just those [checked from side effects](?id=side-effects)).
+> Remove all unused imports (not just those
+> [checked from side effects](?id=side-effects)).
 
 #### Default
 
@@ -600,104 +605,122 @@ $ pycln --show-completion
 # Supported Cases
 
 ## General
+
 > All bellow cases and more are considered as used.
 
 ### Single Line
 
-* Import:
-    ```python
-    import x, y
-    import a as b
-    import foo.bar
+- Import:
 
-    foo.bar(b)
-    y = 5
-    print(x)
-    ```
+  ```python
+  import x, y
+  import a as b
+  import foo.bar
 
-* Import From:
-    ```python
-    from xxx import x, y
-    from abc import a as b
-    from metasyntactic import foo.bar
-    from metasyntactic.foo import baz
+  foo.bar(b)
+  y = 5
+  print(x)
+  ```
 
-    foo.bar(baz(b))
-    y = 5
-    print(x)
-    ```
+- Import From:
+
+  ```python
+  from xxx import x, y
+  from abc import a as b
+  from metasyntactic import foo.bar
+  from metasyntactic.foo import baz
+
+  foo.bar(baz(b))
+  y = 5
+  print(x)
+  ```
 
 ### Multi Line
 
-* Import:
-    ```python
-    import \
-        x, y
+- Import:
 
-    print(x, y)
-    ```
+  ```python
+  import \
+      x, y
 
-* Import From:
-    ```python
-    from xxx import (
-        x,
-        y
-    )
-    from metasyntactic import foo, \
-        bar
-    
-    print(foo(bar(x, y)))
-    ```
+  print(x, y)
+  ```
+
+- Import From:
+
+  ```python
+  from xxx import (
+      x,
+      y
+  )
+  from metasyntactic import foo, \
+      bar
+
+  print(foo(bar(x, y)))
+  ```
 
 ## Special cases
 
 ### Side Effects
+
 > Pycln takes imports that has side effects into account.
 
 Some behaviours:
-* These behaviours will be changed if [`-a, --all` flag](?id=-a-all-flag) has specified.
-* All Python standrad modules are considered as imports without side effects **except** ([this](https://www.python.org/dev/peps/pep-0020/), [antigravity](http://python-history.blogspot.com/2010/06/import-antigravity.html), [rlcompleter](https://docs.python.org/3.8/library/rlcompleter.html)).
-* Third party and local modules will be statically analyzed, there are three cases:
-    + `HasSideEffects.YES` ~> considered as used.
-    + `HasSideEffects.MAYBE` ~> considered as used.
-    + `HasSideEffects.NO` ~> considered as not used.
+
+- These behaviours will be changed if [`-a, --all` flag](?id=-a-all-flag) has specified.
+- All Python standrad modules are considered as imports without side effects **except**
+  ([this](https://www.python.org/dev/peps/pep-0020/),
+  [antigravity](http://python-history.blogspot.com/2010/06/import-antigravity.html),
+  [rlcompleter](https://docs.python.org/3.8/library/rlcompleter.html)).
+- Third party and local modules will be statically analyzed, there are three cases:
+  - `HasSideEffects.YES` ~> considered as used.
+  - `HasSideEffects.MAYBE` ~> considered as used.
+  - `HasSideEffects.NO` ~> considered as not used.
 
 ### Try..Except
+
 > Pycln can understand `try..except (Some Import Exceptions..)` case.
 
 Supported built-in exceptions:
-* [ModuleNotFoundError](https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError).
-* [ImportError](https://docs.python.org/3/library/exceptions.html#ImportError).
-* [ImportWarning](https://docs.python.org/3/library/exceptions.html#ImportWarning).
+
+- [ModuleNotFoundError](https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError).
+- [ImportError](https://docs.python.org/3/library/exceptions.html#ImportError).
+- [ImportWarning](https://docs.python.org/3/library/exceptions.html#ImportWarning).
 
 Supported blocks:
-* [try](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
-* [except](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
-* [else](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
+
+- [try](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
+- [except](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
+- [else](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
 
 All bellow imports are considered as used:
-* `try..except`:
-    ```python
-    try:
-        import x_for_py38
-    except ModuleNotFoundError:  # Can be tuple of exceptions.
-        import x_for_py36
-    ```
-* `try..except..else`:
-    ```python
-    try:
-        import x_for_py38
-    except ModuleNotFoundError:  # Can be tuple of exceptions.
-        import x_for_py36
-    else:
-        import y
-    ```
+
+- `try..except`:
+  ```python
+  try:
+      import x_for_py38
+  except ModuleNotFoundError:  # Can be tuple of exceptions.
+      import x_for_py36
+  ```
+- `try..except..else`:
+  ```python
+  try:
+      import x_for_py38
+  except ModuleNotFoundError:  # Can be tuple of exceptions.
+      import x_for_py36
+  else:
+      import y
+  ```
 
 ### Import With Importlib
-> Not supported yet, on the roadmap: [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46608325).
+
+> Not supported yet, on the roadmap:
+> [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46608325).
 
 ### Typing
-> Pycln takes [Python 3.5+ type hints](https://www.python.org/dev/peps/pep-0484/) into account.
+
+> Pycln takes [Python 3.5+ type hints](https://www.python.org/dev/peps/pep-0484/) into
+> account.
 
 ```python
 from typing import List, Tuple  # marked as used.
@@ -709,47 +732,62 @@ def bar() -> Tuple[int, int]:
 ```
 
 #### String
+
 > Pycln can understand string type hints.
 
 All bellow imports are considered as used:
-* Fully string A:
-    ```python
-    from ast import Import
-    from typing import List
 
-    def foo(bar: "List[Import]"):
-        pass
-    ```
-* Fully string B:
-    ```python
-    from ast import Import
-    from typing import List
+- Fully string A:
 
-    def foo(bar: "List['Import']"):
-        pass
-    ```
-* Semi string:
-    > Not supported yet, on the roadmap: [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46611579).
-    ```python
-    from ast import Import  # With the current version Pycln will remove this.
-    from typing import List
+  ```python
+  from ast import Import
+  from typing import List
 
-    def foo(bar: List["Import"]):
-        pass
-    ```
+  def foo(bar: "List[Import]"):
+      pass
+  ```
+
+- Fully string B:
+
+  ```python
+  from ast import Import
+  from typing import List
+
+  def foo(bar: "List['Import']"):
+      pass
+  ```
+
+- Semi string:
+
+  > Not supported yet, on the roadmap:
+  > [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46611579).
+
+  ```python
+  from ast import Import  # With the current version Pycln will remove this.
+  from typing import List
+
+  def foo(bar: List["Import"]):
+      pass
+  ```
 
 #### Comments
-> Pycln takes [Python 3.8+ variable annotations](https://www.python.org/dev/peps/pep-0526/) into account.
+
+> Pycln takes
+> [Python 3.8+ variable annotations](https://www.python.org/dev/peps/pep-0526/) into
+> account.
 
 All bellow imports are considered as used:
 
-* Assign:
+- Assign:
+
   ```python
   from typing import List
 
   foo = []  # type: List[str]
   ```
-* Argument:
+
+- Argument:
+
   ```python
   from typing import List
 
@@ -758,7 +796,9 @@ All bellow imports are considered as used:
   ):
       pass
   ```
-* Function:
+
+- Function:
+
   ```python
   from typing import List, Tuple
 
@@ -768,10 +808,14 @@ All bellow imports are considered as used:
   ```
 
 #### Cast
-> Not supported yet, on the roadmap: [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46572939)
+
+> Not supported yet, on the roadmap:
+> [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46572939)
 
 ### All (`__all__`)
-> Pycln looks at the items in the `__all__` list, if it matches the imports, marks it as used.
+
+> Pycln looks at the items in the `__all__` list, if it matches the imports, marks it as
+> used.
 
 ```python
 import os, time  # These imports are considered as used.
@@ -780,36 +824,48 @@ __all__ = ["os", "time"]
 ```
 
 #### List Operations (append and extend)
-> Not supported yet, on the roadmap: [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46609104)
+
+> Not supported yet, on the roadmap:
+> [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46609104)
 
 #### List Concatenation
-> Not supported yet, on the roadmap: [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46607703)
+
+> Not supported yet, on the roadmap:
+> [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46607703)
 
 #### List Comprehension
+
 > Unsupported, not on the [roadmap](https://github.com/hadialqattan/pycln/projects/1).
 
 # Integrations
 
 ## Version Control Integration
 
-* Use [pre-commit](https://pre-commit.com/). Once you have it [installed](https://pre-commit.com/#install), add this to the `.pre-commit-config.yaml` in your project:
-    ```yaml
-    - repo: https://github.com/hadialqattan/pycln
-        rev: stable  # To specify a release: https://github.com/hadialqattan/pycln/tags
-        hooks:
-        - id: pycln
-            args: [--config=pyproject.toml]
-    ```
-    * [stable](https://github.com/hadialqattan/pycln/tree/stable) is a branch that tracks the latest release on PyPI. 
-    If you’d rather run on [master](https://github.com/hadialqattan/pycln/tree/master), this is also an option.
+- Use [pre-commit](https://pre-commit.com/). Once you have it
+  [installed](https://pre-commit.com/#install), add this to the
+  `.pre-commit-config.yaml` in your project:
 
-    * Avoid using `args` in the hook. 
-    Instead, store necessary configuration in [pyproject.toml](?id=-config-path-option) so that CLI usage of Pycln behave consistently for your project.
+  ```yaml
+  - repo: https://github.com/hadialqattan/pycln
+      rev: stable  # To specify a release: https://github.com/hadialqattan/pycln/tags
+      hooks:
+      - id: pycln
+          args: [--config=pyproject.toml]
+  ```
 
-* On your `pyproject.toml` add this section (optional):
-    ```toml
-    [tool.pycln]
-    all = true
-    ```
+  - [stable](https://github.com/hadialqattan/pycln/tree/stable) is a branch that tracks
+    the latest release on PyPI. If you’d rather run on
+    [master](https://github.com/hadialqattan/pycln/tree/master), this is also an option.
 
-* Then run `pre-commit install` and you’re ready to go.
+  - Avoid using `args` in the hook. Instead, store necessary configuration in
+    [pyproject.toml](?id=-config-path-option) so that CLI usage of Pycln behave
+    consistently for your project.
+
+- On your `pyproject.toml` add this section (optional):
+
+  ```toml
+  [tool.pycln]
+  all = true
+  ```
+
+- Then run `pre-commit install` and you’re ready to go.
