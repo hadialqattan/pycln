@@ -52,17 +52,6 @@ improvement slated for the next release. In general, PRs should:
 - Add or edit our tests suite for fixed or changed functionality (if a test suite
   already exists).
 - Include documentation on our [README](README).
-- Be accompanied by a complete this Pull Request template:
-
-  ```md
-  Fixes # .
-
-  ## Proposed Changes
-
-  -
-  -
-  -
-  ```
 
 In general, we follow the ["fork-and-pull"](https://github.com/susam/gitpr) Git
 workflow:

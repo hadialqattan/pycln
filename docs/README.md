@@ -141,9 +141,9 @@ $ pycln [PATH]
 
 ## CLI Arguments
 
-### Path
+### Paths
 
-> Directory or a file path.
+> Directories or files paths.
 
 #### Usage
 
@@ -154,6 +154,10 @@ $ pycln [PATH]
 - Specify a file:
   ```bash
   $ pycln my_python_file.py
+  ```
+- Specify multiple directories and files:
+  ```bash
+  $ pycln dir1/ dir2/ main.py cli.py
   ```
 
 ## CLI Options
