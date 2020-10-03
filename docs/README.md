@@ -851,15 +851,11 @@ __all__ = ["os", "time"]
 
   ```yaml
   - repo: https://github.com/hadialqattan/pycln
-    rev: stable # To specify a release: https://github.com/hadialqattan/pycln/tags
+    rev: v0.0.1-alpha.2 # Possible releases: https://github.com/hadialqattan/pycln/tags
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
   ```
-
-  - [stable](https://github.com/hadialqattan/pycln/tree/stable) is a branch that tracks
-    the latest release on PyPI. If you’d rather run on
-    [master](https://github.com/hadialqattan/pycln/tree/master), this is also an option.
 
   - Avoid using `args` in the hook. Instead, store necessary configuration in
     [pyproject.toml](?id=-config-path-option) so that CLI usage of Pycln behave
