@@ -3,6 +3,7 @@ name = "pycln"
 version = "0.0.1-alpha.2"
 description = "A formatter for finding and removing unused import statements."
 authors = ["Hadi Alqattan <alqattanhadizaki@gmail.com>"]
+homepage = "https://hadialqattan.github.io/pycln"
 repository = "https://github.com/hadialqattan/pycln"
 keywords = ["formatter", "linter", "quality-assurance", "tools", "cli"]
 classifiers = [
