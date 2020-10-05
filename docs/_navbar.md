@@ -9,6 +9,7 @@
   - [ISSUES TRACKER](https://github.com/hadialqattan/pycln/issues)
   - [PROJECTS](https://github.com/hadialqattan/pycln/projects)
   - [CONTRIBUTING](CONTRIBUTING)
+  - [SECURITY](SECURITY)
   - [CHANGELOG](CHANGELOG)
   - [AUTHORS](AUTHORS)
   - [CODE OF CONDUCT](CODE_OF_CONDUCT)
