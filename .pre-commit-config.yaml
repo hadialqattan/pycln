@@ -36,7 +36,7 @@ repos:
         args: [--py36-plus]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.5.3
+    rev: 5.5.4
     hooks:
       - id: isort
         files: "\\.(py)$"
@@ -55,7 +55,7 @@ repos:
         args: [--config=pyproject.toml]
 
   - repo: https://gitlab.com/pycqa/flake8
-    rev: "3.8.3"
+    rev: "3.8.4"
     hooks:
       - id: flake8
         additional_dependencies: [pep8-naming]
