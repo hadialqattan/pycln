@@ -506,22 +506,6 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
         self._assert_not_importables(analyzer._not_importables, expec_not_importables)
 
     @pytest.mark.parametrize(
-        "module_name",
-        [
-            pytest.param("time", id="standard lib"),
-            pytest.param("not-exists", id="not exists"),
-        ],
-    )
-    def test_handle_c_libs_importables(self, module_name):
-        try:
-            importables = scan.ImportablesAnalyzer.handle_c_libs_importables(
-                module_name
-            )
-            assert importables
-        except ModuleNotFoundError:
-            assert module_name == "not-exists"
-
-    @pytest.mark.parametrize(
         "code, expec_importables",
         [
             pytest.param(
@@ -556,7 +540,7 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
                 id="normal imports",
             ),
             pytest.param(
-                "from time import *\n",
+                "from os import *\n",
                 None,
                 id="standard star import",
             ),
@@ -841,12 +825,6 @@ class TestScanFunctions(AnalyzerTestCase):
                 sysu.Pass,
                 set(dir(import_module("ast"))),
                 id="standard module",
-            ),
-            pytest.param(
-                "from time import *\n",
-                sysu.Pass,
-                set(dir(import_module("time"))),
-                id="cpython embedded module",
             ),
             pytest.param(
                 "from pycln import *\n",
