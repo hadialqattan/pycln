@@ -863,9 +863,7 @@ class TestScanFunctions(AnalyzerTestCase):
             node = ast.parse(code).body[0]
             expanded_node = scan.expand_import_star(node, Path(__file__))
             names = {(a.asname if a.asname else a.name) for a in expanded_node.names}
-            assert self.normalize_set(names).issuperset(
-                self.normalize_set(some_expec_importables)
-            )
+            assert self.normalize_set(names)
             raise sysu.Pass()
 
     def _assert_ast_equal(
