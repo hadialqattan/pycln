@@ -5,7 +5,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum, unique
 from functools import lru_cache, wraps
-from importlib import import_module
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, cast
 
@@ -358,8 +358,16 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
         :param module_name: `_nodes/ast.ImportFrom.module`.
         :returns: set of importables.
+        :raises ModuleNotFoundError: when we can't find the spec of the `module_name`
+            and/or can't create the module or it's not a standard module.
         """
-        return set(dir(import_module(module_name)))
+        if module_name in pathu.get_standard_lib_names():
+            spec = find_spec(module_name)
+            if spec:
+                module = spec.loader.create_module(spec)  # type: ignore
+                if module:
+                    return set(dir(module))
+        raise ModuleNotFoundError(name=module_name)
 
     def __init__(self, path: Path):
         self._not_importables: Set[Union[ast.Name, str]] = set()
@@ -599,7 +607,7 @@ def expand_import_star(
         msg = (
             err
             if not isinstance(err, ModuleNotFoundError)
-            else f"{err.name!r} module not found!"
+            else f"{err.name!r} module not found or it's not a standard module!"
         )
         if hasattr(node, "location"):
             location = node.location  # type: ignore # pragma: nocover.

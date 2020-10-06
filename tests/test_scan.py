@@ -505,7 +505,6 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
         "module_name, expec_names",
         [
             pytest.param("time", set(dir(import_module("time"))), id="standard lib"),
-            pytest.param("typer", set(dir(import_module("typer"))), id="third party"),
             pytest.param("not-exists", None, id="not exists"),
         ],
     )
