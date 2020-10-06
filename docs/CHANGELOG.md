@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Security
+
+- [C modules import star expanding related vulnerability by @hadialqattan](https://github.com/hadialqattan/pycln/pull/20)
+
 ## [0.0.1-alpha.2] - 2020-10-03
 
 ### Added
