@@ -4,8 +4,7 @@ import os
 import sys
 from dataclasses import dataclass
 from enum import Enum, unique
-from functools import lru_cache, wraps
-from importlib import import_module
+from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, cast
 
@@ -351,16 +350,6 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     :param path: a file path that belongs to the given `ast.Module`.
     """
 
-    @staticmethod
-    @lru_cache()
-    def handle_c_libs_importables(module_name: str) -> Set[str]:
-        """Handle libs written in C or built-in CPython.
-
-        :param module_name: `_nodes/ast.ImportFrom.module`.
-        :returns: set of importables.
-        """
-        return set(dir(import_module(module_name)))
-
     def __init__(self, path: Path):
         self._not_importables: Set[Union[ast.Name, str]] = set()
         self._importables: Set[str] = set()
@@ -594,12 +583,13 @@ def expand_import_star(
             analyzer.visit(tree)
             importables = analyzer.get_stats()
         else:
-            importables = ImportablesAnalyzer.handle_c_libs_importables(node.module)
+            name = ("." * node.level) + (node.module if node.module else "")
+            raise ModuleNotFoundError(name=name)
     except (ReadPermissionError, UnparsableFile, ModuleNotFoundError) as err:
         msg = (
             err
             if not isinstance(err, ModuleNotFoundError)
-            else f"{err.name!r} module not found!"
+            else f"{err.name!r} module not found or it's a C wrapped module!"
         )
         if hasattr(node, "location"):
             location = node.location  # type: ignore # pragma: nocover.

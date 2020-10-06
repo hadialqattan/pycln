@@ -10,6 +10,14 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [now --expand-stars can't expand C wrapped modules @hadialqattan](https://github.com/hadialqattan/pycln/pull/20)
+
+### Security
+
+- [C wrapped modules import star expanding related vulnerability by @hadialqattan](https://github.com/hadialqattan/pycln/pull/20)
+
 ## [0.0.1-alpha.2] - 2020-10-03
 
 ### Added
