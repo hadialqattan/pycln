@@ -193,6 +193,34 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
     @pytest.mark.parametrize(
+        "code, expec_names",
+        [
+            pytest.param(
+                (
+                    "from typing import cast\n"
+                    "import foo, bar\n"
+                    "baz = cast('foo', bar)\n"
+                ),
+                {"cast", "foo", "bar", "baz"},
+                id="cast",
+            ),
+            pytest.param(
+                (
+                    "import typing\n"
+                    "import foo, bar\n"
+                    "baz = typing.cast('foo', bar)\n"
+                ),
+                {"typing", "foo", "bar", "baz"},
+                id="typing.cast",
+            ),
+        ],
+    )
+    def test_visit_Call(self, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
+    @pytest.mark.parametrize(
         "code, expec_name",
         [
             pytest.param(

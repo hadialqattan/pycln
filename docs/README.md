@@ -813,8 +813,16 @@ All bellow imports are considered as used:
 
 #### Cast
 
-> Not supported yet, on the roadmap:
-> [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46572939)
+> Pycln can understand `typing.cast` case.
+
+All bellow imports are considered as used:
+
+```python
+from typing import cast
+import foo, bar
+
+baz = cast("foo", bar)  # or typing.cast("foo", bar)
+```
 
 ### All (`__all__`)
 
