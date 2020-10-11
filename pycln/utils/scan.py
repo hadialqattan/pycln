@@ -15,16 +15,18 @@ from ._exceptions import ReadPermissionError, UnexpandableImportStar, Unparsable
 PY38_PLUS = sys.version_info >= (3, 8)
 IMPORT_EXCEPTIONS = {"ImportError", "ImportWarning", "ModuleNotFoundError"}
 __ALL__ = "__all__"
-NAMES_TO_SKIP = {
-    "__name__",
-    "__doc__",
-    "__package__",
-    "__loader__",
-    "__spec__",
-    "__build_class__",
-    "__import__",
-    __ALL__,
-}
+NAMES_TO_SKIP = frozenset(
+    {
+        "__name__",
+        "__doc__",
+        "__package__",
+        "__loader__",
+        "__spec__",
+        "__build_class__",
+        "__import__",
+        __ALL__,
+    }
+)
 
 # Custom types.
 FunctionT = TypeVar("FunctionT", bound=Callable[..., Any])
@@ -122,6 +124,22 @@ class SourceAnalyzer(ast.NodeVisitor):
     @recursive
     def visit_Attribute(self, node: ast.Attribute):
         self._source_stats.attr_.add(node.attr)
+
+    @recursive
+    def visit_Call(self, node: ast.Call):
+        #: Support casting case.
+        #: >>> from typing import cast
+        #: >>> import xxx, yyy
+        #: >>> zzz = cast("xxx", yyy)
+        #: Issue: https://github.com/hadialqattan/pycln/issues/26
+        func = node.func
+        if getattr(func, "id", "") == "cast" or (
+            getattr(func, "attr", "") == "cast"
+            and getattr(func.value, "id", "") == "typing"  # type: ignore
+        ):
+            type_ = node.args[0]
+            value = getattr(type_, "value", "") or getattr(type_, "s", "")
+            self._source_stats.name_.add(value)
 
     @recursive
     def visit_Try(self, node: ast.Try):
