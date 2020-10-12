@@ -139,7 +139,8 @@ class SourceAnalyzer(ast.NodeVisitor):
         ):
             type_ = node.args[0]
             value = getattr(type_, "value", "") or getattr(type_, "s", "")
-            self._source_stats.name_.add(value)
+            if value:
+                self._source_stats.name_.add(value)
 
     @recursive
     def visit_Try(self, node: ast.Try):
