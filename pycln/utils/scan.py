@@ -13,6 +13,7 @@ from ._exceptions import ReadPermissionError, UnexpandableImportStar, Unparsable
 
 # Constants.
 PY38_PLUS = sys.version_info >= (3, 8)
+PY39_PLUS = sys.version_info >= (3, 9)
 IMPORT_EXCEPTIONS = {"ImportError", "ImportWarning", "ModuleNotFoundError"}
 __ALL__ = "__all__"
 NAMES_TO_SKIP = frozenset(
@@ -25,6 +26,63 @@ NAMES_TO_SKIP = frozenset(
         "__build_class__",
         "__import__",
         __ALL__,
+    }
+)
+SUBSCRIPT_TYPE_VARIABLE = frozenset(
+    {
+        "AbstractSet",
+        "AsyncContextManager",
+        "AsyncGenerator",
+        "AsyncIterable",
+        "AsyncIterator",
+        "Awaitable",
+        "ByteString",
+        "Callable",
+        "ChainMap",
+        "ClassVar",
+        "Collection",
+        "Container",
+        "ContextManager",
+        "Coroutine",
+        "Counter",
+        "DefaultDict",
+        "Deque",
+        "Dict",
+        "FrozenSet",
+        "Generator",
+        "IO",
+        "ItemsView",
+        "Iterable",
+        "Iterator",
+        "KeysView",
+        "List",
+        "Mapping",
+        "MappingView",
+        "Match",
+        "MutableMapping",
+        "MutableSequence",
+        "MutableSet",
+        "Optional",
+        "Pattern",
+        "Reversible",
+        "Sequence",
+        "Set",
+        "SupportsRound",
+        "Tuple",
+        "Type",
+        "Union",
+        "ValuesView",
+        # Python >=3.7:
+        "Literal",
+        # Python >=3.8:
+        "OrderedDict",
+        # Python >=3.9:
+        "tuple",
+        "list",
+        "dict",
+        "set",
+        "frozenset",
+        "type",
     }
 )
 
@@ -137,10 +195,26 @@ class SourceAnalyzer(ast.NodeVisitor):
             getattr(func, "attr", "") == "cast"
             and getattr(func.value, "id", "") == "typing"  # type: ignore
         ):
-            type_ = node.args[0]
-            value = getattr(type_, "value", "") or getattr(type_, "s", "")
-            if value:
-                self._source_stats.name_.add(value)
+            self._parse_string(node.args[0])  # type: ignore
+
+    @recursive
+    def visit_Subscript(self, node: ast.Subscript) -> None:
+        #: Support semi string type hints.
+        #: >>> from ast import Import
+        #: >>> from typing import List
+        #: >>> def foo(bar: List["Import"]):
+        #: >>>     pass
+        #: Issue: https://github.com/hadialqattan/pycln/issues/32
+        value = getattr(node, "value", "")
+        if getattr(value, "id", "") in SUBSCRIPT_TYPE_VARIABLE or (
+            hasattr(value, "value") and getattr(value.value, "id", "") == "typing"
+        ):
+            if PY39_PLUS:
+                s_val = node.slice  # type: ignore
+            else:
+                s_val = node.slice.value  # type: ignore
+            for elt in getattr(s_val, "elts", ()) or (s_val,):
+                self._parse_string(elt)  # type: ignore
 
     @recursive
     def visit_Try(self, node: ast.Try):
@@ -250,14 +324,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             annotation = node.annotation
         else:
             annotation = node.returns
-        if isinstance(annotation, (ast.Constant, ast.Str)):
-            if hasattr(annotation, "value"):
-                value = annotation.value
-            else:
-                value = annotation.s
-            if value:
-                tree = parse_ast(value, mode="eval")
-                self._add_name_attr(tree)
+        self._parse_string(annotation)  # type: ignore
 
     def _visit_type_comment(
         self, node: Union[ast.Assign, ast.arg, FunctionDefT]
@@ -277,6 +344,14 @@ class SourceAnalyzer(ast.NodeVisitor):
                 mode = "func_type"
             tree = parse_ast(type_comment, mode=mode)
             self._add_name_attr(tree)
+
+    def _parse_string(self, node: Union[ast.Constant, ast.Str]) -> None:
+        # Parse string names/attrs.
+        if isinstance(node, (ast.Constant, ast.Str)):
+            val = getattr(node, "value", "") or getattr(node, "s", "")
+            if val and isinstance(val, str):
+                tree = parse_ast(val, mode="eval")
+                self._add_name_attr(tree)
 
     def _add_name_attr(self, tree: ast.AST):
         # Add any `ast.Name` or `ast.Attribute`

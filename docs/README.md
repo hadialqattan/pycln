@@ -763,11 +763,8 @@ All bellow imports are considered as used:
 
 - Semi string:
 
-  > Not supported yet, on the roadmap:
-  > [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46611579).
-
   ```python
-  from ast import Import  # With the current version Pycln will remove this.
+  from ast import Import
   from typing import List
 
   def foo(bar: List["Import"]):

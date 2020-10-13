@@ -193,7 +193,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
     @pytest.mark.parametrize(
-        "code, expec_names",
+        "code, expec_names, expec_attrs",
         [
             pytest.param(
                 (
@@ -202,7 +202,8 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                     "baz = cast('foo', bar)\n"
                 ),
                 {"cast", "foo", "bar", "baz"},
-                id="cast",
+                set(),
+                id="cast name",
             ),
             pytest.param(
                 (
@@ -211,14 +212,75 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                     "baz = typing.cast('foo', bar)\n"
                 ),
                 {"typing", "foo", "bar", "baz"},
-                id="typing.cast",
+                {"cast"},
+                id="typing.cast name",
+            ),
+            pytest.param(
+                (
+                    "from typing import cast\n"
+                    "import foo.x, bar\n"
+                    "baz = cast('foo.x', bar)\n"
+                ),
+                {"cast", "foo", "bar", "baz"},
+                {"x"},
+                id="cast attr-0",
+            ),
+            pytest.param(
+                ("import typing\n" "import foo, bar\n" "baz = cast('foo.x', bar)\n"),
+                {"cast", "foo", "bar", "baz"},
+                {"x"},
+                id="cast attr-1",
             ),
         ],
     )
-    def test_visit_Call(self, code, expec_names):
+    def test_visit_Call(self, code, expec_names, expec_attrs):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
+        self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
+
+    @pytest.mark.parametrize(
+        "code, expec_names, expec_attrs",
+        [
+            pytest.param(
+                ("from typing import List\n" "import foo\n" "baz = List['foo']\n"),
+                {"List", "foo", "baz"},
+                set(),
+                id="str-name",
+            ),
+            pytest.param(
+                ("from typing import List\n" "import foo.x\n" "baz = List['foo.x']\n"),
+                {"List", "foo", "baz"},
+                {"x"},
+                id="str-attr",
+            ),
+            pytest.param(
+                (
+                    "from typing import Union\n"
+                    "import foo, bar\n"
+                    "baz = Union['foo', 'bar']\n"
+                ),
+                {"Union", "foo", "bar", "baz"},
+                set(),
+                id="tuple-name",
+            ),
+            pytest.param(
+                (
+                    "from typing import Union\n"
+                    "import foo.x, bar.y\n"
+                    "baz = Union['foo.x', 'bar.y']\n"
+                ),
+                {"Union", "foo", "bar", "baz"},
+                {"x", "y"},
+                id="tuple-attr",
+            ),
+        ],
+    )
+    def test_visit_Subscript(self, code, expec_names, expec_attrs):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+        self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
     @pytest.mark.parametrize(
         "code, expec_name",
