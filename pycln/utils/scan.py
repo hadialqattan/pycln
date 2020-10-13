@@ -27,6 +27,53 @@ NAMES_TO_SKIP = frozenset(
         __ALL__,
     }
 )
+SUBSCRIPT_TYPE_VARIABLE = frozenset(
+    {
+        "AbstractSet",
+        "AsyncContextManager",
+        "AsyncGenerator",
+        "AsyncIterable",
+        "AsyncIterator",
+        "Awaitable",
+        "Callable",
+        "ChainMap",
+        "ClassVar",
+        "Collection",
+        "Container",
+        "ContextManager",
+        "Coroutine",
+        "Counter",
+        "DefaultDict",
+        "Deque",
+        "Dict",
+        "FrozenSet",
+        "Generator",
+        "IO",
+        "ItemsView",
+        "Iterable",
+        "Iterator",
+        "KeysView",
+        "List",
+        "Literal",  # Python >=3.7.
+        "Mapping",
+        "MappingView",
+        "Match",
+        "MutableMapping",
+        "MutableSequence",
+        "MutableSet",
+        "Optional",
+        "OrderedDict",  # Python >=3.8.
+        "Pattern",
+        "Reversible",
+        "Sequence",
+        "Set",
+        "SupportsRound",
+        "Tuple",
+        "Type",
+        "Union",
+        "ValuesView",
+    }
+)
 
 # Custom types.
 FunctionT = TypeVar("FunctionT", bound=Callable[..., Any])
@@ -141,6 +188,24 @@ class SourceAnalyzer(ast.NodeVisitor):
             value = getattr(type_, "value", "") or getattr(type_, "s", "")
             if value:
                 self._source_stats.name_.add(value)
+
+    @recursive
+    def visit_Subscript(self, node: ast.Subscript) -> None:
+        #: Support semi string type hints.
+        #: >>> from ast import Import
+        #: >>> from typing import List
+        #: >>> def foo(bar: List["Import"]):
+        #: >>>     pass
+        #: Issue: https://github.com/hadialqattan/pycln/issues/32
+        value = getattr(node, "value", "")
+        if getattr(value, "id", "") in SUBSCRIPT_TYPE_VARIABLE or (
+            hasattr(value, "value") and getattr(value.value, "id") == "typing"
+        ):
+            s_val = node.slice.value  # type: ignore
+            for elt in getattr(s_val, "elts", ()) or (s_val,):
+                value = getattr(elt, "value", "") or getattr(elt, "s", "")
+                if value:
+                    self._source_stats.name_.add(value)
 
     @recursive
     def visit_Try(self, node: ast.Try):
