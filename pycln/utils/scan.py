@@ -13,6 +13,7 @@ from ._exceptions import ReadPermissionError, UnexpandableImportStar, Unparsable
 
 # Constants.
 PY38_PLUS = sys.version_info >= (3, 8)
+PY39_PLUS = sys.version_info >= (3, 9)
 IMPORT_EXCEPTIONS = {"ImportError", "ImportWarning", "ModuleNotFoundError"}
 __ALL__ = "__all__"
 NAMES_TO_SKIP = frozenset(
@@ -208,9 +209,12 @@ class SourceAnalyzer(ast.NodeVisitor):
         if getattr(value, "id", "") in SUBSCRIPT_TYPE_VARIABLE or (
             hasattr(value, "value") and getattr(value.value, "id", "") == "typing"
         ):
-            s_val = node.slice.value  # type: ignore
+            if PY39_PLUS:
+                s_val = node.slice  # type: ignore
+            else:
+                s_val = node.slice.value  # type: ignore
             for elt in getattr(s_val, "elts", ()) or (s_val,):
-                self._parse_string(elt)
+                self._parse_string(elt)  # type: ignore
 
     @recursive
     def visit_Try(self, node: ast.Try):
