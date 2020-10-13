@@ -12,6 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- [Support semi string type hint by @hadialqattan](https://github.com/hadialqattan/pycln/pull/35)
 - [Support casting case by @hadialqattan](https://github.com/hadialqattan/pycln/pull/34)
 
 ## [0.0.1-alpha.3] - 2020-10-07
