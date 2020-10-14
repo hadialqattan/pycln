@@ -716,6 +716,18 @@ All bellow imports are considered as used:
       import y
   ```
 
+### Implicit Imports From Sub-Packages
+
+> Pycln can deal with implicit imports from sub-packages.
+
+For example:
+
+```python
+import os.path  # marked as used.
+
+print(os.getpid())
+```
+
 ### Import With Importlib
 
 > Not supported yet, on the roadmap:

@@ -534,6 +534,24 @@ class TestRefactor:
         assert (enode, is_star) == (node, expec_is_star)
 
     @pytest.mark.parametrize(
+        "_has_used_return, name, asname, expec_val",
+        [
+            pytest.param(True, "os.path.join", None, True, id="used"),
+            pytest.param(False, "os.path.join", None, False, id="unused"),
+            pytest.param(None, "os.path.join", "asname", False, id="as alias"),
+            pytest.param(None, "os", None, False, id="single name"),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._has_used")
+    def test_is_partially_used(
+        self, _has_used, _has_used_return, name, asname, expec_val
+    ):
+        _has_used.return_value = _has_used_return
+        alias = ast.alias(name=name, asname=asname)
+        val = self.session_maker._is_partially_used(alias, False)
+        assert val == expec_val
+
+    @pytest.mark.parametrize(
         "_has_used_return, _has_side_effects_return, all_, name, expec_val",
         [
             pytest.param(True, None, None, "not-matter", False, id="used"),
