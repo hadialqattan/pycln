@@ -246,7 +246,9 @@ class Refactor:
         """
         used_names: Set[str] = set()
         for alias in node.names:
-            if self._should_remove(node, alias, is_star):
+            if self._should_remove(
+                node, alias, is_star
+            ) and not self._is_partially_used(alias, is_star):
                 if not is_star:
                     self.reporter.removed_import(self._path, node, alias)
                 continue
@@ -307,6 +309,21 @@ class Refactor:
             self.reporter.failure(str(err))
             self.reporter.ignored_import(self._path, node, is_star=True)
             return node, None
+
+    def _is_partially_used(self, alias: ast.alias, is_star: bool) -> bool:
+        """Determine if the alias name partially used or not.
+
+        :param alias: an `ast.alias` node.
+        :param is_star: is it a '*' import.
+        :returns: whather the alias name partially used or not.
+        """
+        if not alias.asname and "." in alias.name:
+            names = alias.name.split(".")[1:]
+            for name in reversed(names):
+                alias.name = alias.name.rstrip("." + name)
+                if self._has_used(alias.name, is_star):
+                    return True
+        return False
 
     def _should_remove(
         self, node: Union[Import, ImportFrom], alias: ast.alias, is_star: bool

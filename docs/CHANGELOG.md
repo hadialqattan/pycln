@@ -12,6 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- [Support implicit imports from sub-packages by @hadialqattan](https://github.com/hadialqattan/pycln/pull/36)
 - [Support semi string type hint by @hadialqattan](https://github.com/hadialqattan/pycln/pull/35)
 - [Support casting case by @hadialqattan](https://github.com/hadialqattan/pycln/pull/34)
 
