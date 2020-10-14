@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.1-beta.0] - 2020-10-14
+
 ### Added
 
 - [Support implicit imports from sub-packages by @hadialqattan](https://github.com/hadialqattan/pycln/pull/36)
