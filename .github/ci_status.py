@@ -53,7 +53,7 @@ def main() -> int:
     """Return the computed exit code."""
     code = get_last_run_status(get_ci_runs_dict())
     status = "succeed" if code == 0 else "failed"
-    print(f"The last master brach push run has {status}.")
+    print(f"The last master branch push run has {status}.")
     return code
 
 
