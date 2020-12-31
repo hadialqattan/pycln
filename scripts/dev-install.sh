@@ -39,11 +39,11 @@ done
 
 # Setup poetry.
 python3 -m pip install poetry
-poetry install --no-root  # install only the dependencies.
+python3 -m poetry install --no-root  # install only the dependencies.
 
 # Setup pre-commit.
 python3 -m pip install pre-commit
-pre-commit install
+python3 -m pre_commit install
 
 # Show the commands.
 commands
