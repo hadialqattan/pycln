@@ -2,4 +2,4 @@
 
 set -e
 
-pre-commit autoupdate
+python3 -m pre_commit autoupdate
