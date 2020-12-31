@@ -37,9 +37,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install requests
 
-      #- name: Check the last master push CI status
-      #  run: |
-      #    python .github/ci_status.py
+      - name: Check the last master push CI status
+        run: |
+          python .github/ci_status.py
 
   create_release:
     name: Create Release
