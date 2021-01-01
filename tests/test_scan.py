@@ -274,6 +274,16 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 {"x", "y"},
                 id="tuple-attr",
             ),
+            pytest.param(
+                (
+                    "from typing import Union\n"
+                    "import bar.y\n"
+                    "baz = Union['foo x', 'bar.y']\n"
+                ),
+                {"Union", "bar", "baz"},
+                {"y"},
+                id="literal with space (i41)",
+            ),
         ],
     )
     def test_visit_Subscript(self, code, expec_names, expec_attrs):
