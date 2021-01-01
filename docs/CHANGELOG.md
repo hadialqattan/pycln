@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.1-beta.2] - 2021-01-01
+
 ### Fixed
 
 - [Spaces inside Literal type annotations breaks pycln by @hadialqattan [the raw idea by @zealotous]](https://github.com/hadialqattan/pycln/pull/45)
