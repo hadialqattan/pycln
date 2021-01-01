@@ -214,7 +214,17 @@ class SourceAnalyzer(ast.NodeVisitor):
             else:
                 s_val = node.slice.value  # type: ignore
             for elt in getattr(s_val, "elts", ()) or (s_val,):
-                self._parse_string(elt)  # type: ignore
+                try:
+                    self._parse_string(elt)  # type: ignore
+                except UnparsableFile:
+                    #: Ignore errors when parsing Literal
+                    #: that are not valid identifiers.
+                    #:
+                    #: >>> from typing import Literal
+                    #: >>> L: Literal[" "] = " "
+                    #:
+                    #: Issue: https://github.com/hadialqattan/pycln/issues/41
+                    pass
 
     @recursive
     def visit_Try(self, node: ast.Try):
