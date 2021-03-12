@@ -78,6 +78,9 @@ class TestIOU:
                 sysu.Pass,
                 0o0644,
                 id="detect LF",
+                marks=pytest.mark.skipif(
+                    ISWIN, reason="Unnecessary as long as WindowsOS uses CRLF."
+                ),
             ),
         ],
     )
