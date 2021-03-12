@@ -63,7 +63,7 @@ class TestIOU:
             ),
             pytest.param(
                 "print('Hello')\r\n",
-                "print('Hello')\n",
+                "print('Hello')\r\n" if ISWIN else "print('Hello')\n",
                 iou.CRLF,
                 sysu.Pass,
                 0o0644,
