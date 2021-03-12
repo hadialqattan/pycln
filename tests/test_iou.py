@@ -1,5 +1,7 @@
 """pycln/utils/iou.py tests."""
 # pylint: disable=R0201,W0613
+import os
+
 import pytest
 from oschmod import set_mode
 
@@ -63,7 +65,7 @@ class TestIOU:
             ),
             pytest.param(
                 "print('Hello')\r\n",
-                "print('Hello')\n\n" if ISWIN else "print('Hello')\n",
+                "print('Hello')\n\n",
                 iou.CRLF,
                 sysu.Pass,
                 0o0644,
@@ -81,6 +83,8 @@ class TestIOU:
     )
     def test_safe_read(self, content, expec_code, expec_newlines, expec_err, chmod):
         with pytest.raises(expec_err):
+            if expec_newlines:
+                content = content.replace(os.linesep, expec_newlines)
             with sysu.reopenable_temp_file(content) as tmp_path:
                 set_mode(str(tmp_path), chmod)
                 # default param: permissions: tuple = (os.R_OK, os.W_OK).
