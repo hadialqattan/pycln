@@ -680,7 +680,7 @@ def expand_import_star(
 
     try:
         if mpath:
-            content, _ = iou.safe_read(mpath, permissions=(os.R_OK,))
+            content, _, _ = iou.safe_read(mpath, permissions=(os.R_OK,))
             tree = parse_ast(content, mpath)
 
             analyzer = ImportablesAnalyzer(mpath)

@@ -159,7 +159,7 @@ class TestRefactor:
     def test_session(
         self, safe_read, _code_session, _output, safe_read_raise, _code_session_raise
     ):
-        safe_read.return_value = ("code...\ncode...\n", "utf-8")
+        safe_read.return_value = ("code...\ncode...\n", "utf-8", "\n")
         safe_read.side_effect = safe_read_raise
         _code_session.return_value = "code...\ncode...\n"
         _code_session.side_effect = _code_session_raise
@@ -229,7 +229,7 @@ class TestRefactor:
         x.return_value = fixed_lines
         setattr(self.configs, mode, True)
         with sysu.std_redirect(sysu.STD.OUT) as stdout:
-            self.session_maker._output(fixed_lines, original_lines, "utf-8")
+            self.session_maker._output(fixed_lines, original_lines, "utf-8", "\n")
             assert expec_output in stdout.getvalue()
 
     @mock.patch(MOCK % "Refactor.remove_useless_passes")
@@ -239,7 +239,7 @@ class TestRefactor:
         with sysu.reopenable_temp_file("".join(original_lines)) as tmp_path:
             with open(tmp_path) as tmp:
                 self.session_maker._path = tmp_path
-                self.session_maker._output(fixed_lines, original_lines, "utf-8")
+                self.session_maker._output(fixed_lines, original_lines, "utf-8", "\n")
                 assert tmp.readlines() == fixed_lines
 
     @pytest.mark.parametrize(
@@ -621,7 +621,7 @@ class TestRefactor:
         [
             pytest.param(
                 None,
-                ("", ""),
+                ("", "", ""),
                 None,
                 None,
                 None,
@@ -631,7 +631,7 @@ class TestRefactor:
             ),
             pytest.param(
                 Path(""),
-                ("", ""),
+                ("", "", ""),
                 ReadPermissionError(13, "", Path("")),
                 None,
                 None,
@@ -641,7 +641,7 @@ class TestRefactor:
             ),
             pytest.param(
                 Path(""),
-                ("", ""),
+                ("", "", ""),
                 None,
                 ast.Module(),
                 UnparsableFile(Path(""), SyntaxError("")),
@@ -651,7 +651,7 @@ class TestRefactor:
             ),
             pytest.param(
                 Path(""),
-                ("", ""),
+                ("", "", ""),
                 None,
                 ast.Module(),
                 None,
@@ -661,7 +661,7 @@ class TestRefactor:
             ),
             pytest.param(
                 Path(""),
-                ("", ""),
+                ("", "", ""),
                 None,
                 ast.Module(),
                 None,

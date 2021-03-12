@@ -107,11 +107,11 @@ class Refactor:
             permissions = [os.R_OK]
             if not self.configs.check and not self.configs.diff:
                 permissions.append(os.W_OK)
-            content, encoding = iou.safe_read(self._path, tuple(permissions))
+            content, encoding, newlines = iou.safe_read(self._path, tuple(permissions))
 
             # Refactor and output the `content`.
             fixed_lines = self._code_session(content).splitlines(True)
-            self._output(fixed_lines, content.splitlines(True), encoding)
+            self._output(fixed_lines, content.splitlines(True), encoding, newlines)
         except (
             ReadPermissionError,
             WritePermissionError,
@@ -144,13 +144,18 @@ class Refactor:
         return self._refactor(original_lines)
 
     def _output(
-        self, fixed_lines: List[str], original_lines: List[str], encoding: str
+        self,
+        fixed_lines: List[str],
+        original_lines: List[str],
+        encoding: str,
+        newlines: str,
     ) -> None:
         """Output the given `fixed_lines`.
 
         :param fixed_lines: the refactored source lines.
         :param original_lines: unmodified source lines.
         :param encoding: file encoding.
+        :param newlines: original file newlines (CRFL | FL).
         """
         if fixed_lines == original_lines:
             self.reporter.unchanged_file(self._path)
@@ -163,7 +168,7 @@ class Refactor:
                         self._path, original_lines, fixed_lines
                     )
                 else:
-                    iou.safe_write(self._path, fixed_lines, encoding)
+                    iou.safe_write(self._path, fixed_lines, encoding, newlines)
 
     def _analyze(
         self, tree: ast.AST, original_lines: List[str]
@@ -394,7 +399,7 @@ class Refactor:
             return scan.HasSideEffects.NOT_MODULE
 
         try:
-            code, _ = iou.safe_read(module_source, permissions=(os.R_OK,))
+            code, _, _ = iou.safe_read(module_source, permissions=(os.R_OK,))
             tree = scan.parse_ast(code, module_source)
         except (ReadPermissionError, UnparsableFile) as err:
             self.reporter.failure(str(err))
