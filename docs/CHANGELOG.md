@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.1-beta.3] - 2021-03-12
+
 ### Fixed
 
 - [Keep the original format of line break by @hadialqattan](https://github.com/hadialqattan/pycln/pull/48)
