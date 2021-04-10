@@ -10,6 +10,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.1] - 2021-04-10
+
+### Added
+
+- [First stable version](https://pypi.org/project/pycln/), Happy 🍰 Day 2021!
+
 ## [0.0.1-beta.3] - 2021-03-12
 
 ### Fixed
