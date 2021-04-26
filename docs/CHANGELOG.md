@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Pycln always exits with 0 status code! @hadialqattan](https://github.com/hadialqattan/pycln/pull/53)
+
 ## [0.0.1] - 2021-04-10
 
 ### Added
