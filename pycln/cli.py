@@ -154,7 +154,7 @@ def main(  # pylint: disable=R0913,R0914
     # Print the report.
     typer.echo(str(reporter), nl=False)
     # Set the correct exit code and exit.
-    typer.Exit(reporter.exit_code)
+    exit(reporter.exit_code)
 
 
 # Override main function `__doc__`.

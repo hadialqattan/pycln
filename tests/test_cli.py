@@ -16,11 +16,11 @@ class TestCli:
 
     """some `cli.py` tests."""
 
-    def _assert_code_in(self, expec_out, *args):
+    def _assert_code_in(self, expec_out, *args, expec_exit_code=0):
         results = self.cli.invoke(cli.app, args)
         if expec_out:
             assert expec_out in results.stdout
-        assert results.exit_code == 0
+        assert results.exit_code == expec_exit_code
 
     def setup_method(self, method):
         # results = self.cli.invoke(cli.app, args...)
@@ -34,27 +34,28 @@ class TestCli:
         self._assert_code_in(__version__, "--version")
 
     @pytest.mark.parametrize(
-        "expec_out, args, expec_change",
+        "expec_out, args, expec_change, expec_exit_code",
         [
-            pytest.param("1 import has removed", ["--all"], True, id="default"),
-            pytest.param("1 file left unchanged", [], False, id="side effects"),
+            pytest.param("1 import has removed", ["--all"], True, 0, id="default"),
+            pytest.param("1 file left unchanged", [], False, 0, id="side effects"),
             pytest.param(
-                "1 import would be removed", ["--all", "--check"], False, id="check"
+                "1 import would be removed", ["--all", "--check"], False, 1, id="check"
             ),
             pytest.param(
                 "import x\n",
                 ["--config", str(CONFIG_FILE)],
                 False,
+                0,
                 id="config-file, diff",
             ),
         ],
     )
-    def test_integrations(self, expec_out, args, expec_change):
+    def test_integrations(self, expec_out, args, expec_change, expec_exit_code):
         content = "import x, y\nx\n"
         with reopenable_temp_file(content) as tmp_path:
             with open(tmp_path) as tmp:
                 args = [str(tmp_path)] + args
-                self._assert_code_in(expec_out, *args)
+                self._assert_code_in(expec_out, *args, expec_exit_code=expec_exit_code)
                 if expec_change:
                     assert tmp.read() == content.replace(", y", "")
                 else:
