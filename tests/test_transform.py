@@ -383,7 +383,7 @@ class TestImportTransformer:
             names = name.split(".")
             value = get_name_node(".".join(names[:-1]))
             attr = get_name_node(names[-1])
-            return cst.Attribute(value=value, attr=attr)
+            return cst.Attribute(value=value, attr=attr)  # type: ignore
 
         node = get_name_node(name)
         transformer = transform.ImportTransformer(None, None)

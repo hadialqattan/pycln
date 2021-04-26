@@ -868,7 +868,7 @@ __all__ = ["os", "time"]
 
   ```yaml
   - repo: https://github.com/hadialqattan/pycln
-    rev: v0.0.1 # Possible releases: https://github.com/hadialqattan/pycln/tags
+    rev: stable # Possible releases: https://github.com/hadialqattan/pycln/tags
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
@@ -877,6 +877,8 @@ __all__ = ["os", "time"]
   - Avoid using `args` in the hook. Instead, store necessary configuration in
     [pyproject.toml](?id=-config-path-option) so that CLI usage of Pycln behave
     consistently for your project.
+
+  - Stable branch points to the latest released version.
 
 - On your `pyproject.toml` add this section (optional):
 
