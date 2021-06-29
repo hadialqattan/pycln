@@ -152,7 +152,7 @@ def main(  # pylint: disable=R0913,R0914
         for source in sources:
             session_maker.session(source)
     # Print the report.
-    typer.echo(str(reporter), nl=False)
+    typer.echo(str(reporter).encode("utf-8"), nl=False)
     # Set the correct exit code and exit.
     exit(reporter.exit_code)
 
