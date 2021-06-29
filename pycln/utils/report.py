@@ -63,10 +63,10 @@ class Report:
         else:
             raise ValueError("Please specify one of the is* args.")
         # Print the colored message
-        typer.echo(
-            typer.style(" ", bg=color) + " " + typer.style(message, bold=bold),
-            err=bool(iswarning or iserror),
+        colored_message = (
+            typer.style(" ", bg=color) + " " + typer.style(message, bold=bold)
         )
+        typer.echo(colored_message.encode("utf-8"), err=bool(iswarning or iserror))
 
     @staticmethod
     def colored_unified_diff(
