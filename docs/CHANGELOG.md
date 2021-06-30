@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [UnicodeEncodeError in non-utf8 terminals @hadialqattan](https://github.com/hadialqattan/pycln/pull/56)
+
 ## [0.0.2] - 2021-04-27
 
 ### Fixed
