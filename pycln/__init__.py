@@ -8,8 +8,8 @@ import typer
 
 #: Fixes `UnicodeEncodeError` in non-utf8 terminals.
 #: For more info: https://github.com/hadialqattan/pycln/issues/54
+UTF8 = "utf-8"
 if "pytest" not in sys.modules:
-    UTF8 = "utf-8"
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding=UTF8)
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding=UTF8)
 
