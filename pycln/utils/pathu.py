@@ -105,9 +105,17 @@ def yield_sources(
 
     for dirname in dirs:
 
-        dir_path = Path(os.path.join(path, dirname))
+        child = Path(os.path.join(path, dirname))
 
-        yield from yield_sources(dir_path, include, exclude, gitignore, reporter)
+        # If gitignore is None, gitignore usage is disabled, while a Falsey
+        # gitignore is when the directory doesn't have a .gitignore file.
+        yield from yield_sources(
+            child,
+            include,
+            exclude,
+            gitignore + regexu.get_gitignore(child) if gitignore is not None else None,
+            reporter,
+        )
 
 
 @lru_cache()

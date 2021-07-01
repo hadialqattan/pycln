@@ -9,13 +9,14 @@ from pathspec import PathSpec
 from pytest_mock import mock
 
 from pycln import ISWIN
-from pycln.utils import pathu
+from pycln.utils import pathu, regexu
 from pycln.utils.report import Report
 
 from . import CONFIG_DIR
 
 # Constants.
 MOCK = "pycln.utils.report.%s"
+THIS_DIR = Path(__file__).parent
 
 if ISWIN:
     PYVER = "Lib"
@@ -70,6 +71,21 @@ class TestPathu:
         sources = pathu.yield_sources(path, include, exclude, gitignore, Report(None))
         for source in sources:
             assert source.parts[-1] in expec
+
+    @mock.patch(MOCK % "Report.ignored_path")
+    def test_nested_gitignore(self, ignored_path):
+        path = Path(THIS_DIR / "data" / "nested_gitignore_tests")
+        include = regexu.safe_compile(regexu.INCLUDE_REGEX, regexu.INCLUDE)
+        exclude = regexu.safe_compile(regexu.EXCLUDE_REGEX, regexu.EXCLUDE)
+        gitignore = regexu.get_gitignore(path)
+        sources = pathu.yield_sources(path, include, exclude, gitignore, Report(None))
+        expected = [
+            Path(path / "x.py"),
+            Path(path / "root/b.py"),
+            Path(path / "root/c.py"),
+            Path(path / "root/child/c.py"),
+        ]
+        assert sorted(list(sources)) == sorted(expected)
 
     def test_get_standard_lib_paths(self):
         standard_paths = pathu.get_standard_lib_paths()
