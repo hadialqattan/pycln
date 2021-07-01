@@ -64,7 +64,8 @@ repos:
     rev: v0.782
     hooks:
       - id: mypy
-        args: [--no-strict-optional, --ignore-missing-imports]
+        exclude: tests/data/
+        args: [--config-file=pyproject.toml]
 
   - repo: https://github.com/pre-commit/mirrors-pylint
     rev: v2.6.0

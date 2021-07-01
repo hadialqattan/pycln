@@ -63,11 +63,11 @@ def is_excluded(name: str, regex: Pattern[str]) -> bool:
     return bool(regex.fullmatch(name))
 
 
-def get_gitignore(root: Path, no_gitignore: bool) -> PathSpec:
+def get_gitignore(root: Path, no_gitignore: bool = False) -> PathSpec:
     """Return a PathSpec matching gitignore content, if present.
 
     :param root: root path to search for `.gitignore`.
-    :param no_gitignore: `config.no_gitignore` value.
+    :param no_gitignore: `config.no_gitignore` value (default=False).
     :returns: PathSpec matching gitignore content, if present.
     """
     lines: List[str] = []

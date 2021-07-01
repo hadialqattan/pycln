@@ -13,8 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Topic :: Utilities"
-]
+    "Topic :: Utilities"]
 license = "MIT"
 readme = "README.md"
 include = ["pyproject.toml"]
@@ -23,7 +22,7 @@ include = ["pyproject.toml"]
 pycln = "pycln.cli:app"
 
 [tool.poetry.dependencies]
-python = ">=3.6, <3.10"
+python = ">=3.6.2, <3.10"
 typer = "^0.3.1"
 toml = "^0.10.1"
 pathspec = "^0.8.0"
@@ -39,10 +38,15 @@ pytest-cov = "^2.10.1"
 pytest-mock = "^3.3.1"
 pytest-randomly = "^3.4.1"
 oschmod = "^0.3.9"
+black = {version = "^21.6b0", allow-prereleases = true}
 
 # Pre-commit hooks related config.
 [tool.pycln]
 all = true
+
+[mypy]
+ignore_missing_imports = true
+no_strict_optional = true
 
 [tool.isort]
 line_length = 88

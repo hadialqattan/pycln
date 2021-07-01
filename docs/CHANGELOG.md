@@ -10,15 +10,19 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [Respect `.gitignore` files in all levels, not only `root/.gitignore` file (apply `.gitignore` rules like `git` does) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/57)
+
 ### Fixed
 
-- [UnicodeEncodeError in non-utf8 terminals @hadialqattan](https://github.com/hadialqattan/pycln/pull/56)
+- [UnicodeEncodeError in non-utf8 terminals by @hadialqattan](https://github.com/hadialqattan/pycln/pull/56)
 
 ## [0.0.2] - 2021-04-27
 
 ### Fixed
 
-- [Pycln always exits with 0 status code! @hadialqattan](https://github.com/hadialqattan/pycln/pull/53)
+- [Pycln always exits with 0 status code by @hadialqattan](https://github.com/hadialqattan/pycln/pull/53)
 
 ## [0.0.1] - 2021-04-10
 
