@@ -352,8 +352,17 @@ class SourceAnalyzer(ast.NodeVisitor):
                 mode = "eval"
             else:
                 mode = "func_type"
-            tree = parse_ast(type_comment, mode=mode)
-            self._add_name_attr(tree)
+            try:
+                tree = parse_ast(type_comment, mode=mode)
+                self._add_name_attr(tree)
+            except UnparsableFile:
+                #: Ignore errors when it's not a valid type comment.
+                #:
+                #: Sometimes we find nodes (comments)
+                #: satisfy PIP-526 type comment rules, but they're not valid.
+                #:
+                #: Issue: https://github.com/hadialqattan/pycln/issues/58
+                pass
 
     def _parse_string(self, node: Union[ast.Constant, ast.Str]) -> None:
         # Parse string names/attrs.

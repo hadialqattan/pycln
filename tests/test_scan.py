@@ -455,6 +455,11 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 id="async-function",
             ),
             pytest.param("foobar = 'x'\n", None, id="no type comment"),
+            pytest.param(
+                "foo = []  # type: optional, defaults to '[]'\n",
+                set({}),
+                id="non-valid",
+            ),
         ],
     )
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")

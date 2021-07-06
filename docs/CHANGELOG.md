@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Invalid PIP-526 type comments make Pycln crashes with an UnparsableFile error by @hadialqattan](https://github.com/hadialqattan/pycln/pull/59)
+
 ## [0.0.3] - 2021-07-01
 
 ### Changed
