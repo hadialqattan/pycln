@@ -16,5 +16,3 @@
 
 <!-- Please write your name alphabetically and use the below template. -->
 <!-- - First Last ([@username](https://github.com/username)) <example@email.com> -->
-
-- Matej Bašić ([@matejbasic](https://github.com/matejbasic)) <mbasic3310@gmail.com>
