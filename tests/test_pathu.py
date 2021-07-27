@@ -12,11 +12,9 @@ from pycln import ISWIN
 from pycln.utils import pathu, regexu
 from pycln.utils.report import Report
 
-from . import CONFIG_DIR
-
 # Constants.
 MOCK = "pycln.utils.report.%s"
-THIS_DIR = Path(__file__).parent
+DATA_DIR = Path(__file__).parent.joinpath("data")
 
 if ISWIN:
     PYVER = "Lib"
@@ -32,30 +30,27 @@ class TestPathu:
         "path, include, exclude, gitignore, expec",
         [
             pytest.param(
-                Path(__file__).parent.parent,
-                re.compile(r"test_.*\.py$"),
-                re.compile(r"(.*_re.*\.py|.*s\.py|.git/|pycln/)$"),
+                Path(DATA_DIR / "paths" / "dir"),
+                re.compile(r".*\.py$"),
+                re.compile(r"(.*s\.py|git/)$"),
                 PathSpec.from_lines("gitwildmatch", ["*u.py", "utils/"]),
                 {
-                    "test_main.py",
-                    "test_scan.py",
-                    "test_config.py",
-                    "test_metadata.py",
-                    "test_transform.py",
-                    "test_cli.py",
+                    "x.py",
+                    "y.py",
+                    "z.py",
                 },
                 id="path: directory",
             ),
             pytest.param(
-                Path(__file__),
+                Path(DATA_DIR / "paths" / "a.py"),
                 re.compile(r".*\.py$"),
                 re.compile(r""),
                 PathSpec.from_lines("gitwildmatch", []),
-                {"test_pathu.py"},
+                {"a.py"},
                 id="path: file",
             ),
             pytest.param(
-                CONFIG_DIR.joinpath("setup.cfg"),
+                Path(DATA_DIR / "paths" / "b.c"),
                 re.compile(r".*\.py$"),
                 re.compile(r""),
                 PathSpec.from_lines("gitwildmatch", []),
@@ -74,7 +69,7 @@ class TestPathu:
 
     @mock.patch(MOCK % "Report.ignored_path")
     def test_nested_gitignore(self, ignored_path):
-        path = Path(THIS_DIR / "data" / "nested_gitignore_tests")
+        path = Path(DATA_DIR / "nested_gitignore_tests")
         include = regexu.safe_compile(regexu.INCLUDE_REGEX, regexu.INCLUDE)
         exclude = regexu.safe_compile(regexu.EXCLUDE_REGEX, regexu.EXCLUDE)
         gitignore = regexu.get_gitignore(path)
