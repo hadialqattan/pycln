@@ -12,6 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- [Support `__all__` with add binary operator (concatenation) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/64)
 - [Support `__all__` list operations (append & extend) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/63)
 
 ## [0.0.4] - 2021-07-07

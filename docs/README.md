@@ -867,8 +867,13 @@ __all__ = ["os", "time"]
 
 #### List Concatenation
 
-> Not supported yet, on the roadmap:
-> [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46607703)
+> Pycln can deal with list concatenation (`[...] + [...]`).
+
+```python
+import os, time  # These imports are considered as used.
+
+__all__ = ["os"] + ["time"]
+```
 
 #### List Comprehension
 

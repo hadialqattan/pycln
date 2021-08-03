@@ -380,10 +380,16 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 id="names to skip",
             ),
             pytest.param(
-                "__all__ = ['x', 'y', 'z']\n",
+                "__all__ = ['x', 'y', 'z']",
                 {"x", "y", "z"},
                 {"__all__"},
                 id="__all__ dunder overriding",
+            ),
+            pytest.param(
+                "__all__ = ['x', 'y'] + ['i', 'j'] + ['z']",
+                {"x", "y", "i", "j", "z"},
+                {"__all__"},
+                id="__all__ dunder overriding - concatenation",
             ),
         ],
     )
@@ -638,7 +644,12 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
                 ("x = 'y'\n" "__all__ = ['i', 'j', 'k']"),
                 {"i", "j", "k"},
                 id="__all__ dunder overriding",
-            )
+            ),
+            pytest.param(
+                "__all__ = ['x', 'y'] + ['i', 'j'] + ['z']",
+                {"x", "y", "i", "j", "z"},
+                id="__all__ dunder overriding - concatenation",
+            ),
         ],
     )
     def test_visit_Assign(self, code, expec_importables):
