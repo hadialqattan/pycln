@@ -835,7 +835,7 @@ baz = cast("foo", bar)  # or typing.cast("foo", bar)
 
 ### All (`__all__`)
 
-> Pycln looks at the items in the `__all__` list, if it matches the imports, marks it as
+> Pycln looks at the items in the `__all__` list, if it match the imports, marks it as
 > used.
 
 ```python
@@ -846,8 +846,24 @@ __all__ = ["os", "time"]
 
 #### List Operations (append and extend)
 
-> Not supported yet, on the roadmap:
-> [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46609104)
+> Pycln considers `__all__.append` arguments and `__all__.extend` list items as used
+> names.
+
+- Append:
+
+  ```python
+  import os, time  # These imports are considered as used.
+
+  __all__.append("os", "time")
+  ```
+
+- Extend:
+
+  ```python
+  import os, time  # These imports are considered as used.
+
+  __all__.extend(["os", "time"])
+  ```
 
 #### List Concatenation
 
