@@ -317,10 +317,24 @@ class SourceAnalyzer(ast.NodeVisitor):
         # These names will be skipped on import `*` case.
         if id_ in NAMES_TO_SKIP:
             self._source_stats.names_to_skip.add(id_)
-        # Support `__all__` dunder overriding case.
+        #: Support `__all__` dunder overriding:
+        #:
+        #: >>> import x, y, z
+        #: >>>
+        #: >>> __all__ = ["x", "y", "z"]
         if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 self._add_list_names(node.value.elts)
+            elif isinstance(node.value, ast.BinOp):
+                #: Support `__all__` dunder overriding with
+                #: add (`+`) binary operation (concatenation):
+                #:
+                #: >>> import x, y, z, i, j
+                #: >>>
+                #: >>> __all__ = ["x"] + ["y", "z"] + ["i", "j"]
+                #:
+                #: Issue: https://github.com/hadialqattan/pycln/issues/28
+                self._add_concatenated_list_names(node.value)
 
     @recursive
     def visit_Expr(self, node: ast.Expr):
@@ -394,6 +408,16 @@ class SourceAnalyzer(ast.NodeVisitor):
             if val and isinstance(val, str):
                 tree = parse_ast(val, mode="eval")
                 self._add_name_attr(tree)
+
+    def _add_concatenated_list_names(self, node: ast.BinOp) -> None:
+        #: Safely add `["x", "y"] + ["i", "j"]`
+        #: `const/str` names to `self._source_stats.name_`.
+        if isinstance(node.right, (ast.List, ast.Tuple, ast.Set)):
+            self._add_list_names(node.right.elts)
+        if isinstance(node.left, (ast.List, ast.Tuple, ast.Set)):
+            self._add_list_names(node.left.elts)
+        elif isinstance(node.left, ast.BinOp):
+            self._add_concatenated_list_names(node.left)
 
     def _add_list_names(self, node: List[ast.expr]) -> None:
         # Safely add list `const/str` names to `self._source_stats.name_`.
@@ -503,13 +527,27 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_Assign(self, node: ast.Assign):
-        # Support `__all__` dunder overriding case.
+        #: Support `__all__` dunder overriding:
+        #:
+        #: >>> import x, y, z
+        #: >>>
+        #: >>> __all__ = ["x", "y", "z"]
         id_ = getattr(node.targets[0], "id", None)
         if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 self._has_all = True
                 self._importables.clear()
                 self._add_list_names(node.value.elts)
+            elif isinstance(node.value, ast.BinOp):
+                #: Support `__all__` dunder overriding with
+                #: add (`+`) binary operation (concatenation):
+                #:
+                #: >>> import x, y, z, i, j
+                #: >>>
+                #: >>> __all__ = ["x"] + ["y", "z"] + ["i", "j"]
+                #:
+                #: Issue: https://github.com/hadialqattan/pycln/issues/28
+                self._add_concatenated_list_names(node.value)
 
     @recursive
     def visit_Expr(self, node: ast.Expr):
@@ -583,8 +621,18 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             if node not in self._not_importables:
                 self._importables.add(node.id)
 
+    def _add_concatenated_list_names(self, node: ast.BinOp) -> None:
+        #: Safely add `["x", "y"] + ["i", "j"]`
+        #: `const/str` names to `self._importables`.
+        if isinstance(node.right, (ast.List, ast.Tuple, ast.Set)):
+            self._add_list_names(node.right.elts)
+        if isinstance(node.left, (ast.List, ast.Tuple, ast.Set)):
+            self._add_list_names(node.left.elts)
+        elif isinstance(node.left, ast.BinOp):
+            self._add_concatenated_list_names(node.left)
+
     def _add_list_names(self, node: List[ast.expr]) -> None:
-        # Safely add list `const/str` names to `self._source_stats.name_`.
+        # Safely add list `const/str` names to `self._importables`.
         for item in node:
             if isinstance(item, (ast.Constant, ast.Str)):
                 key = "s" if hasattr(item, "s") else "value"
