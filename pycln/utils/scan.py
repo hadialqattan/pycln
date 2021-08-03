@@ -320,11 +320,34 @@ class SourceAnalyzer(ast.NodeVisitor):
         # Support `__all__` dunder overriding case.
         if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
-                for constant in node.value.elts:
-                    k = "s" if hasattr(constant, "s") else "value"
-                    value = getattr(constant, k, "")
-                    if value and isinstance(value, str):
-                        self._source_stats.name_.add(value)
+                self._add_list_names(node.value.elts)
+
+    @recursive
+    def visit_Expr(self, node: ast.Expr):
+        #: Support `__all__` dunder overriding with
+        #: `append` and `extend` operations:
+        #:
+        #: >>> import x, y, z
+        #: >>>
+        #: >>> __all__ = ["x"]
+        #: >>> __all__.append("y")
+        #: >>> __all__.extend(["z"])
+        #:
+        #: Issue: https://github.com/hadialqattan/pycln/issues/29
+        node_value = node.value
+        if (
+            isinstance(node_value, ast.Call)
+            and isinstance(node_value.func, ast.Attribute)
+            and isinstance(node_value.func.value, ast.Name)
+            and node_value.func.value.id == __ALL__
+        ):
+            func_attr = node_value.func.attr
+            if func_attr == "append":
+                self._add_list_names(node_value.args)
+            elif func_attr == "extend":
+                for arg in node_value.args:
+                    if isinstance(arg, ast.List):
+                        self._add_list_names(arg.elts)
 
     def _visit_string_type_annotation(
         self, node: Union[ast.AnnAssign, ast.arg, FunctionDefT]
@@ -371,6 +394,15 @@ class SourceAnalyzer(ast.NodeVisitor):
             if val and isinstance(val, str):
                 tree = parse_ast(val, mode="eval")
                 self._add_name_attr(tree)
+
+    def _add_list_names(self, node: List[ast.expr]) -> None:
+        # Safely add list `const/str` names to `self._source_stats.name_`.
+        for item in node:
+            if isinstance(item, (ast.Constant, ast.Str)):
+                key = "s" if hasattr(item, "s") else "value"
+                value = getattr(item, key, "")
+                if value and isinstance(value, str):
+                    self._source_stats.name_.add(value)
 
     def _add_name_attr(self, tree: ast.AST):
         # Add any `ast.Name` or `ast.Attribute`
@@ -477,11 +509,34 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 self._has_all = True
                 self._importables.clear()
-                for constant in node.value.elts:
-                    k = "s" if hasattr(constant, "s") else "value"
-                    value = getattr(constant, k, "")
-                    if value and isinstance(value, str):
-                        self._importables.add(value)
+                self._add_list_names(node.value.elts)
+
+    @recursive
+    def visit_Expr(self, node: ast.Expr):
+        #: Support `__all__` dunder overriding with
+        #: `append` and `extend` operations:
+        #:
+        #: >>> import x, y, z
+        #: >>>
+        #: >>> __all__ = ["x"]
+        #: >>> __all__.append("y")
+        #: >>> __all__.extend(["z"])
+        #:
+        #: Issue: https://github.com/hadialqattan/pycln/issues/29
+        node_value = node.value
+        if (
+            isinstance(node_value, ast.Call)
+            and isinstance(node_value.func, ast.Attribute)
+            and isinstance(node_value.func.value, ast.Name)
+            and node_value.func.value.id == __ALL__
+        ):
+            func_attr = node_value.func.attr
+            if func_attr == "append":
+                self._add_list_names(node_value.args)
+            elif func_attr == "extend":
+                for arg in node_value.args:
+                    if isinstance(arg, ast.List):
+                        self._add_list_names(arg.elts)
 
     @recursive
     def visit_Import(self, node: ast.Import):
@@ -527,6 +582,15 @@ class ImportablesAnalyzer(ast.NodeVisitor):
             # Except not-importables.
             if node not in self._not_importables:
                 self._importables.add(node.id)
+
+    def _add_list_names(self, node: List[ast.expr]) -> None:
+        # Safely add list `const/str` names to `self._source_stats.name_`.
+        for item in node:
+            if isinstance(item, (ast.Constant, ast.Str)):
+                key = "s" if hasattr(item, "s") else "value"
+                value = getattr(item, key, "")
+                if value and isinstance(value, str):
+                    self._importables.add(value)
 
     def _compute_not_importables(self, node: Union[FunctionDefT, ast.ClassDef]):
         # Compute class/function not-importables.

@@ -397,6 +397,27 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @pytest.mark.parametrize(
         "code, expec_names",
         [
+            pytest.param(
+                "__all__.append('x', 'y', 'z')",
+                {"x", "y", "z"},
+                id="__all__ dunder overriding - append",
+            ),
+            pytest.param(
+                "__all__.extend(['x', 'y', 'z'])",
+                {"x", "y", "z"},
+                id="__all__ dunder overriding - extend",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
+    def test_visit_Expr(self, visit_Name, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
+    @pytest.mark.parametrize(
+        "code, expec_names",
+        [
             pytest.param("foo: 'List[str]' = []\n", {"List", "str"}, id="assign"),
             pytest.param(
                 ("def foo(bar: 'List[str]'):\n" "    pass\n"),
@@ -621,6 +642,24 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
         ],
     )
     def test_visit_Assign(self, code, expec_importables):
+        self._assert_importables_and_not(code, expec_importables)
+
+    @pytest.mark.parametrize(
+        "code, expec_importables",
+        [
+            pytest.param(
+                ("x = 'y'\n" "__all__.append('x', 'y', 'z')"),
+                {"x", "y", "z"},
+                id="__all__ dunder overriding - append",
+            ),
+            pytest.param(
+                ("x = 'y'\n" "__all__.extend(['x', 'y', 'z'])"),
+                {"x", "y", "z"},
+                id="__all__ dunder overriding - extend",
+            ),
+        ],
+    )
+    def test_visit_Expr(self, code, expec_importables):
         self._assert_importables_and_not(code, expec_importables)
 
     @pytest.mark.parametrize(
