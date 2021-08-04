@@ -70,7 +70,7 @@ jobs:
         with:
           # This pulls from the "Get Changelog Entry" step above,
           # referencing it's ID to get its outputs object.
-          tag_name: ${{ steps.changelog_reader.outputs.version }}
+          tag_name: v${{ steps.changelog_reader.outputs.version }}
           release_name: v${{ steps.changelog_reader.outputs.version }}
           body: ${{ steps.changelog_reader.outputs.changes }}
           prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
