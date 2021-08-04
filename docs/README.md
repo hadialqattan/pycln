@@ -867,17 +867,35 @@ __all__ = ["os", "time"]
 
 #### List Concatenation
 
-> Pycln can deal with list concatenation (`[...] + [...]`).
+> Pycln can deal with almost all types of list concatenation.
 
-```python
-import os, time  # These imports are considered as used.
+- Normal concatenation:
 
-__all__ = ["os"] + ["time"]
-```
+  ```python
+  import os, time  # These imports are considered as used.
+
+  __all__ = ["os"] + ["time"]
+  ```
+
+- Augmented assignment:
+
+  ```python
+  import os, time  # These imports are considered as used.
+
+  __all__ += ["os", "time"]
+  ```
+
+- Augmented assignment with concatenation:
+
+  ```python
+  import os, time  # These imports are considered as used.
+
+  __all__ += ["os"] + ["time"]
+  ```
 
 #### List Comprehension
 
-> Unsupported, not on the [roadmap](https://github.com/hadialqattan/pycln/projects/1).
+> Unsupported, not on the [roadmap](https://github.com/hadialqattan/pycln/projects/3).
 
 # Integrations
 

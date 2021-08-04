@@ -317,23 +317,46 @@ class SourceAnalyzer(ast.NodeVisitor):
         # These names will be skipped on import `*` case.
         if id_ in NAMES_TO_SKIP:
             self._source_stats.names_to_skip.add(id_)
-        #: Support `__all__` dunder overriding:
-        #:
-        #: >>> import x, y, z
-        #: >>>
-        #: >>> __all__ = ["x", "y", "z"]
+        # Support `__all__` dunder overriding cases.
         if id_ == __ALL__:
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
+                #: Support normal `__all__` dunder overriding:
+                #:
+                #: >>> import x, y, z
+                #: >>>
+                #: >>> __all__ = ["x", "y", "z"]
                 self._add_list_names(node.value.elts)
             elif isinstance(node.value, ast.BinOp):
                 #: Support `__all__` dunder overriding with
-                #: add (`+`) binary operation (concatenation):
+                #: add (`+`) binary operator (concatenation):
                 #:
                 #: >>> import x, y, z, i, j
                 #: >>>
                 #: >>> __all__ = ["x"] + ["y", "z"] + ["i", "j"]
                 #:
                 #: Issue: https://github.com/hadialqattan/pycln/issues/28
+                self._add_concatenated_list_names(node.value)
+
+    @recursive
+    def visit_AugAssign(self, node: ast.AugAssign):
+        id_ = getattr(node.target, "id", None)
+        # Support `__all__` with `+=` operator case.
+        if id_ == __ALL__:
+            if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
+                #: Support `__all__` dunder overriding with
+                #: only `+=` operator:
+                #:
+                #: >>> import x, y, z
+                #: >>>
+                #: >>> __all__ += ["x", "y", "z"]
+                self._add_list_names(node.value.elts)
+            elif isinstance(node.value, ast.BinOp):
+                #: Support `__all__` dunder overriding with
+                #: both `+=` and `+` operators:
+                #:
+                #: >>> import x, y, z
+                #: >>>
+                #: >>> __all__ += ["x", "y"] + ["z"]
                 self._add_concatenated_list_names(node.value)
 
     @recursive
@@ -527,26 +550,50 @@ class ImportablesAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_Assign(self, node: ast.Assign):
-        #: Support `__all__` dunder overriding:
-        #:
-        #: >>> import x, y, z
-        #: >>>
-        #: >>> __all__ = ["x", "y", "z"]
         id_ = getattr(node.targets[0], "id", None)
+        # Support `__all__` dunder overriding cases.
         if id_ == __ALL__:
+            self._has_all = True
+            self._importables.clear()
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
-                self._has_all = True
-                self._importables.clear()
+                #: Support normal `__all__` dunder overriding:
+                #:
+                #: >>> import x, y, z
+                #: >>>
+                #: >>> __all__ = ["x", "y", "z"]
                 self._add_list_names(node.value.elts)
             elif isinstance(node.value, ast.BinOp):
                 #: Support `__all__` dunder overriding with
-                #: add (`+`) binary operation (concatenation):
+                #: add (`+`) binary operator (concatenation):
                 #:
                 #: >>> import x, y, z, i, j
                 #: >>>
                 #: >>> __all__ = ["x"] + ["y", "z"] + ["i", "j"]
                 #:
                 #: Issue: https://github.com/hadialqattan/pycln/issues/28
+                self._add_concatenated_list_names(node.value)
+
+    @recursive
+    def visit_AugAssign(self, node: ast.AugAssign):
+        id_ = getattr(node.target, "id", None)
+        # Support `__all__` with `+=` operator case.
+        if id_ == __ALL__:
+            self._has_all = True
+            if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
+                #: Support `__all__` dunder overriding with
+                #: only `+=` operator:
+                #:
+                #: >>> import x, y, z
+                #: >>>
+                #: >>> __all__ += ["x", "y", "z"]
+                self._add_list_names(node.value.elts)
+            elif isinstance(node.value, ast.BinOp):
+                #: Support `__all__` dunder overriding with
+                #: both `+=` and `+` operators:
+                #:
+                #: >>> import x, y, z
+                #: >>>
+                #: >>> __all__ += ["x", "y"] + ["z"]
                 self._add_concatenated_list_names(node.value)
 
     @recursive
@@ -663,7 +710,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         """Called if no explicit visitor function exists for a node
         (override)."""
         # Continue visiting if only if `__all__` has not overridden.
-        if not self._has_all:
+        if (not self._has_all) or isinstance(node, ast.AugAssign):
             for _, value in ast.iter_fields(node):
                 if isinstance(value, list):
                     for item in value:
