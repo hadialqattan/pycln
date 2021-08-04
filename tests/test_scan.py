@@ -691,7 +691,7 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
             ),
         ],
     )
-    def test_visit_Assign(self, code, expec_importables):
+    def test_visit_AugAssign(self, code, expec_importables):
         self._assert_importables_and_not(code, expec_importables)
 
     @pytest.mark.parametrize(

@@ -871,27 +871,27 @@ __all__ = ["os", "time"]
 
 - Normal concatenation:
 
-    ```python
-    import os, time  # These imports are considered as used.
+  ```python
+  import os, time  # These imports are considered as used.
 
-    __all__ = ["os"] + ["time"]
-    ```
+  __all__ = ["os"] + ["time"]
+  ```
 
 - Augmented assignment:
 
-    ```python
-    import os, time  # These imports are considered as used.
+  ```python
+  import os, time  # These imports are considered as used.
 
-    __all__ += ["os", "time"]
-    ```
+  __all__ += ["os", "time"]
+  ```
 
 - Augmented assignment with concatenation:
 
-    ```python
-    import os, time  # These imports are considered as used.
+  ```python
+  import os, time  # These imports are considered as used.
 
-    __all__ += ["os"] + ["time"]
-    ```
+  __all__ += ["os"] + ["time"]
+  ```
 
 #### List Comprehension
 
