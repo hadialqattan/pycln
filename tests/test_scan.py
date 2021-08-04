@@ -404,6 +404,27 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         "code, expec_names",
         [
             pytest.param(
+                "__all__ += ['x', 'y', 'z']",
+                {"x", "y", "z"},
+                id="__all__ dunder overriding - aug assign",
+            ),
+            pytest.param(
+                "__all__ += ['x', 'y'] + ['i', 'j'] + ['z']",
+                {"x", "y", "i", "j", "z"},
+                id="__all__ dunder overriding - aug assign & concatenation",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
+    def test_visit_AugAssign(self, visit_Name, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
+    @pytest.mark.parametrize(
+        "code, expec_names",
+        [
+            pytest.param(
                 "__all__.append('x', 'y', 'z')",
                 {"x", "y", "z"},
                 id="__all__ dunder overriding - append",
@@ -641,14 +662,32 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
         "code, expec_importables",
         [
             pytest.param(
-                ("x = 'y'\n" "__all__ = ['i', 'j', 'k']"),
+                ("x = 'y'\n" "__all__ = ['i', 'j', 'k']\n" "a = 'b'"),
                 {"i", "j", "k"},
                 id="__all__ dunder overriding",
             ),
             pytest.param(
-                "__all__ = ['x', 'y'] + ['i', 'j'] + ['z']",
+                ("x = 'y'\n" "__all__ = ['x', 'y'] + ['i', 'j'] + ['z']\n" "a = 'b'"),
                 {"x", "y", "i", "j", "z"},
                 id="__all__ dunder overriding - concatenation",
+            ),
+        ],
+    )
+    def test_visit_Assign(self, code, expec_importables):
+        self._assert_importables_and_not(code, expec_importables)
+
+    @pytest.mark.parametrize(
+        "code, expec_importables",
+        [
+            pytest.param(
+                ("__all__ += ['i', 'j', 'k']\n" "x = 'y'"),
+                {"i", "j", "k"},
+                id="__all__ dunder overriding - aug assign",
+            ),
+            pytest.param(
+                ("__all__ += ['x', 'y'] + ['i', 'j'] + ['z']\n" "a = 'b'"),
+                {"x", "y", "i", "j", "z"},
+                id="__all__ dunder overriding - aug assign and concatenation",
             ),
         ],
     )
