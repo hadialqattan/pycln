@@ -50,6 +50,14 @@ class TestPathu:
                 id="path: file",
             ),
             pytest.param(
+                Path(DATA_DIR / "paths" / "a.py"),
+                re.compile(r".*\.py$"),
+                re.compile(r""),
+                PathSpec.from_lines("gitwildmatch", ["a.py"]),
+                None,
+                id="path: file - ignored",
+            ),
+            pytest.param(
                 Path(DATA_DIR / "paths" / "b.c"),
                 re.compile(r".*\.py$"),
                 re.compile(r""),

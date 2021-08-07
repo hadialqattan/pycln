@@ -58,19 +58,19 @@ def yield_sources(
     :param reporter: a `report.Report` object.
     :returns: generator of `.py` files paths.
     """
-    if path.is_file():
-        if str(path).endswith(PY_EXTENSION):
-            yield path
-            return
-        return
 
     dirs: List[str] = []
     files: List[str] = []
 
     is_included, is_excluded = regexu.is_included, regexu.is_excluded
 
-    scandir = os.scandir(path)
-    for entry in scandir:
+    if path.is_dir():
+        root_dir = os.scandir(path)  # type: ignore
+    else:
+        root_dir = {path}  # type: ignore
+        path = path.parent
+
+    for entry in root_dir:
 
         # Skip symlinks.
         if entry.is_symlink():

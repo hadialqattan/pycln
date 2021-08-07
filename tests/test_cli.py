@@ -9,7 +9,7 @@ from . import CONFIG_DIR
 from .utils.sysu import reopenable_temp_file
 
 # Constants.
-CONFIG_FILE = CONFIG_DIR.joinpath("setup.cfg")
+CONFIG_FILE = CONFIG_DIR.joinpath("cli.cfg")
 
 
 class TestCli:

@@ -16,6 +16,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - [Support `__all__` with add binary operator (concatenation) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/64)
 - [Support `__all__` list operations (append & extend) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/63)
 
+### Fixed
+
+- [Gitignore, include, and exclude path matching rules doesn't apply for file sources by @hadialqattan](https://github.com/hadialqattan/pycln/pull/67)
+
 ## [0.0.4] - 2021-07-07
 
 ### Fixed
