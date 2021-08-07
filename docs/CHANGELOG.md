@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.5] - 2021-08-07
+
 ### Added
 
 - [Support `__all__` with add augmented assignment operation by @hadialqattan](https://github.com/hadialqattan/pycln/pull/65)
