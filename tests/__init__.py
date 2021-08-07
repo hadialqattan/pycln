@@ -2,4 +2,4 @@
 from pathlib import Path
 
 # Constatns.
-CONFIG_DIR = Path(__file__).parent.joinpath(Path("config"))
+CONFIG_DIR = Path(__file__).parent.joinpath("data/config")

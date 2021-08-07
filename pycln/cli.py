@@ -144,8 +144,10 @@ def main(  # pylint: disable=R0913,R0914
     )
     reporter = report.Report(configs)
     session_maker = refactor.Refactor(configs, reporter)
-    gitignore = regexu.get_gitignore(Path("."), configs.no_gitignore)
     for path in configs.paths:
+        gitignore = regexu.get_gitignore(
+            path if path.is_dir() else path.parent, configs.no_gitignore
+        )
         sources: Generator = pathu.yield_sources(
             path, configs.include, configs.exclude, gitignore, reporter
         )
