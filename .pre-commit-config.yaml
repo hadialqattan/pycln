@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/hadialqattan/pycln
-    rev: v0.0.4 # Possible releases: https://github.com/hadialqattan/pycln/releases
+    rev: v0.0.5 # Possible releases: https://github.com/hadialqattan/pycln/releases
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
