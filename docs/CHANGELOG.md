@@ -18,7 +18,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- [Gitignore, include, and exclude path matching rules doesn't apply for file sources by @hadialqattan](https://github.com/hadialqattan/pycln/pull/67)
+- [Gitignore, include, and exclude path matching rules don't apply for file sources by @hadialqattan](https://github.com/hadialqattan/pycln/pull/67)
 
 ## [0.0.4] - 2021-07-07
 
