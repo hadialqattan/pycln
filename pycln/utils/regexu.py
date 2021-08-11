@@ -9,6 +9,8 @@ import typer
 from pathspec import PathSpec
 from pathspec.patterns import GitWildMatchPattern
 
+from .. import ISWIN
+
 # Constants.
 INCLUDE = "include"
 EXCLUDE = "exclude"
@@ -49,7 +51,11 @@ def strpath(path: Path) -> str:
     :param path: file-system path.
     :returns: stringified path.
     """
-    return f"{path}" if path.is_file() else f"{path}/"
+    if ISWIN:
+        path_str = str(path).replace("\\", "/")
+        return path_str if path.is_file() else f"{path_str}/"
+    else:
+        return f"{path}" if path.is_file() else f"{path}/"
 
 
 def is_included(path: Path, regex: Pattern[str]) -> bool:

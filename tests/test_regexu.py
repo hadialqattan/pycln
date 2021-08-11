@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from typer import Exit
 
+from pycln import ISWIN
 from pycln.utils import regexu
 
 from . import CONFIG_DIR, DATA_DIR
@@ -51,14 +52,22 @@ class TestRegexU:
         "path, expec_strpath",
         [
             pytest.param(
-                Path(DATA_DIR / "paths/a.py"),
-                f"{Path(DATA_DIR / 'paths/a.py')}",
+                Path(DATA_DIR / "paths" / "a.py"),
+                f"{Path(DATA_DIR / 'paths' / 'a.py')}",
                 id="path: file",
             ),
             pytest.param(
                 Path(DATA_DIR / "paths"),
                 f"{Path(DATA_DIR / 'paths')}/",
                 id="path: directory",
+            ),
+            pytest.param(
+                Path("C:/dir/child"),
+                "C:/dir/child/",
+                id="path: directory - windows",
+                marks=pytest.mark.skipif(
+                    not ISWIN, reason="Windows specific path normalization."
+                ),
             ),
         ],
     )
