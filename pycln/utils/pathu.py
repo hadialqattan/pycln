@@ -4,7 +4,7 @@ import sys
 from distutils import sysconfig
 from functools import lru_cache
 from pathlib import Path
-from typing import Generator, List, Optional, Pattern, Set
+from typing import Generator, Optional, Pattern, Set
 
 from pathspec import PathSpec
 
@@ -47,7 +47,7 @@ def yield_sources(
     exclude: Pattern[str],
     gitignore: PathSpec,
     reporter: Report,
-) -> Generator:
+) -> Generator[Path, None, None]:
     """Yields `.py` paths to handle. Walk throw path sub-directories/files
     recursively.
 
@@ -59,8 +59,8 @@ def yield_sources(
     :returns: generator of `.py` files paths.
     """
 
-    dirs: List[str] = []
-    files: List[str] = []
+    dirs: Set[Path] = set()
+    files: Set[Path] = set()
 
     is_included, is_excluded = regexu.is_included, regexu.is_excluded
 
@@ -71,49 +71,43 @@ def yield_sources(
         path = path.parent
 
     for entry in root_dir:
+        entry_path = Path(entry)
 
         # Skip symlinks.
-        if entry.is_symlink():
+        if entry_path.is_symlink():
             continue
 
-        name = entry.name if entry.is_file() else f"{entry.name}/"
-        entry_path = Path(os.path.join(path, name))
-
         # Compute exclusions.
-        if is_excluded(name, exclude):
+        if is_excluded(entry_path, exclude):
             reporter.ignored_path(entry_path, EXCLUDE)
             continue
 
         # Compute `.gitignore`.
-        if gitignore.match_file(name):
+        if gitignore.match_file(entry_path):
             reporter.ignored_path(entry_path, GITIGNORE)
             continue
 
         # Directories.
-        if entry.is_dir():
-            dirs.append(name)
+        if entry_path.is_dir():
+            dirs.add(entry_path)
             continue
 
         # Files.
-        if is_included(name, include):
-            files.append(name)
+        if is_included(entry_path, include):
+            files.add(entry_path)
         else:
             reporter.ignored_path(entry_path, INCLUDE)
 
-    for name in files:
-        yield Path(os.path.join(path, name))
+    yield from files
 
-    for dirname in dirs:
-
-        child = Path(os.path.join(path, dirname))
-
+    for dir_ in dirs:
         # If gitignore is None, gitignore usage is disabled, while a Falsey
         # gitignore is when the directory doesn't have a .gitignore file.
         yield from yield_sources(
-            child,
+            dir_,
             include,
             exclude,
-            gitignore + regexu.get_gitignore(child) if gitignore is not None else None,
+            gitignore + regexu.get_gitignore(dir_) if gitignore is not None else None,
             reporter,
         )
 

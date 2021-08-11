@@ -43,24 +43,33 @@ def safe_compile(pattern: str, type_: str) -> Pattern[str]:
         raise typer.Exit(1) from err
 
 
-def is_included(name: str, regex: Pattern[str]) -> bool:
+def strpath(path: Path) -> str:
+    """Custom `Path` to `str` casting.
+
+    :param path: file-system path.
+    :returns: stringified path.
+    """
+    return f"{path}" if path.is_file() else f"{path}/"
+
+
+def is_included(path: Path, regex: Pattern[str]) -> bool:
     """Check if the file/directory name match include pattern.
 
-    :param name: file/directory name to check.
+    :param path: file-system path to check.
     :param regex: include regex pattern.
     :returns: True if the name match else False.
     """
-    return bool(regex.fullmatch(name))
+    return bool(regex.search(strpath(path)))
 
 
-def is_excluded(name: str, regex: Pattern[str]) -> bool:
+def is_excluded(path: Path, regex: Pattern[str]) -> bool:
     """Check if the file/directory name match exclude pattern.
 
-    :param name: file/directory name to check.
+    :param path: file-system path to check.
     :param regex: exclude regex pattern.
     :returns: True if the name match else False.
     """
-    return bool(regex.fullmatch(name))
+    return bool(regex.search(strpath(path)))
 
 
 def get_gitignore(root: Path, no_gitignore: bool = False) -> PathSpec:
