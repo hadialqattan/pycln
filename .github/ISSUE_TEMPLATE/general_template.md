@@ -6,6 +6,8 @@ labels: []
 assignees: ""
 ---
 
+<!-- Feel free to remove any unnecessary part ;-) -->
+
 **Describe the issue** A clear and concise description of what the issue is.
 
 **Environment (please complete the following informations):**

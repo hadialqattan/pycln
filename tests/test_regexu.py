@@ -6,9 +6,10 @@ from pathlib import Path
 import pytest
 from typer import Exit
 
+from pycln import ISWIN
 from pycln.utils import regexu
 
-from . import CONFIG_DIR
+from . import CONFIG_DIR, DATA_DIR
 from .utils import sysu
 
 # Constants.
@@ -48,41 +49,108 @@ class TestRegexU:
             assert stderr.getvalue() == expec_err
 
     @pytest.mark.parametrize(
-        "type_, name, regex, expec",
+        "path, expec_strpath",
         [
             pytest.param(
-                "included",
-                "pycln_util.py",
-                COMPILED_INCLUDE_REGEX,
-                True,
-                id="include -> True",
+                Path(DATA_DIR / "paths" / "a.py"),
+                f"{Path(DATA_DIR / 'paths' / 'a.py')}",
+                id="path: file",
+                marks=pytest.mark.skipif(
+                    ISWIN, reason="Unix specific path normalization."
+                ),
             ),
             pytest.param(
-                "excluded",
-                "pycln_test.py",
-                COMPILED_EXCLUDE_REGEX,
-                True,
-                id="exclude -> True",
+                Path(DATA_DIR / "paths"),
+                f"{Path(DATA_DIR / 'paths')}/",
+                id="path: directory",
+                marks=pytest.mark.skipif(
+                    ISWIN, reason="Unix specific path normalization."
+                ),
             ),
             pytest.param(
-                "included",
-                "main.py",
-                COMPILED_INCLUDE_REGEX,
-                False,
-                id="include -> False",
+                Path(DATA_DIR / "paths" / "a.py"),
+                f"{Path(DATA_DIR / 'paths' / 'a.py')}".replace("\\", "/"),
+                id="path: file",
+                marks=pytest.mark.skipif(
+                    not ISWIN, reason="Windows specific path normalization."
+                ),
             ),
             pytest.param(
-                "excluded",
-                "cli.py",
-                COMPILED_EXCLUDE_REGEX,
-                False,
-                id="exclude -> False",
+                Path(DATA_DIR / "paths"),
+                f"{Path(DATA_DIR / 'paths')}/".replace("\\", "/"),
+                id="path: directory",
+                marks=pytest.mark.skipif(
+                    not ISWIN, reason="Windows specific path normalization."
+                ),
             ),
         ],
     )
-    def test_is_(self, type_, name, regex, expec):
-        # Test `is_included` and `is_excluded` functions.
-        assert getattr(regexu, f"is_{type_}")(name, regex) == expec
+    def test_strpath(self, path, expec_strpath):
+        assert regexu.strpath(path) == expec_strpath
+
+    @pytest.mark.parametrize(
+        "path, regex, expec",
+        [
+            pytest.param(
+                Path("path/to/file00.py"),
+                re.compile(r"file.*.py", re.IGNORECASE),
+                True,
+                id="path: file - true",
+            ),
+            pytest.param(
+                Path("path/to/hi.py"),
+                re.compile(r"file.*.py", re.IGNORECASE),
+                False,
+                id="path: file - false",
+            ),
+        ],
+    )
+    def test_is_included(self, path, regex, expec):
+        assert regexu.is_included(path, regex) == expec
+
+    @pytest.mark.parametrize(
+        "path, regex, expec",
+        [
+            pytest.param(
+                Path("path/to/file00.py"),
+                re.compile(r"file.*.py", re.IGNORECASE),
+                True,
+                id="path: file - true",
+            ),
+            pytest.param(
+                Path("path/to/hi.py"),
+                re.compile(r"file.*.py", re.IGNORECASE),
+                False,
+                id="path: file - false",
+            ),
+            pytest.param(
+                Path("path/to/directory00"),
+                re.compile(r"directory.*/", re.IGNORECASE),
+                True,
+                id="path: directory - true",
+            ),
+            pytest.param(
+                Path("path/to/root"),
+                re.compile(r"directory.*/", re.IGNORECASE),
+                False,
+                id="path: directory - false",
+            ),
+            pytest.param(
+                Path("path/to/directory00/file.py"),
+                re.compile(r"directory.*/", re.IGNORECASE),
+                True,
+                id="path: directory/file.py - true",
+            ),
+            pytest.param(
+                Path("path/to/root/file.py"),
+                re.compile(r"directory.*/", re.IGNORECASE),
+                False,
+                id="path: directory/file.py - false",
+            ),
+        ],
+    )
+    def test_is_excluded(self, path, regex, expec):
+        assert regexu.is_excluded(path, regex) == expec
 
     @pytest.mark.parametrize(
         "root, no_gitignore, expec",

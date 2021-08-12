@@ -12,9 +12,10 @@ from pycln import ISWIN
 from pycln.utils import pathu, regexu
 from pycln.utils.report import Report
 
+from . import DATA_DIR
+
 # Constants.
 MOCK = "pycln.utils.report.%s"
-DATA_DIR = Path(__file__).parent.joinpath("data")
 
 if ISWIN:
     PYVER = "Lib"
@@ -42,6 +43,22 @@ class TestPathu:
                 id="path: directory",
             ),
             pytest.param(
+                Path(DATA_DIR / "paths"),
+                re.compile(r".*\.py$"),
+                re.compile(r"paths/"),
+                PathSpec.from_lines("gitwildmatch", []),
+                set(),
+                id="path: directory - excluded",
+            ),
+            pytest.param(
+                Path(DATA_DIR / "paths" / "dir"),
+                re.compile(r".*\.py$"),
+                re.compile(r"paths/"),
+                PathSpec.from_lines("gitwildmatch", []),
+                set(),
+                id="path: nested-directory - excluded",
+            ),
+            pytest.param(
                 Path(DATA_DIR / "paths" / "a.py"),
                 re.compile(r".*\.py$"),
                 re.compile(r""),
@@ -54,7 +71,7 @@ class TestPathu:
                 re.compile(r".*\.py$"),
                 re.compile(r""),
                 PathSpec.from_lines("gitwildmatch", ["a.py"]),
-                None,
+                set(),
                 id="path: file - ignored",
             ),
             pytest.param(
