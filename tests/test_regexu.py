@@ -68,16 +68,16 @@ class TestRegexU:
                 ),
             ),
             pytest.param(
-                Path("C:/dir/child/a.py"),
-                "C:/dir/child/a.py",
+                Path(DATA_DIR / "paths" / "a.py"),
+                f"{Path(DATA_DIR / 'paths' / 'a.py')}".replace("\\", "/"),
                 id="path: file",
                 marks=pytest.mark.skipif(
                     not ISWIN, reason="Windows specific path normalization."
                 ),
             ),
             pytest.param(
-                Path("C:/dir/child"),
-                "C:/dir/child/",
+                Path(DATA_DIR / "paths"),
+                f"{Path(DATA_DIR / 'paths')}/".replace("\\", "/"),
                 id="path: directory",
                 marks=pytest.mark.skipif(
                     not ISWIN, reason="Windows specific path normalization."
