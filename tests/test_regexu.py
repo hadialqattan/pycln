@@ -55,16 +55,30 @@ class TestRegexU:
                 Path(DATA_DIR / "paths" / "a.py"),
                 f"{Path(DATA_DIR / 'paths' / 'a.py')}",
                 id="path: file",
+                marks=pytest.mark.skipif(
+                    ISWIN, reason="Unix specific path normalization."
+                ),
             ),
             pytest.param(
                 Path(DATA_DIR / "paths"),
                 f"{Path(DATA_DIR / 'paths')}/",
                 id="path: directory",
+                marks=pytest.mark.skipif(
+                    ISWIN, reason="Unix specific path normalization."
+                ),
+            ),
+            pytest.param(
+                Path("C:/dir/child/a.py"),
+                "C:/dir/child/a.py",
+                id="path: file",
+                marks=pytest.mark.skipif(
+                    not ISWIN, reason="Windows specific path normalization."
+                ),
             ),
             pytest.param(
                 Path("C:/dir/child"),
                 "C:/dir/child/",
-                id="path: directory - windows",
+                id="path: directory",
                 marks=pytest.mark.skipif(
                     not ISWIN, reason="Windows specific path normalization."
                 ),
