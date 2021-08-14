@@ -730,8 +730,8 @@ print(os.getpid())
 
 ### Import With Importlib
 
-> Not supported yet, on the roadmap:
-> [# TODO](https://github.com/hadialqattan/pycln/projects/1#card-46608325).
+> Not supported, also not on the
+> [roadmap](https://github.com/hadialqattan/pycln/projects/3).
 
 ### Typing
 
@@ -895,7 +895,8 @@ __all__ = ["os", "time"]
 
 #### List Comprehension
 
-> Unsupported, not on the [roadmap](https://github.com/hadialqattan/pycln/projects/3).
+> Not supported, also not on the
+> [roadmap](https://github.com/hadialqattan/pycln/projects/3).
 
 # Integrations
 
