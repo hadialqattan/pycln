@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.0.0] - 2021-08-18
+
 ### Changed
 
 - [Prevent the path finding method from searching inside any of the excluded directories' children by @hadialqattan](https://github.com/hadialqattan/pycln/pull/68)

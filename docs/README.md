@@ -908,7 +908,7 @@ __all__ = ["os", "time"]
 
   ```yaml
   - repo: https://github.com/hadialqattan/pycln
-    rev: stable # Possible releases: https://github.com/hadialqattan/pycln/releases
+    rev: v1.0.0 # Possible releases: https://github.com/hadialqattan/pycln/releases
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
