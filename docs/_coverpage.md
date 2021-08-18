@@ -4,7 +4,7 @@
 
 <!-- Title & body -->
 
-# Pycln <small>1.0.0</small>
+# Pycln <small>1.0.3</small>
 
 > A formatter for finding and removing unused import statements.
 
