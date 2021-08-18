@@ -133,7 +133,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     )
     def test_visit_Import(self, code, expec_name):
         analyzer = self._get_analyzer(code)
-        _, import_stats = analyzer.get_stats()
+        _, import_stats, _ = analyzer.get_stats()
         self._assert_name_equal_or_not(list(import_stats.import_), expec_name)
 
     @pytest.mark.parametrize(
@@ -153,7 +153,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     )
     def test_visit_ImportFrom(self, code, expec_module_name):
         analyzer = self._get_analyzer(code)
-        _, import_stats = analyzer.get_stats()
+        _, import_stats, _ = analyzer.get_stats()
         imports = list(import_stats.from_)
         if expec_module_name:
             assert imports
@@ -173,7 +173,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     )
     def test_visit_Name(self, code, expec_names):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
@@ -189,7 +189,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     )
     def test_visit_Attribute(self, code, expec_attrs):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
     @pytest.mark.parametrize(
@@ -235,7 +235,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     )
     def test_visit_Call(self, code, expec_names, expec_attrs):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
@@ -288,7 +288,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     )
     def test_visit_Subscript(self, code, expec_names, expec_attrs):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
@@ -396,7 +396,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_Assign(self, visit_Name, code, expec_names, expec_names_to_skip):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
         self.assert_set_equal_or_not(source_stats.names_to_skip, expec_names_to_skip)
 
@@ -418,7 +418,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_AugAssign(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
@@ -439,7 +439,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_Expr(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
@@ -468,7 +468,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_string_type_annotation(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.skipif(
@@ -513,7 +513,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_type_comment(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
@@ -527,7 +527,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     def test_add_name_attr(self, code, expec_names, expec_attrs):
         analyzer = scan.SourceAnalyzer([])
         analyzer._add_name_attr(ast.parse(code))
-        source_stats, _ = analyzer.get_stats()
+        source_stats, _, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 

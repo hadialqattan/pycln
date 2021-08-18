@@ -46,6 +46,13 @@ def main(  # pylint: disable=R0913,R0914
             " Exclusions are calculated first, inclusions later."
         ),
     ),
+    # requirements: bool = typer.Option(
+    #    False,
+    #   "--requirements",
+    #   "-r",
+    #   show_default=True,
+    #   help="TODO: write this help message"
+    # ),
     all_: bool = typer.Option(
         False,
         "--all",
@@ -153,6 +160,13 @@ def main(  # pylint: disable=R0913,R0914
         )
         for source in sources:
             session_maker.session(source)
+
+    # TODO 2021-08-18: Read and compare `requirements.txt`
+    # with `session_maker.used_dependencies`
+    dep = set({"typer", "toml", "pathspec", "dataclasses", "libcst", "pyyaml"})
+    for d in dep:
+        print(d, d in session_maker.used_dependencies)
+
     # Print the report.
     typer.echo(str(reporter), nl=False)
     # Set the correct exit code and exit.

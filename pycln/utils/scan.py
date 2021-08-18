@@ -2,7 +2,7 @@
 import ast
 import os
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, unique
 from functools import wraps
 from pathlib import Path
@@ -92,6 +92,9 @@ FunctionDefT = TypeVar(
     "FunctionDefT", bound=Union[ast.FunctionDef, ast.AsyncFunctionDef]
 )
 
+# Custom type hints.
+SetOfImports = Set[Union[_nodes.Import, _nodes.ImportFrom]]
+
 
 def recursive(func: FunctionT) -> FunctionT:
     """decorator to make `ast.NodeVisitor` work recursive.
@@ -112,8 +115,8 @@ class ImportStats:
 
     """Import statements statistics."""
 
-    import_: Set[_nodes.Import]
-    from_: Set[_nodes.ImportFrom]
+    import_: Set[_nodes.Import] = field(default_factory=set)
+    from_: Set[_nodes.ImportFrom] = field(default_factory=set)
 
     def __iter__(self):
         return iter([self.import_, self.from_])
@@ -125,11 +128,11 @@ class SourceStats:
     """Source code (`ast.Name`, `ast.Attribute`) statistics."""
 
     #: Included on `__iter__`.
-    name_: Set[str]
-    attr_: Set[str]
+    name_: Set[str] = field(default_factory=set)
+    attr_: Set[str] = field(default_factory=set)
 
     #: Not included on `__iter__`.
-    names_to_skip: Set[str]
+    names_to_skip: Set[str] = field(default_factory=set)
 
     def __iter__(self):
         return iter([self.name_, self.attr_])
@@ -158,9 +161,9 @@ class SourceAnalyzer(ast.NodeVisitor):
             # Bad class usage.
             raise ValueError("Please provide source lines for Python < 3.8.")
         self._lines = source_lines
-        self._import_stats = ImportStats(set(), set())
-        self._imports_to_skip: Set[Union[_nodes.Import, _nodes.ImportFrom]] = set()
-        self._source_stats = SourceStats(set(), set(), set())
+        self._import_stats = ImportStats()
+        self._imports_to_skip: SetOfImports = set()
+        self._source_stats = SourceStats()
 
     @recursive
     def visit_Import(self, node: ast.Import):
@@ -519,12 +522,12 @@ class SourceAnalyzer(ast.NodeVisitor):
                     break
         return end_lineno
 
-    def get_stats(self) -> Tuple[SourceStats, ImportStats]:
+    def get_stats(self) -> Tuple[SourceStats, ImportStats, SetOfImports]:
         """Get source analyzer results.
 
-        :returns: tuple of `ImportStats` and `SourceStats`.
+        :returns: tuple of `ImportStats`, `SourceStats`, and `SetOfImports`.
         """
-        return self._source_stats, self._import_stats
+        return self._source_stats, self._import_stats, self._imports_to_skip
 
 
 class ImportablesAnalyzer(ast.NodeVisitor):

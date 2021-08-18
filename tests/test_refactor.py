@@ -2,6 +2,7 @@
 # pylint: disable=R0201,W0613
 import ast
 from pathlib import Path
+from typing import Set
 
 import pytest
 from libcst import ParserSyntaxError
@@ -24,6 +25,30 @@ from .utils import sysu
 MOCK = "pycln.utils.refactor.%s"
 
 
+def get_import(names: Set[str]) -> Import:
+    """Creates an `import ...` statement for testing purposes.
+
+    :param names: set of imported names.
+    :returns: import statement.
+    """
+    return Import(None, names=[ast.alias(name=n) for n in names])
+
+
+def get_import_from(module: str, names: Set[str]) -> ImportFrom:
+    """Creates a `from ... import ...` statement for testing purposes.
+
+    :param module: a module name.
+    :param names: set of imported names.
+    :returns: import statement.
+    """
+    return ImportFrom(
+        None,
+        names=[ast.alias(name=n) for n in names],
+        module=module,
+        level=module.count("."),
+    )
+
+
 class TestRefactor:
 
     """`Refactor` methods test case."""
@@ -32,6 +57,117 @@ class TestRefactor:
         self.configs = config.Config(paths=[Path("")])
         self.reporter = report.Report(self.configs)
         self.session_maker = refactor.Refactor(self.configs, self.reporter)
+
+    @pytest.mark.parametrize(
+        "name, expec",
+        [
+            pytest.param("x", set({"x"}), id="noraml"),
+            pytest.param("y.z", set({"y"}), id="dotted"),
+            pytest.param("..z", set({}), id="relative"),
+        ],
+    )
+    def test_dependencies_add_one(self, name, expec):
+        dependencies = refactor.Dependencies()
+        dependencies.add_one(name)
+        assert dependencies.used_modules == expec
+
+    @pytest.mark.parametrize(
+        "names, expec",
+        [
+            pytest.param({get_import({"x"})}, set({"x"}), id="import: single - normal"),
+            pytest.param(
+                {get_import({"i.j"})}, set({"i"}), id="import: single - dotted"
+            ),
+            pytest.param(
+                {get_import({"*"})},
+                set({}),
+                id="import: single - star",
+            ),
+            pytest.param(
+                {get_import({"x"}), get_import({"y"})},
+                set({"x", "y"}),
+                id="import: multiple - normal",
+            ),
+            pytest.param(
+                {get_import({"i.j"}), get_import({"x.y"})},
+                set({"i", "x"}),
+                id="import: multiple - dotted",
+            ),
+            pytest.param(
+                {get_import_from("x", {"y"})},
+                set({"x"}),
+                id="importFrom: single - normal",
+            ),
+            pytest.param(
+                {get_import_from("x.i", {"y"})},
+                set({"x"}),
+                id="importFrom: single - dotted",
+            ),
+            pytest.param(
+                {get_import_from("..x.i", {"y"})},
+                set({}),
+                id="importFrom: single - relative",
+            ),
+            pytest.param(
+                {get_import_from("x", {"y"}), get_import_from("i", {"j"})},
+                set({"x", "i"}),
+                id="importFrom: multiple - normal",
+            ),
+            pytest.param(
+                {get_import_from("x.i", {"y"}), get_import_from("z.r", {"h"})},
+                set({"x", "z"}),
+                id="importFrom: multiple - dotted",
+            ),
+            pytest.param(
+                {get_import_from("..x.i", {"y"}), get_import_from("..m.k", {"e"})},
+                set({}),
+                id="importFrom: multiple - relative",
+            ),
+        ],
+    )
+    def test_dependencies_add_set(self, names, expec):
+        dependencies = refactor.Dependencies()
+        dependencies.add_set(names)
+        assert dependencies.used_modules == expec
+
+    @pytest.mark.parametrize(
+        "imports_to_skip, expec",
+        [
+            pytest.param(
+                {get_import({"x"}), get_import({"y"})}, {"x", "y"}, id="normal"
+            ),
+            pytest.param(set({}), set({}), id="empty"),
+        ],
+    )
+    @mock.patch(MOCK % "scan.SourceAnalyzer.get_stats")
+    @mock.patch(MOCK % "scan.SourceAnalyzer.visit")
+    def test_dependencies_in_analyze(self, visit, get_stats, imports_to_skip, expec):
+        get_stats.return_value = (None, None, imports_to_skip)
+        self.session_maker._analyze(None, [])
+        assert self.session_maker.used_dependencies == expec
+
+    @pytest.mark.parametrize(
+        "is_used, import_node, expec",
+        [
+            pytest.param(True, get_import({"x"}), {"x"}, id="used - import"),
+            pytest.param(False, get_import({"x"}), set({}), id="unused - import"),
+            pytest.param(
+                True, get_import_from("x", {"y"}), {"x"}, id="used - importFrom"
+            ),
+            pytest.param(
+                False, get_import_from("x", {"y"}), set({}), id="unused - importFrom"
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._should_remove")
+    @mock.patch(MOCK % "Refactor._is_partially_used")
+    def test_dependencies_in_get_used_names(
+        self, _is_partially_used, _should_remove, is_used, import_node, expec
+    ):
+        _is_partially_used.return_value = is_used
+        _should_remove.return_value = not is_used
+        self.session_maker._get_used_names(import_node, True)
+        assert self.session_maker.used_dependencies == expec
 
     @pytest.mark.parametrize(
         "source_lines, expec_lines",
@@ -251,7 +387,7 @@ class TestRefactor:
     )
     @mock.patch(MOCK % "scan.SourceAnalyzer.get_stats")
     def test_analyze(self, get_stats, get_stats_raise, expec_val):
-        get_stats.return_value = ("", "")
+        get_stats.return_value = ("", "", "")
         get_stats.side_effect = get_stats_raise
         with sysu.std_redirect(sysu.STD.ERR):
             val = self.session_maker._analyze(ast.parse(""), [""])
@@ -394,7 +530,7 @@ class TestRefactor:
         setattr(self.configs, "expand_stars", expand_stars)
         setattr(self.configs, mode, True)
         node = Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)])
-        self.session_maker._import_stats = ImportStats({node}, set())
+        self.session_maker._import_stats = ImportStats({node})
         with sysu.std_redirect(sysu.STD.OUT):
             with sysu.std_redirect(sysu.STD.ERR):
                 fixed_code = self.session_maker._refactor(original_lines)

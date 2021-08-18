@@ -1,12 +1,13 @@
 """Pycln code refactoring utility."""
 import ast
 import os
+from dataclasses import dataclass, field
 from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union, cast
 
-from . import iou, pathu, regexu, scan
+from . import _nodes, iou, pathu, regexu, scan
 from ._exceptions import (
     ReadPermissionError,
     UnexpandableImportStar,
@@ -47,6 +48,43 @@ class LazyLibCSTLoader:
 transform = LazyLibCSTLoader()
 
 
+@dataclass
+class Dependencies:
+
+    """Set contains all used dependencies, used in the unused dependencies
+    removal feature."""
+
+    __modules: Set[str] = field(default_factory=set)
+
+    @property
+    def used_modules(self) -> Set[str]:
+        return self.__modules
+
+    def add_one(self, name: str) -> None:
+        """Adds module name to the set.
+
+        :param name: imported name (e.g `x.y`).
+        :returns: None.
+        """
+        module = str(name).split(".")[0]
+        if module:
+            self.__modules.add(module)
+
+    def add_set(self, imports: scan.SetOfImports) -> None:
+        """Adds set of module names from the given set of import statements.
+
+        :param imports: set of import/importFrom statements.
+        :returns: None.
+        """
+        for node in imports:
+            if isinstance(node, _nodes.ImportFrom):
+                self.add_one(node.module)
+            elif isinstance(node, _nodes.Import):
+                for alias in node.names:
+                    if alias.name != "*":
+                        self.add_one(alias.name)
+
+
 class Refactor:
 
     """Refactor the given source.
@@ -65,15 +103,21 @@ class Refactor:
     def __init__(self, configs: Config, reporter: Report):
         self.configs = configs
         self.reporter = reporter
+
         # Resetables.
-        self._import_stats = scan.ImportStats(set(), set())
-        self._source_stats = scan.SourceStats(set(), set(), set())
+        self._import_stats = scan.ImportStats()
+        self._source_stats = scan.SourceStats()
+        self._dependencies = Dependencies()
         self._path = Path("")
 
     def _reset(self) -> None:
-        self._import_stats = scan.ImportStats(set(), set())
-        self._source_stats = scan.SourceStats(set(), set(), set())
+        self._import_stats = scan.ImportStats()
+        self._source_stats = scan.SourceStats()
         self._path = Path("")
+
+    @property
+    def used_dependencies(self) -> Set[str]:
+        return self._dependencies.used_modules
 
     @staticmethod
     def remove_useless_passes(source_lines: List[str]) -> List[str]:
@@ -182,7 +226,8 @@ class Refactor:
         try:
             analyzer = scan.SourceAnalyzer(original_lines)
             analyzer.visit(tree)
-            source_stats, import_stats = analyzer.get_stats()
+            source_stats, import_stats, imports_to_skip = analyzer.get_stats()
+            self._dependencies.add_set(imports_to_skip)
             return source_stats, import_stats
         except Exception as err:
             self.reporter.failure(str(err), self._path)
@@ -251,13 +296,22 @@ class Refactor:
         """
         used_names: Set[str] = set()
         for alias in node.names:
+
             if self._should_remove(
                 node, alias, is_star
             ) and not self._is_partially_used(alias, is_star):
                 if not is_star:
                     self.reporter.removed_import(self._path, node, alias)
                 continue
+
+            if isinstance(node, Import):
+                self._dependencies.add_one(alias.name)
+
             used_names.add(alias.name)
+
+        if used_names and isinstance(node, ImportFrom):
+            self._dependencies.add_one(node.module)
+
         return used_names
 
     def _transform(
