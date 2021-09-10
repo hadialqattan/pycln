@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [RecursionError occurs when expanding a star import that has too many related modules by @hadialqattan](https://github.com/hadialqattan/pycln/pull/75)
+
 ## [1.0.3] - 2021-08-18
 
 ### Changed

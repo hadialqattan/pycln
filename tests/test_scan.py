@@ -1042,6 +1042,13 @@ class TestScanFunctions(AnalyzerTestCase):
             assert self.normalize_set(names)
             raise sysu.Pass()
 
+    @mock.patch(MOCK % "ImportablesAnalyzer.visit")
+    def test_expand_import_star_stackoverflow(self, tree_visiting):
+        tree_visiting.side_effect = RecursionError()
+        with pytest.raises(UnexpandableImportStar):
+            node = ast.parse("from pycln import *\n").body[0]
+            scan.expand_import_star(node, Path(__file__))
+
     def _assert_ast_equal(
         self,
         code: str,
