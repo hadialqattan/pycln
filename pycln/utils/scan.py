@@ -868,7 +868,7 @@ def expand_import_star(
         elif isinstance(err, RecursionError):
             msg = f"{err}; pycln encounterd too many modules!"
         else:
-            msg = str(err)
+            msg = str(err)  # pragma: nocover
 
         if hasattr(node, "location"):
             location = node.location  # type: ignore # pragma: nocover.
