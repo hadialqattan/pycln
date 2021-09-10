@@ -840,7 +840,7 @@ def expand_import_star(
     :param path: where the node has imported.
     :returns: expanded `_nodes/ast.ImportFrom` (same input node type).
     :raises UnexpandableImportStar: when `ReadPermissionError`,
-        `UnparsableFile` or `ModuleNotFoundError` raised.
+        `UnparsableFile` or `ModuleNotFoundError` or `RecursionError` raised.
     """
     mpath = pathu.get_import_from_path(path, "*", node.module, node.level)
 
@@ -857,19 +857,27 @@ def expand_import_star(
         else:
             name = ("." * node.level) + (node.module if node.module else "")
             raise ModuleNotFoundError(name=name)
-    except (ReadPermissionError, UnparsableFile, ModuleNotFoundError) as err:
-        msg = (
-            err
-            if not isinstance(err, ModuleNotFoundError)
-            else f"{err.name!r} module not found or it's a C wrapped module!"
-        )
+    except (
+        ReadPermissionError,
+        UnparsableFile,
+        ModuleNotFoundError,
+        RecursionError,
+    ) as err:
+        if isinstance(err, ModuleNotFoundError):
+            msg = f"{err.name!r} module not found or it's a C wrapped module!"
+        elif isinstance(err, RecursionError):
+            msg = f"{err}; pycln encounterd too many modules!"
+        else:
+            msg = str(err)
+
         if hasattr(node, "location"):
             location = node.location  # type: ignore # pragma: nocover.
         else:
             location = _nodes.NodeLocation(
                 (node.lineno, node.col_offset), 0  # type: ignore
             )
-        raise UnexpandableImportStar(path, location, str(msg)) from err
+
+        raise UnexpandableImportStar(path, location, msg) from err
 
     # Create `ast.alias` for each name.
     node.names.clear()
