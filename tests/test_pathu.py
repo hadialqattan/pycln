@@ -199,6 +199,7 @@ class TestPathu:
                 id="from .file import *",
             ),
             pytest.param("not-exists", "", 1, None, id="not exists"),
+            pytest.param("utils", None, 1, None, id="non-package"),
         ],
     )
     def test_get_local_import_from_path(self, module, package, level, expec_path):

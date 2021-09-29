@@ -271,7 +271,11 @@ def get_local_import_from_path(
                 __INIT__,
             )
 
-        if os.path.isfile(mpath) and package.split(".")[0] in mpath:
+        if (
+            os.path.isfile(mpath)
+            and package is not None
+            and package.split(".")[0] in mpath
+        ):
             return Path(mpath)
 
     # Path not found.
