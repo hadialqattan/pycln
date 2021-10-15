@@ -17,6 +17,7 @@ from .utils import sysu
 # Constants.
 MOCK = "pycln.utils.scan.%s"
 PY38_PLUS = sys.version_info >= (3, 8)
+PY310_PLUS = sys.version_info >= (3, 10)
 
 
 class TestDataclasses:
@@ -463,6 +464,24 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             ),
             pytest.param("foobar: '' = 'x'\n", None, id="empty string annotation"),
             pytest.param("foobar = 'x'\n", None, id="no string annotation"),
+            pytest.param(
+                ("def foo(bar: str | int):\n" "    pass\n"),
+                {"str", "int"},
+                id="union types - arg",
+                marks=pytest.mark.skipif(
+                    not PY310_PLUS,
+                    reason="This feature is only available in Python >=3.10.",
+                ),
+            ),
+            pytest.param(
+                ("def foo() -> str | int :\n" "    pass\n"),
+                {"str", "int"},
+                id="union types - return",
+                marks=pytest.mark.skipif(
+                    not PY310_PLUS,
+                    reason="This feature is only available in Python >=3.10.",
+                ),
+            ),
         ],
     )
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
@@ -473,7 +492,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
 
     @pytest.mark.skipif(
         not PY38_PLUS,
-        reason="This feature is only available for Python >=3.8.",
+        reason="This feature is only available in Python >=3.8.",
     )
     @pytest.mark.parametrize(
         "code, expec_names",

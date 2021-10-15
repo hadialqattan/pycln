@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- [Add support for Python 3.10](https://github.com/hadialqattan/pycln/pull/81)
+
 ### Fixed
 
 - [Parsing local path import with null-pacakge causes AttributeError by @hadialqattan](https://github.com/hadialqattan/pycln/pull/76)
