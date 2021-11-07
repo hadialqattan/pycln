@@ -2,10 +2,10 @@
 # pylint: disable=R0201,W0613
 import ast
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from libcst import ParserSyntaxError
-from pytest_mock import mock
 
 from pycln.utils import config, refactor, report
 from pycln.utils._exceptions import (

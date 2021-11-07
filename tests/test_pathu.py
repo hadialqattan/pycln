@@ -3,10 +3,10 @@
 import re
 import sys
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from pathspec import PathSpec
-from pytest_mock import mock
 
 from pycln import ISWIN
 from pycln.utils import pathu, regexu

@@ -36,7 +36,6 @@ requests = "^2.24.0"
 semver = "^2.10.2"
 pytest = "^6.2"
 pytest-cov = "^2.10.1"
-pytest-mock = "^3.3.1"
 pytest-randomly = "^3.4.1"
 oschmod = "^0.3.9"
 black = {version = "^21.6b0", allow-prereleases = true}

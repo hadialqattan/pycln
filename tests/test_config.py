@@ -2,9 +2,9 @@
 # pylint: disable=R0201,W0613
 import re
 from pathlib import Path
+from unittest import mock
 
 import pytest
-from pytest_mock import mock
 from typer import Exit
 
 from pycln.utils import config

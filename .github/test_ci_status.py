@@ -1,8 +1,9 @@
 """pycln/.github/ci_status.py tests."""
 # pylint: disable=R0201,W0613
+from unittest import mock
+
 import pytest
 from ci_status import get_ci_runs_dict, get_last_run_status, main
-from pytest_mock import mock
 
 from tests.utils import sysu
 

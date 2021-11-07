@@ -5,9 +5,9 @@ import sys
 from importlib import import_module
 from pathlib import Path
 from typing import Optional
+from unittest import mock
 
 import pytest
-from pytest_mock import mock
 
 from pycln.utils import _nodes, scan
 from pycln.utils._exceptions import UnexpandableImportStar, UnparsableFile
