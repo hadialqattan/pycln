@@ -23,7 +23,7 @@ include = ["pyproject.toml"]
 pycln = "pycln.cli:app"
 
 [tool.poetry.dependencies]
-python = ">=3.6.2, <3.11"
+python = ">=3.6.2"
 typer = "^0.3.1"
 toml = "^0.10.1"
 dataclasses = {version = "^0.7", python = "3.6"}
