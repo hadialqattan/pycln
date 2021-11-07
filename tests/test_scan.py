@@ -170,6 +170,42 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 ("x, y, z\n" "import r\n"), {"x", "y", "z"}, id="normal names"
             ),
             pytest.param("import x\n", None, id="no names"),
+            pytest.param(
+                ("def foo(bar: str):\n" "    pass\n"),
+                {"str"},
+                id="normal types - arg",
+                marks=pytest.mark.skipif(
+                    not PY310_PLUS,
+                    reason="This feature is only available in Python >=3.10.",
+                ),
+            ),
+            pytest.param(
+                ("def foo() -> str :\n" "    pass\n"),
+                {"str"},
+                id="normal types - return",
+                marks=pytest.mark.skipif(
+                    not PY310_PLUS,
+                    reason="This feature is only available in Python >=3.10.",
+                ),
+            ),
+            pytest.param(
+                ("def foo(bar: str | int):\n" "    pass\n"),
+                {"str", "int"},
+                id="union types - arg",
+                marks=pytest.mark.skipif(
+                    not PY310_PLUS,
+                    reason="This feature is only available in Python >=3.10.",
+                ),
+            ),
+            pytest.param(
+                ("def foo() -> str | int :\n" "    pass\n"),
+                {"str", "int"},
+                id="union types - return",
+                marks=pytest.mark.skipif(
+                    not PY310_PLUS,
+                    reason="This feature is only available in Python >=3.10.",
+                ),
+            ),
         ],
     )
     def test_visit_Name(self, code, expec_names):
@@ -464,24 +500,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             ),
             pytest.param("foobar: '' = 'x'\n", None, id="empty string annotation"),
             pytest.param("foobar = 'x'\n", None, id="no string annotation"),
-            pytest.param(
-                ("def foo(bar: str | int):\n" "    pass\n"),
-                {"str", "int"},
-                id="union types - arg",
-                marks=pytest.mark.skipif(
-                    not PY310_PLUS,
-                    reason="This feature is only available in Python >=3.10.",
-                ),
-            ),
-            pytest.param(
-                ("def foo() -> str | int :\n" "    pass\n"),
-                {"str", "int"},
-                id="union types - return",
-                marks=pytest.mark.skipif(
-                    not PY310_PLUS,
-                    reason="This feature is only available in Python >=3.10.",
-                ),
-            ),
         ],
     )
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
