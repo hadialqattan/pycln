@@ -171,22 +171,12 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             ),
             pytest.param("import x\n", None, id="no names"),
             pytest.param(
-                ("def foo(bar: str):\n" "    pass\n"),
-                {"str"},
-                id="normal types - arg",
-                marks=pytest.mark.skipif(
-                    not PY310_PLUS,
-                    reason="This feature is only available in Python >=3.10.",
-                ),
+                ("def foo(bar: str):\n" "    pass\n"), {"str"}, id="normal types - arg"
             ),
             pytest.param(
                 ("def foo() -> str :\n" "    pass\n"),
                 {"str"},
                 id="normal types - return",
-                marks=pytest.mark.skipif(
-                    not PY310_PLUS,
-                    reason="This feature is only available in Python >=3.10.",
-                ),
             ),
             pytest.param(
                 ("def foo(bar: str | int):\n" "    pass\n"),
