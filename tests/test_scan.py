@@ -219,6 +219,96 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
+    @pytest.mark.skipif(
+        not PY310_PLUS, reason="Match/MatchAs nodes only available in Python >=3.10."
+    )
+    @pytest.mark.parametrize(
+        "code, expec_names, expec_attrs",
+        [
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match x:\n"
+                    "       case '':\n"
+                    "           return ''\n"
+                ),
+                {"x"},
+                set({}),
+                id="subject",
+            ),
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match '':\n"
+                    "       case x:\n"
+                    "           return ''\n"
+                ),
+                {"x"},
+                set({}),
+                id="case name",
+            ),
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match '':\n"
+                    "       case (x, y):\n"
+                    "           return ''\n"
+                ),
+                {"x", "y"},
+                set({}),
+                id="case (name1, name2)",
+            ),
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match '':\n"
+                    "       case (x.i, y.j):\n"
+                    "           return ''\n"
+                ),
+                {"x", "y"},
+                {"i", "j"},
+                id="case (name1.attr, name2.attr)",
+            ),
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match '':\n"
+                    "       case Class():\n"
+                    "           return ''\n"
+                ),
+                {"Class"},
+                set({}),
+                id="case-cls",
+            ),
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match '':\n"
+                    "       case Class(x, y):\n"
+                    "           return ''\n"
+                ),
+                {"Class", "x", "y"},
+                set({}),
+                id="case-cls(name1, name2)",
+            ),
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match '':\n"
+                    "       case Class(x.i, y.j):\n"
+                    "           return ''\n"
+                ),
+                {"Class", "x", "y"},
+                {"j", "i"},
+                id="case-cls(name1.attr, name2.attr)",
+            ),
+        ],
+    )
+    def test_visit_MatchAs(self, code, expec_names, expec_attrs):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
     @pytest.mark.parametrize(
         "code, expec_names, expec_attrs",
         [

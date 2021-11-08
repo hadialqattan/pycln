@@ -184,6 +184,10 @@ class SourceAnalyzer(ast.NodeVisitor):
         self._source_stats.attr_.add(node.attr)
 
     @recursive
+    def visit_MatchAs(self, node: ast.MatchAs):
+        self._source_stats.name_.add(node.name)
+
+    @recursive
     def visit_Call(self, node: ast.Call):
         #: Support casting case.
         #: >>> from typing import cast
