@@ -13,6 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Utilities"]
 license = "MIT"
 readme = "README.md"
@@ -22,7 +23,7 @@ include = ["pyproject.toml"]
 pycln = "pycln.cli:app"
 
 [tool.poetry.dependencies]
-python = ">=3.6.2, <3.10"
+python = ">=3.6.2, <4"
 typer = "^0.3.1"
 toml = "^0.10.1"
 dataclasses = {version = "^0.7", python = "3.6"}
@@ -33,9 +34,8 @@ pathspec = "^0.9.0"
 [tool.poetry.dev-dependencies]
 requests = "^2.24.0"
 semver = "^2.10.2"
-pytest = "^5.2"
+pytest = "^6.2"
 pytest-cov = "^2.10.1"
-pytest-mock = "^3.3.1"
 pytest-randomly = "^3.4.1"
 oschmod = "^0.3.9"
 black = {version = "^21.6b0", allow-prereleases = true}

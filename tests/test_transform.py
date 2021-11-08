@@ -2,10 +2,10 @@
 # pylint: disable=R0201,W0613
 from pathlib import Path
 from typing import Union
+from unittest import mock
 
 import libcst as cst
 import pytest
-from pytest_mock import mock
 
 from pycln.utils import transform
 from pycln.utils._exceptions import UnsupportedCase
