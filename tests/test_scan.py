@@ -251,6 +251,28 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 (
                     "def foo():\n"
                     "    match '':\n"
+                    "       case x | y:\n"
+                    "           return ''\n"
+                ),
+                {"x", "y"},
+                set({}),
+                id="case name1 | name2",
+            ),
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match '':\n"
+                    "       case x.i | y.j:\n"
+                    "           return ''\n"
+                ),
+                {"x", "y"},
+                {"i", "j"},
+                id="case name1.attr | name2.attr",
+            ),
+            pytest.param(
+                (
+                    "def foo():\n"
+                    "    match '':\n"
                     "       case (x, y):\n"
                     "           return ''\n"
                 ),
