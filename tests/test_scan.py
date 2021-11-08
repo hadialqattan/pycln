@@ -330,6 +330,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
+        self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
     @pytest.mark.parametrize(
         "code, expec_names, expec_attrs",
