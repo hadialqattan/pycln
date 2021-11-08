@@ -366,7 +366,7 @@ class Report:
                 + "No Python files are present to be cleaned. Nothing to do 😴",
                 bold=True,
             )
-            raise typer.Exit(1)
+            raise typer.Exit(0)
 
         if any([self.configs.check, self.configs.diff]):
             removed_imports = "would be removed"
