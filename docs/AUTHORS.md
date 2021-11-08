@@ -17,4 +17,5 @@
 <!-- Please write your name alphabetically and use the below template. -->
 <!-- - First Last ([@username](https://github.com/username)) <example@email.com> -->
 
-- RooTer Urbański ([@rooterkyberian](https://github.com/rooterkyberian)) <rooter@kyberian.net>
+- RooTer Urbański ([@rooterkyberian](https://github.com/rooterkyberian))
+  <rooter@kyberian.net>
