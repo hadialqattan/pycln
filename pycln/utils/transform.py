@@ -10,9 +10,9 @@ from ._nodes import NodeLocation
 # Constants.
 SPACE4 = " " * 4
 
-# Custom types.
+# Custom types & annotations.
 ImportT = TypeVar("ImportT", bound=Union[cst.Import, cst.ImportFrom])
-TrailingCommaT = Union[cst.MaybeSentinel, cst.Comma]
+TrailingCommaA = Union[cst.MaybeSentinel, cst.Comma]
 
 
 class ImportTransformer(cst.CSTTransformer):
@@ -30,7 +30,7 @@ class ImportTransformer(cst.CSTTransformer):
         self._used_names = used_names
         self._location = location
         self._indentation = " " * location.start.col
-        self._trailing_comma: TrailingCommaT = cst.MaybeSentinel.DEFAULT
+        self._trailing_comma: TrailingCommaA = cst.MaybeSentinel.DEFAULT
 
     def refactor_import_star(self, updated_node: cst.ImportFrom) -> cst.ImportFrom:
         """Add used import aliases to import star.
