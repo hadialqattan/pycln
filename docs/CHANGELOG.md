@@ -16,6 +16,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- [Preserving trailing comma style in multi-line imports by @hadialqattan](https://github.com/hadialqattan/pycln/pull/86)
 - [Exit normally (code 0) when no files were present to be cleaned by @rooterkyberian](https://github.com/hadialqattan/pycln/pull/84)
 - [Parsing local path import with null-pacakge causes AttributeError by @hadialqattan](https://github.com/hadialqattan/pycln/pull/76)
 - [RecursionError occurs when expanding a star import that has too many related modules by @hadialqattan](https://github.com/hadialqattan/pycln/pull/75)

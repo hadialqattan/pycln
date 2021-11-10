@@ -173,7 +173,7 @@ class TestImportTransformer:
                 id="single, parentheses, no-end-comma, some-unused",
             ),
             pytest.param(
-                "from xxx import (x, y, z,)",
+                "from xxx import (x, y, z)",
                 1,
                 ("x", "y", "z"),
                 "from xxx import (x, y, z)",
@@ -183,7 +183,7 @@ class TestImportTransformer:
                 "from xxx import (x, y, z,)",
                 1,
                 ("x", "z"),
-                "from xxx import (x, z)",
+                "from xxx import (x, z,)",
                 id="single, parentheses, nend-comma, some-unused",
             ),
             pytest.param(
@@ -253,7 +253,7 @@ class TestImportTransformer:
                 ("from xxx import (\n" "    x,\n" "    y,\n" "    z,\n" ")"),
                 5,
                 ("x", "y", "z"),
-                ("from xxx import (\n" "    x,\n" "    y,\n" "    z\n" ")"),
+                ("from xxx import (\n" "    x,\n" "    y,\n" "    z,\n" ")"),
                 id="multi, parentheses, end-comma, no-unused",
             ),
             pytest.param(
@@ -267,7 +267,7 @@ class TestImportTransformer:
                 ("from xxx import (\n" "    x,\n" "    y,\n" "    z,\n" ")"),
                 5,
                 ("x", "z"),
-                ("from xxx import (\n" "    x,\n" "    z\n" ")"),
+                ("from xxx import (\n" "    x,\n" "    z,\n" ")"),
                 id="multi, parentheses, end-comma, some-unused",
             ),
             pytest.param(
@@ -281,7 +281,7 @@ class TestImportTransformer:
                 ("from xxx import (\n" "    x,\n" "    y, z,\n" ")"),
                 4,
                 ("x", "z"),
-                ("from xxx import (\n" "    x,\n" "    z\n" ")"),
+                ("from xxx import (\n" "    x,\n" "    z,\n" ")"),
                 id="multi, parentheses, double, end-comma, some-unused",
             ),
             pytest.param(
@@ -317,7 +317,7 @@ class TestImportTransformer:
                     "from xxx import (\n"
                     "    xx as x,\n"
                     "    yy as y,\n"
-                    "    zz as z\n"
+                    "    zz as z,\n"
                     ")"
                 ),
                 id="multi, parentheses, end-comma, no-unused, as",
@@ -345,7 +345,7 @@ class TestImportTransformer:
                 ),
                 5,
                 ("xx", "zz"),
-                ("from xxx import (\n" "    xx as x,\n" "    zz as z\n" ")"),
+                ("from xxx import (\n" "    xx as x,\n" "    zz as z,\n" ")"),
                 id="multi, parentheses, end-comma, some-unused, as",
             ),
             pytest.param(
@@ -359,7 +359,7 @@ class TestImportTransformer:
                 ("from xxx import (\n" "    xx as x,\n" "    yy as y, zz as z,\n" ")"),
                 4,
                 ("xx", "zz"),
-                ("from xxx import (\n" "    xx as x,\n" "    zz as z\n" ")"),
+                ("from xxx import (\n" "    xx as x,\n" "    zz as z,\n" ")"),
                 id="multi, parentheses, double, end-comma, some-unused, as",
             ),
         ],
