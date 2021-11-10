@@ -12,6 +12,7 @@ SPACE4 = " " * 4
 
 # Custom types.
 ImportT = TypeVar("ImportT", bound=Union[cst.Import, cst.ImportFrom])
+TrailingCommaT = Union[cst.MaybeSentinel, cst.Comma]
 
 
 class ImportTransformer(cst.CSTTransformer):
@@ -29,6 +30,7 @@ class ImportTransformer(cst.CSTTransformer):
         self._used_names = used_names
         self._location = location
         self._indentation = " " * location.start.col
+        self._trailing_comma: TrailingCommaT = cst.MaybeSentinel.DEFAULT
 
     def refactor_import_star(self, updated_node: cst.ImportFrom) -> cst.ImportFrom:
         """Add used import aliases to import star.
@@ -74,16 +76,47 @@ class ImportTransformer(cst.CSTTransformer):
 
     def leave_Import(  # pylint: disable=W0613
         self, original_node: cst.Import, updated_node: cst.Import
-    ) -> Union[cst.Import]:
+    ) -> Optional[cst.Import]:
+        self._set_trailing_comma(original_node)
         return self.refactor_import(updated_node)
 
     def leave_ImportFrom(  # pylint: disable=W0613
         self, original_node: cst.ImportFrom, updated_node: cst.ImportFrom
-    ) -> Union[cst.ImportFrom]:
+    ) -> Optional[cst.ImportFrom]:
         if isinstance(updated_node.names, cst.ImportStar):
             return self.refactor_import_star(updated_node)
         else:
+            self._set_trailing_comma(original_node)
             return self.refactor_import(updated_node)
+
+    def _set_trailing_comma(self, node: Union[cst.Import, cst.ImportFrom]):
+        # Set `self._trailing_comma` base on the original one.
+        comma = node.names[-1].comma  # type: ignore
+        if isinstance(comma, cst.Comma):
+            self._trailing_comma = self._comma_with_no_newline(comma)
+
+    @staticmethod
+    def _comma_with_no_newline(comma: cst.Comma) -> cst.Comma:
+        # Return `cst.Comma` node without a `Newline` node.
+        c_wa = comma.whitespace_after
+
+        if not isinstance(c_wa, cst.ParenthesizedWhitespace):
+            return comma
+
+        c_wa_fl = c_wa.first_line
+        return cst.Comma(
+            whitespace_before=comma.whitespace_before,
+            whitespace_after=cst.ParenthesizedWhitespace(
+                first_line=cst.TrailingWhitespace(
+                    whitespace=c_wa_fl.whitespace,
+                    comment=c_wa_fl.comment,
+                    newline=cst.Newline(""),
+                ),
+                empty_lines=c_wa.empty_lines,
+                indent=c_wa.indent,
+                last_line=c_wa.last_line,
+            ),
+        )
 
     def _get_alias_name(
         self, node: Optional[Union[cst.Name, cst.Attribute]], name=""
@@ -137,10 +170,9 @@ class ImportTransformer(cst.CSTTransformer):
         force_multiline: bool = False,
     ) -> ImportT:
         # (Preserving `node` style).
-        # Remove the comma from the last name.
-        used_aliases[-1] = used_aliases[-1].with_changes(
-            comma=cst.MaybeSentinel.DEFAULT
-        )
+
+        # Set the trailing comma determined by `_set_trailing_comma`.
+        used_aliases[-1] = used_aliases[-1].with_changes(comma=self._trailing_comma)
         node = cast(ImportT, node.with_changes(names=used_aliases))
         # Preserving multiline nodes style.
         if isinstance(node, cst.ImportFrom):
