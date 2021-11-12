@@ -30,6 +30,10 @@ class ImportTransformer(cst.CSTTransformer):
         self._used_names = used_names
         self._location = location
         self._indentation = " " * location.start.col
+
+        # Style preservation.
+        self._lpar: cst.LeftParen = self._multiline_lpar()
+        self._rpar: cst.RightParen = self._multiline_rpar()
         self._trailing_comma: TrailingCommaA = cst.MaybeSentinel.DEFAULT
 
     def refactor_import_star(self, updated_node: cst.ImportFrom) -> cst.ImportFrom:
@@ -86,37 +90,22 @@ class ImportTransformer(cst.CSTTransformer):
         if isinstance(updated_node.names, cst.ImportStar):
             return self.refactor_import_star(updated_node)
         else:
+            self._set_lpar(original_node)
+            self._set_rpar(original_node)
             self._set_trailing_comma(original_node)
             return self.refactor_import(updated_node)
 
-    def _set_trailing_comma(self, node: Union[cst.Import, cst.ImportFrom]):
-        # Set `self._trailing_comma` base on the original one.
-        comma = node.names[-1].comma  # type: ignore
-        if isinstance(comma, cst.Comma):
-            self._trailing_comma = self._comma_with_no_newline(comma)
+    def _set_lpar(self, node: cst.ImportFrom):
+        # Set `self._lpar` base on the original node.
+        self._lpar = node.lpar
 
-    @staticmethod
-    def _comma_with_no_newline(comma: cst.Comma) -> cst.Comma:
-        # Return `cst.Comma` node without a `Newline` node.
-        c_wa = comma.whitespace_after
+    def _set_rpar(self, node: cst.ImportFrom):
+        # Set `self._rpar` base on the original node.
+        self._rpar = node.rpar
 
-        if not isinstance(c_wa, cst.ParenthesizedWhitespace):
-            return comma
-
-        c_wa_fl = c_wa.first_line
-        return cst.Comma(
-            whitespace_before=comma.whitespace_before,
-            whitespace_after=cst.ParenthesizedWhitespace(
-                first_line=cst.TrailingWhitespace(
-                    whitespace=c_wa_fl.whitespace,
-                    comment=c_wa_fl.comment,
-                    newline=cst.Newline(""),
-                ),
-                empty_lines=c_wa.empty_lines,
-                indent=c_wa.indent,
-                last_line=c_wa.last_line,
-            ),
-        )
+    def _set_trailing_comma(self, node: ImportT):
+        # Set `self._trailing_comma` base on the original node.
+        self._trailing_comma = node.names[-1].comma  # type: ignore
 
     def _get_alias_name(
         self, node: Optional[Union[cst.Name, cst.Attribute]], name=""
@@ -177,7 +166,7 @@ class ImportTransformer(cst.CSTTransformer):
         # Preserving multiline nodes style.
         if isinstance(node, cst.ImportFrom):
             if force_multiline or (node.rpar and len(self._location) != 1):
-                rpar, lpar = self._multiline_rpar(), self._multiline_lpar()
+                rpar, lpar = self._rpar, self._lpar
                 node = cast(ImportT, node.with_changes(rpar=rpar, lpar=lpar))
         return node
 
