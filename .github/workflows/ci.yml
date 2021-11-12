@@ -20,19 +20,17 @@ on:
   pull_request:
 
 jobs:
-  # DISABLED TEMPORARLY:
-  #pre-commit:
-  #  name: Pre-commit
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - uses: actions/checkout@v2
-  #    - uses: actions/setup-python@v2
-  #    - uses: pre-commit/action@v2.0.0
+  pre-commit:
+    name: Pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: pre-commit/action@v2.0.0
 
   test:
     name: Test
-    # DISABLED TEMPORARLY:
-    #needs: pre-commit
+    needs: pre-commit
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
