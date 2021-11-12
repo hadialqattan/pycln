@@ -362,6 +362,13 @@ class TestImportTransformer:
                 ("from xxx import (\n" "    xx as x,\n" "    zz as z,\n" ")"),
                 id="multi, parentheses, double, end-comma, some-unused, as",
             ),
+            pytest.param(
+                ("from xxx import (x,\n" "    y,\n" "    z,)"),
+                3,
+                ("x", "z"),
+                ("from xxx import (x,\n" "    z,)"),
+                id="multi, parentheses(no-new-lines), end-comma, some-unused",
+            ),
         ],
     )
     def test_leave_ImportFrom(self, impt_stmnt, endlineno, used_names, expec_impt):
