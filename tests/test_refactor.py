@@ -264,17 +264,6 @@ class TestRefactor:
         ),
         [
             pytest.param(
-                True,
-                None,
-                None,
-                ["import x # nopycln: import"],
-                False,
-                "not-matter",
-                ["import x, y # nopycln: import"],
-                ["import x, y # nopycln: import"],
-                id="nopycln",
-            ),
-            pytest.param(
                 False,
                 (None, None),
                 None,
@@ -399,6 +388,46 @@ class TestRefactor:
             with sysu.std_redirect(sysu.STD.ERR):
                 fixed_code = self.session_maker._refactor(original_lines)
                 assert fixed_code == "".join(expec_fixed_lines)
+
+    @pytest.mark.parametrize(
+        ("endline_no, original_lines, expec_fixed_lines"),
+        [
+            pytest.param(
+                1,
+                ["import x # nopycln: import"],
+                ["import x # nopycln: import"],
+                id="nopycln - first line",
+            ),
+            pytest.param(
+                3,
+                ["import (\n", "    x\n", ") # nopycln: import"],
+                ["import (\n", "    x\n", ") # nopycln: import"],
+                id="nopycln - last line",
+            ),
+            pytest.param(
+                1,
+                ["import x # noqa"],
+                ["import x # noqa"],
+                id="noqa",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._get_used_names")
+    def test_refactor_skipping(
+        self,
+        _get_used_names,
+        endline_no,
+        original_lines,
+        expec_fixed_lines,
+    ):
+        _get_used_names.return_value = set()
+        setattr(self.configs, "expand_stars", False)
+        node = Import(
+            NodeLocation((1, 0), endline_no), [ast.alias(name="x", asname=None)]
+        )
+        self.session_maker._import_stats = ImportStats({node}, set())
+        fixed_code = self.session_maker._refactor(original_lines)
+        assert fixed_code == "".join(expec_fixed_lines)
 
     @pytest.mark.parametrize(
         "_should_remove_return, node, is_star, expec_names",

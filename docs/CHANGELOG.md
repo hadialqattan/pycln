@@ -12,10 +12,11 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- [Add support for Python 3.10](https://github.com/hadialqattan/pycln/pull/81)
+- [Add support for Python 3.10 by @hadialqattan](https://github.com/hadialqattan/pycln/pull/81)
 
 ### Fixed
 
+- [Pycln does not skip imports that have "# nopycln: import" or "# noqa" on the last line by @hadialqattan](https://github.com/hadialqattan/pycln/pull/88)
 - [Pycln removes extra lines in import-from multiline case (shown bellow) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/87)
 
   ```python3

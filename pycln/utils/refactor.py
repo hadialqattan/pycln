@@ -200,8 +200,11 @@ class Refactor:
             for node in type_:
 
                 # Skip any import that has `# noqa` or `# nopycln: import` comment.
-                lineno = node.location.start.line - 1
-                if regexu.skip_import(fixed_lines[lineno]):
+                s_lineno = node.location.start.line - 1
+                e_lineno = node.location.end.line - 1
+                if regexu.skip_import(fixed_lines[s_lineno]) or regexu.skip_import(
+                    fixed_lines[e_lineno]
+                ):
                     self.reporter.ignored_import(self._path, node)
                     continue
 
