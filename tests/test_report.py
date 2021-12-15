@@ -290,7 +290,7 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "would be",
+                ["1 import would be removed", "1 file would be changed"],
                 id="check",
             ),
             pytest.param(
@@ -299,7 +299,7 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "would be",
+                ["1 import would be removed", "1 file would be changed"],
                 id="diff",
             ),
             pytest.param(
@@ -308,7 +308,7 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "has",
+                ["1 import was removed", "1 file was changed"],
                 id="default",
             ),
             pytest.param(
@@ -317,8 +317,31 @@ class TestReport:
                 "verbose",
                 sysu.Pass,
                 True,
-                "ignored",
+                [
+                    "1 import was removed",
+                    "1 import was expanded",
+                    "1 file was changed",
+                    "1 file left unchanged",
+                    "1 import was ignored",
+                    "1 path was ignored",
+                ],
                 id="verbose, ignored",
+            ),
+            pytest.param(
+                (2, 3, 4, 5, 0, 3, 2),
+                "default",
+                "verbose",
+                sysu.Pass,
+                True,
+                [
+                    "2 imports were removed",
+                    "3 imports were expanded",
+                    "4 files were changed",
+                    "5 files left unchanged",
+                    "3 imports were ignored",
+                    "2 paths were ignored",
+                ],
+                id="verbose, ignored, plural",
             ),
             pytest.param(
                 (1, 1, 1, 1, 0, 0, 0),
@@ -344,8 +367,8 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "error",
-                id="failures",
+                "Oh no, there is an error!",
+                id="failures-2",
             ),
         ],
     )
@@ -369,4 +392,8 @@ class TestReport:
             raise sysu.Pass()
         if err is sysu.Pass:
             assert bool(str_report) == is_out
-            assert expec_in_out in str_report
+            if isinstance(expec_in_out, list):
+                for snippet in expec_in_out:
+                    assert snippet in str_report
+            else:
+                assert expec_in_out in str_report

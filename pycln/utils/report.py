@@ -129,14 +129,14 @@ class Report:
     ) -> None:
         """Increment `self._removed_imports`. Write a message to stdout.
 
-        :param path: where the import has removed.
+        :param path: where the import was removed.
         :param node: removed import node.
         :param removed_alias: the removed `ast.alias` from the node.
         """
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
             location = Report.get_location(path, node.location)
             statement = Report.rebuild_report_import(node, removed_alias)
-            removed = "whould be removed" if self.configs.check else "has removed"
+            removed = "would be removed" if self.configs.check else "was removed"
             Report.secho(
                 f"{location} {statement!r} {removed}! 🔮",
                 bold=False,
@@ -152,14 +152,14 @@ class Report:
     def expanded_star(self, path: Path, node: _nodes.ImportFrom) -> None:
         """Increment `self._expanded_stars`. Write a message to stdout.
 
-        :param path: where the import has expanded.
+        :param path: where the import was expanded.
         :param node: the expanded node.
         """
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
             location = Report.get_location(path, node.location)
             star_alias = ast.alias(name="*", asname=None)
             statement = Report.rebuild_report_import(node, star_alias)
-            expanded = "whould be expanded" if self.configs.check else "has expanded"
+            expanded = "would be expanded" if self.configs.check else "was expanded"
             Report.secho(
                 f"{location} {statement!r} {expanded}! 🔗",
                 bold=False,
@@ -189,14 +189,12 @@ class Report:
             file_report: List[str] = []
 
             if self._file_removed_imports > 0:
-                removed = "whould be removed" if self.configs.check else "has removed"
+                removed = "would be removed" if self.configs.check else "was removed"
                 s = "s" if self._file_removed_imports > 1 else ""
                 file_report.append(f"{self._file_removed_imports} import{s} {removed}")
 
             if self._file_expanded_stars > 0:
-                expanded = (
-                    "whould be expanded" if self.configs.check else "has expanded"
-                )
+                expanded = "would be expanded" if self.configs.check else "was expanded"
                 s = "s" if self._file_expanded_stars > 1 else ""
                 file_report.append(f"{self._file_expanded_stars} import{s} {expanded}")
 
@@ -240,7 +238,7 @@ class Report:
                 sharp = "#"  # To no skip this file.
                 type_ = f"do to `{sharp} nopycln: file` comment"
             Report.secho(
-                f"{ignored_path} has ignored: {type_}! ⚠️",
+                f"{ignored_path} was ignored: {type_}! ⚠️",
                 bold=False,
                 iswarning=True,
             )
@@ -258,7 +256,7 @@ class Report:
     ) -> None:
         """Increment `self._ignored_imports`. Write a message to stderr.
 
-        :param path: where the import has ignored.
+        :param path: where the import was ignored.
         :param node: the ignored import node.
         :param is_star: set to true if it's a '*' import.
         """
@@ -271,7 +269,7 @@ class Report:
                 else "cannot expand the '*'"
             )
             Report.secho(
-                f"{location} {statement!r} has ignored: {reason}! ⚠️",
+                f"{location} {statement!r} was ignored: {reason}! ⚠️",
                 bold=False,
                 iswarning=True,
             )
@@ -370,78 +368,99 @@ class Report:
 
         if any([self.configs.check, self.configs.diff]):
             removed_imports = "would be removed"
+            removed_imports_plural = removed_imports
             expanded_stars = "would be expanded"
+            expanded_stars_plural = expanded_stars
             changed_files = "would be changed"
+            changed_files_plural = changed_files
             unchanged_files = "would be left unchanged"
+            unchanged_files_plural = unchanged_files
         else:
-            removed_imports = "has removed"
-            expanded_stars = "has expanded"
-            changed_files = "has changed"
+            removed_imports = "was removed"
+            removed_imports_plural = "were removed"
+            expanded_stars = "was expanded"
+            expanded_stars_plural = "were expanded"
+            changed_files = "was changed"
+            changed_files_plural = "were changed"
             unchanged_files = "left unchanged"
+            unchanged_files_plural = "left unchanged"
         failures = "has failed to be cleaned"
+        failures_plural = "have failed to be cleaned"
 
         report = []
 
         if self._removed_imports:
-            s = "s" if self._removed_imports > 1 else ""
+            plural = self._removed_imports > 1
             report.append(
                 typer.style(
-                    f"{self._removed_imports} import{s} {removed_imports}",
+                    f"{self._removed_imports} import{'s' if plural else ''} "
+                    f"{removed_imports_plural if plural else removed_imports}",
                     bold=True,
                 )
             )
 
         if self._expanded_stars:
-            s = "s" if self._expanded_stars > 1 else ""
+            plural = self._expanded_stars > 1
             report.append(
                 typer.style(
-                    f"{self._expanded_stars} import{s} {expanded_stars}",
+                    f"{self._expanded_stars} import{'s' if plural else ''} "
+                    f"{expanded_stars_plural if plural else expanded_stars}",
                     bold=True,
                 )
             )
 
         if self._changed_files:
-            s = "s" if self._changed_files > 1 else ""
+            plural = self._changed_files > 1
             report.append(
                 typer.style(
-                    f"{self._changed_files} file{s} {changed_files}",
+                    f"{self._changed_files} file{'s' if plural else ''} "
+                    f"{changed_files_plural if plural else changed_files}",
                     bold=True,
                 )
             )
 
         if self._unchanged_files:
-            s = "s" if self._unchanged_files > 1 else ""
+            plural = self._unchanged_files > 1
             report.append(
                 typer.style(
-                    f"{self._unchanged_files} file{s} {unchanged_files}",
+                    f"{self._unchanged_files} file{'s' if plural else ''} "
+                    f"{unchanged_files_plural if plural else unchanged_files}",
                     bold=False,
                 )
             )
 
         if self._failures:
-            s = "s" if self._failures > 1 else ""
+            plural = self._failures > 1
             report.append(
-                typer.style(f"{self._failures} file{s} {failures}", bold=False)
+                typer.style(
+                    f"{self._failures} file{'s' if plural else ''} "
+                    f"{failures_plural if plural else failures}",
+                    bold=False,
+                )
             )
 
         if self.configs.verbose:
-            ignored_imports = "has ignored"
-            ignored_paths = "has ignored"
+            ignored_imports = "was ignored"
+            ignored_imports_plural = "were ignored"
+            ignored_paths = "was ignored"
+            ignored_paths_plural = "were ignored"
 
             if self._ignored_imports:
-                s = "s" if self._ignored_imports > 1 else ""
+                plural = self._ignored_imports > 1
                 report.append(
                     typer.style(
-                        f"{self._ignored_imports} import{s} {ignored_imports}",
+                        f"{self._ignored_imports} import{'s' if plural else ''} "
+                        f"{ignored_imports_plural if plural else ignored_imports}",
                         bold=False,
                     )
                 )
 
             if self._ignored_paths:
-                s = "s" if self._ignored_paths > 1 else ""
+                plural = self._ignored_paths > 1
                 report.append(
                     typer.style(
-                        f"{self._ignored_paths} path{s} {ignored_paths}",
+                        f"{self._ignored_paths} path{'s' if plural else ''} "
+                        f"{ignored_paths_plural if plural else ignored_paths}",
                         bold=False,
                     )
                 )

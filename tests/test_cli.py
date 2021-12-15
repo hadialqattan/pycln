@@ -36,7 +36,7 @@ class TestCli:
     @pytest.mark.parametrize(
         "expec_out, args, expec_change, expec_exit_code",
         [
-            pytest.param("1 import has removed", ["--all"], True, 0, id="default"),
+            pytest.param("1 import was removed", ["--all"], True, 0, id="default"),
             pytest.param("1 file left unchanged", [], False, 0, id="side effects"),
             pytest.param(
                 "1 import would be removed", ["--all", "--check"], False, 1, id="check"
