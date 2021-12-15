@@ -290,7 +290,7 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "would be",
+                ["1 import would be removed", "1 file would be changed"],
                 id="check",
             ),
             pytest.param(
@@ -299,7 +299,7 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "would be",
+                ["1 import would be removed", "1 file would be changed"],
                 id="diff",
             ),
             pytest.param(
@@ -308,7 +308,7 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "was",
+                ["1 import was removed", "1 file was changed"],
                 id="default",
             ),
             pytest.param(
@@ -317,7 +317,14 @@ class TestReport:
                 "verbose",
                 sysu.Pass,
                 True,
-                "ignored",
+                [
+                    "1 import was removed",
+                    "1 import was expanded",
+                    "1 file was changed",
+                    "1 file left unchanged",
+                    "1 import was ignored",
+                    "1 path was ignored",
+                ],
                 id="verbose, ignored",
             ),
             pytest.param(
@@ -344,8 +351,8 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "error",
-                id="failures",
+                "Oh no, there is an error!",
+                id="failures-2",
             ),
         ],
     )
@@ -369,4 +376,8 @@ class TestReport:
             raise sysu.Pass()
         if err is sysu.Pass:
             assert bool(str_report) == is_out
-            assert expec_in_out in str_report
+            if isinstance(expec_in_out, list):
+                for snippet in expec_in_out:
+                    assert snippet in str_report
+            else:
+                assert expec_in_out in str_report
