@@ -136,7 +136,7 @@ class Report:
         if not any([self.configs.diff, self.configs.quiet, self.configs.silence]):
             location = Report.get_location(path, node.location)
             statement = Report.rebuild_report_import(node, removed_alias)
-            removed = "whould be removed" if self.configs.check else "was removed"
+            removed = "would be removed" if self.configs.check else "was removed"
             Report.secho(
                 f"{location} {statement!r} {removed}! 🔮",
                 bold=False,
@@ -159,7 +159,7 @@ class Report:
             location = Report.get_location(path, node.location)
             star_alias = ast.alias(name="*", asname=None)
             statement = Report.rebuild_report_import(node, star_alias)
-            expanded = "whould be expanded" if self.configs.check else "was expanded"
+            expanded = "would be expanded" if self.configs.check else "was expanded"
             Report.secho(
                 f"{location} {statement!r} {expanded}! 🔗",
                 bold=False,
@@ -189,14 +189,12 @@ class Report:
             file_report: List[str] = []
 
             if self._file_removed_imports > 0:
-                removed = "whould be removed" if self.configs.check else "was removed"
+                removed = "would be removed" if self.configs.check else "was removed"
                 s = "s" if self._file_removed_imports > 1 else ""
                 file_report.append(f"{self._file_removed_imports} import{s} {removed}")
 
             if self._file_expanded_stars > 0:
-                expanded = (
-                    "whould be expanded" if self.configs.check else "was expanded"
-                )
+                expanded = "would be expanded" if self.configs.check else "was expanded"
                 s = "s" if self._file_expanded_stars > 1 else ""
                 file_report.append(f"{self._file_expanded_stars} import{s} {expanded}")
 
