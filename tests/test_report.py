@@ -328,6 +328,22 @@ class TestReport:
                 id="verbose, ignored",
             ),
             pytest.param(
+                (2, 3, 4, 5, 0, 3, 2),
+                "default",
+                "verbose",
+                sysu.Pass,
+                True,
+                [
+                    "2 imports was removed",
+                    "3 imports was expanded",
+                    "4 files was changed",
+                    "5 files left unchanged",
+                    "3 imports was ignored",
+                    "2 paths was ignored",
+                ],
+                id="verbose, ignored, plural",
+            ),
+            pytest.param(
                 (1, 1, 1, 1, 0, 0, 0),
                 "default",
                 "default",
