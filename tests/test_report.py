@@ -308,7 +308,7 @@ class TestReport:
                 "default",
                 sysu.Pass,
                 True,
-                "has",
+                "was",
                 id="default",
             ),
             pytest.param(
