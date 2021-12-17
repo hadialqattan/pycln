@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Remove star imports when nothing's actually imported by @pmourlanne](https://github.com/hadialqattan/pycln/pull/92)
+
 ## [1.1.0] - 2021-11-12
 
 ### Added
