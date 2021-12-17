@@ -48,8 +48,8 @@ class TestIntegration:
                 # We're told an import has been removed
                 ["'from y import *' was removed! 🔮", "1 import was removed"],
                 [],
-                # But the file is unchanged
-                "from x import *\nfrom y import *",
+                # And the file has changed
+                "from x import *\n",
                 0,
                 id="default",
             ),
@@ -57,8 +57,7 @@ class TestIntegration:
                 ["'from y import *' would be removed! 🔮", "1 import would be removed"],
                 ["--check"],
                 "from x import *\nfrom y import *",
-                # Even though we show imports would be removed, the return code is 0 (?)
-                0,
+                1,
                 id="check",
             ),
             pytest.param(
@@ -69,8 +68,8 @@ class TestIntegration:
                     "2 imports were removed",
                 ],
                 ["--all"],
-                # But only the x import was removed
-                "from y import *",
+                # And both have been removed
+                "",
                 0,
                 id="all",
             ),
