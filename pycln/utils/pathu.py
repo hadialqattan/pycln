@@ -180,8 +180,11 @@ def get_third_party_lib_paths() -> Set[Path]:
     }
 
     for path in packages_paths:
-
-        for name in os.listdir(path):
+        try:
+            dirs = os.listdir(path)
+        except FileNotFoundError:
+            continue
+        for name in dirs:
             if not name.startswith("_") and not name.endswith(BIN_PY_EXTENSIONS):
                 paths.add(Path(os.path.join(path, name)))
 
