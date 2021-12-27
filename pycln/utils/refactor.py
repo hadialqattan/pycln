@@ -227,7 +227,7 @@ class Refactor:
                         self.reporter.removed_import(self._path, node, star_alias)
 
                 # No alias has removed/added.
-                if len(used_names) == len(node.names):
+                if used_names and len(used_names) == len(node.names):
                     if not self.configs.expand_stars:
                         continue
 
