@@ -12,3 +12,6 @@ comment:
   layout: "reach, diff, files"
   behavior: default
   require_changes: no
+
+ignore:
+  - "setup.py"
