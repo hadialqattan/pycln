@@ -25,14 +25,33 @@ CONFIG_FILES = {
         "pycln.yml",
     )
 }
-CONFIG = {
+CONFIG_ATTR = frozenset(
+    {
+        "paths",
+        "include",
+        "exclude",
+        "all_",
+        "check",
+        "diff",
+        "verbose",
+        "quiet",
+        "silence",
+        "expand_stars",
+        "no_gitignore",
+    }
+)
+DEFAULTS = {
+    "paths": [Path(".")],
     "include": re.compile(r".*_util.py$", re.IGNORECASE),
     "exclude": re.compile(r".*_test.py$", re.IGNORECASE),
-    "expand_stars": True,
-    "verbose": True,
-    "diff": True,
     "all": True,  # For `TestParserConfigFile`.
     "all_": True,  # For `TestConfig`.
+    "check": False,
+    "diff": True,
+    "verbose": True,
+    "quiet": False,
+    "silence": False,
+    "expand_stars": True,
     "no_gitignore": False,
 }
 
@@ -56,16 +75,16 @@ class TestConfig:
         configs = config.Config(
             paths=[Path(".")],
             config=config_,
-            include=CONFIG["include"],
-            exclude=CONFIG["exclude"],
+            include=DEFAULTS["include"],
+            exclude=DEFAULTS["exclude"],
             expand_stars=True,
             verbose=True,
             diff=True,
             all_=True,
         )
-        for attr, val in CONFIG.items():
+        for attr in CONFIG_ATTR:
             if attr != "all":
-                assert getattr(configs, attr) == val
+                assert getattr(configs, attr) == DEFAULTS[attr]
         assert configs.paths == [Path(".")]
 
     @pytest.mark.parametrize(
@@ -121,6 +140,12 @@ class TestParseConfigFile:
     def setup_method(self, method, post_init, init):
         self.configs = config.Config(paths=[Path(".")])
 
+    def test_cast_paths(self):
+        str_paths = ["./pycln/src", "home/src/__init__.py"]
+        casted_paths = config.ParseConfigFile._cast_paths(str_paths)
+        expec = [Path("./pycln/src"), Path("home/src/__init__.py")]
+        assert casted_paths == expec
+
     @pytest.mark.xfail(raises=Exit)
     @pytest.mark.parametrize(
         "path",
@@ -143,8 +168,8 @@ class TestParseConfigFile:
     @pytest.mark.parametrize(
         "configs",
         [
-            pytest.param(CONFIG, id="valid"),
-            pytest.param({**CONFIG, **{"Invalid": "data"}}, id="invalid"),
+            pytest.param(DEFAULTS, id="valid"),
+            pytest.param({**DEFAULTS, **{"Invalid": "data"}}, id="invalid"),
         ],
     )
     @mock.patch(MOCK % "Config.__post_init__")
@@ -152,11 +177,31 @@ class TestParseConfigFile:
     def test_config_loader(self, parse, post_init, configs):
         config_parser = config.ParseConfigFile(Path(""), self.configs)
         config_parser._config_loader(configs)
-        for attr, val in CONFIG.items():
+        for attr in CONFIG_ATTR:
             if attr != "all":
-                print(attr, getattr(self.configs, attr), val)
-                assert getattr(self.configs, attr) == val
+                assert getattr(self.configs, attr) == configs[attr]
         assert getattr(self.configs, "Invalid", None) is None
+
+    @pytest.mark.parametrize(
+        "configs",
+        [
+            pytest.param({**DEFAULTS, **{"path": "/path/file.py"}}, id="single-path"),
+            pytest.param(
+                {**DEFAULTS, **{"paths": ["/path/src", "/path/file.py"]}},
+                id="multiple-paths",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Config.__post_init__")
+    @mock.patch(MOCK % "ParseConfigFile.parse")
+    def test_config_loader_with_paths(self, parse, post_init, configs):
+        config_parser = config.ParseConfigFile(Path(""), self.configs)
+        config_parser._config_loader(configs)
+        if configs.get("path", None) is not None:
+            configs["paths"] = [configs["path"]]
+        paths = [Path(p) for p in configs["paths"]]
+        assert getattr(self.configs, "paths") == paths
+        assert getattr(self.configs, "path", None) is None
 
     @pytest.mark.parametrize(
         "file_path",
@@ -174,6 +219,6 @@ class TestParseConfigFile:
         for type_ in ("include", "exclude"):
             regex = getattr(self.configs, type_)
             setattr(self.configs, type_, re.compile(regex, re.IGNORECASE))
-        for attr, val in CONFIG.items():
+        for attr in CONFIG_ATTR:
             if attr != "all":
-                assert getattr(self.configs, attr) == val
+                assert getattr(self.configs, attr) == DEFAULTS[attr]

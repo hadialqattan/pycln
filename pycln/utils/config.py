@@ -89,6 +89,11 @@ class ParseConfigFile:
         self.parse()
         self._config.__post_init__()
 
+    @staticmethod
+    def _cast_paths(paths: List[str]) -> List[Path]:
+        """`paths` List[str] ~> List[Path]."""
+        return [Path(p) for p in paths]
+
     def parse(self) -> None:
         """Get conifg from a `cfg`/`toml`/`json`/`yaml`/`yml` file."""
         if not self._path.is_file():
@@ -155,6 +160,21 @@ class ParseConfigFile:
             for k, v in config_dict.items():
                 # Python preserved name.
                 # `all` ~> `all_`.
-                k = "all_" if k == "all" else k
+                if k == "all":
+                    k = "all_"
+
+                # Set CLI options.
                 if hasattr(Config, k):
+                    setattr(self._config, k, v)
+
+                # Both `path` and `paths` can be used as `paths` CLI arg.
+                if k in ("path", "paths"):
+                    if k == "path":
+                        k = "paths"
+                        v = [v]
+
+                    # List[str] ~> List[Path]
+                    v = ParseConfigFile._cast_paths(v)
+
+                    # Set the [paths] CLI argument.
                     setattr(self._config, k, v)
