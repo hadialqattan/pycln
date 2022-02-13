@@ -12,6 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- [The path argument is ignored when passed in a config file by @hadialqattan](https://github.com/hadialqattan/pycln/pull/95)
 - [Remove star imports when nothing's actually imported by @pmourlanne](https://github.com/hadialqattan/pycln/pull/92)
 
 ## [1.1.0] - 2021-11-12
