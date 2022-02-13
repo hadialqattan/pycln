@@ -189,6 +189,19 @@ $ pycln [PATH]
 
 #### Example
 
+A NOTE BEFORE THE EXAMPLES:
+
+```note
+#: The path argument can be passed either
+#: via `paths` keyword as a *list* like:
+paths = ["/path/to/src", "./file.py"]
+
+#: OR
+
+#: via `path` keyword as a *string*, for example:
+path = "/path/to/src"
+```
+
 <details>
   <summary><code>.cfg</code></summary>
 
