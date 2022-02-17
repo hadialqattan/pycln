@@ -911,6 +911,112 @@ __all__ = ["os", "time"]
 > Not supported, also not on the
 > [roadmap](https://github.com/hadialqattan/pycln/projects/3).
 
+### Init file (`__init__.py`)
+
+> Pycln can not decide weather the unused imported names are useless or imported to be
+> used somewhere else (exported) in case of `__init__.py` file with no `__all__` dunder.
+
+A detailed description of the problem:
+
+consider the following two cases below:
+
+- case a1:
+
+  ```bash
+  # Assume that we have this project structure:
+  .
+  ├── __init__.py
+  └── file.py
+  ```
+
+  where `__init__.py`:
+
+  ```python
+  import x, y  #: These names are unused but imported to be used in another
+              #: file in the same package.
+              #:
+              #: (Pycln should *NOT* remove this import statement).
+  ```
+
+  and `file.py`:
+
+  ```python
+  from . import x, y
+
+  print(y(x))
+  ```
+
+- case a2:
+
+  ```bash
+  # Assume that we have this project structure:
+  .
+  └── __init__.py
+  ```
+
+  where `__init__.py`:
+
+  ```python
+  import x, y  #: These names are unused.
+              #:
+              #: (Pycln should remove this import statement).
+  ```
+
+Due to the nature of Pycln where it checks every file individually, it can not decide
+weather `x` and `y` are imported to be exported (case a1) or imported but unused (case
+a2), therefore, I consider using `__all__` dunder is a good solution for this problem.
+
+NOTE: in case you're not sure about what does the `__all__` dunder do, please consider
+reading this stackoverflow [answer](https://stackoverflow.com/a/35710527/12738844)
+
+Now let us review the same two cases but with `__all__` dunder:
+
+- case b1:
+
+  ```bash
+  # Assume that we have this project structure:
+  .
+  ├── __init__.py
+  └── file.py
+  ```
+
+  where `__init__.py`:
+
+  ```python
+  import x, y  #: Luckily, Pycln can understand that `x` and `y`
+              #: are exported so it would not remove them.
+  __all__ = ["x", "y"]
+  ```
+
+  and `file.py`:
+
+  ```python
+  from . import x, y
+
+  print(y(x))
+  ```
+
+- case b2:
+
+  ```bash
+  # Assume that we have this project structure:
+  .
+  └── __init__.py
+  ```
+
+  where `__init__.py`:
+
+  ```python
+  import x, y  #: In this case where `__all__` dunder is used, Pycln
+              #: can consider these names as unused confidently
+              #: where they are inaccessible from other files
+              #: (not exported).
+  __all__ = ["something else or even an empty list"]
+  ```
+
+You may notice that using `__all__` dunder makes the two cases distinguishable for both
+the developers and QA tools.
+
 # Integrations
 
 ## Version Control Integration

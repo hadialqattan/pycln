@@ -775,6 +775,30 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         end_lineno = analyzer._get_end_lineno(lineno, is_parentheses)
         assert end_lineno == expec_end_lineno
 
+    @pytest.mark.parametrize(
+        "code, expec",
+        [
+            pytest.param(
+                "__all__ = []\n",
+                True,
+                id="__all__ - assign",
+            ),
+            pytest.param(
+                "__all__ += []\n",
+                True,
+                id="__all__ - aug-assign",
+            ),
+            pytest.param(
+                "x = []\n",
+                False,
+                id="no __all__",
+            ),
+        ],
+    )
+    def test_has_all(self, code, expec):
+        analyzer = self._get_analyzer(code)
+        assert analyzer.has_all() == expec
+
 
 class TestImportablesAnalyzer(AnalyzerTestCase):
 
