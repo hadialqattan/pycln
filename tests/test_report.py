@@ -248,6 +248,24 @@ class TestReport:
             assert self.reporter._failures == 1
 
     @pytest.mark.parametrize(
+        "mode, is_err",
+        [
+            ("default", True),
+            ("check", True),
+            ("diff", True),
+            ("verbose", True),
+            ("quiet", True),
+            ("silence", False),
+        ],
+    )
+    def test_init_without_all_warning(self, mode, is_err):
+        setattr(self.configs, mode, True)
+        with sysu.std_redirect(sysu.STD.ERR) as stderr:
+            self.reporter.init_without_all_warning(Path(""))
+            assert bool(stderr.getvalue()) == is_err
+            assert self.reporter._undecidable_case == 1
+
+    @pytest.mark.parametrize(
         "_failures, _changed_files, check, expec_code",
         [
             pytest.param(1, None, True, 250, id="internal error (check)"),
@@ -267,7 +285,7 @@ class TestReport:
         "counters, mode, output_mode, err, is_out, expec_in_out",
         [
             pytest.param(
-                (0, 0, 0, 0, 0, 0, 0),
+                (0, 0, 0, 0, 0, 0, 0, 0),
                 "not-matter",
                 "silence",
                 sysu.Pass,
@@ -276,7 +294,7 @@ class TestReport:
                 id="silence",
             ),
             pytest.param(
-                (0, 0, 0, 0, 0, 0, 0),
+                (0, 0, 0, 0, 0, 0, 0, 0),
                 "not-matter",
                 "not-matter",
                 Exit,
@@ -285,7 +303,7 @@ class TestReport:
                 id="no-file",
             ),
             pytest.param(
-                (1, 0, 1, 0, 0, 0, 0),
+                (1, 0, 1, 0, 0, 0, 0, 0),
                 "check",
                 "default",
                 sysu.Pass,
@@ -294,7 +312,7 @@ class TestReport:
                 id="check",
             ),
             pytest.param(
-                (1, 0, 1, 0, 0, 0, 0),
+                (1, 0, 1, 0, 0, 0, 0, 0),
                 "diff",
                 "default",
                 sysu.Pass,
@@ -303,7 +321,7 @@ class TestReport:
                 id="diff",
             ),
             pytest.param(
-                (1, 0, 1, 0, 0, 0, 0),
+                (1, 0, 1, 0, 0, 0, 0, 0),
                 "default",
                 "default",
                 sysu.Pass,
@@ -312,7 +330,7 @@ class TestReport:
                 id="default",
             ),
             pytest.param(
-                (1, 1, 1, 1, 0, 1, 1),
+                (1, 1, 1, 1, 0, 0, 1, 1),
                 "default",
                 "verbose",
                 sysu.Pass,
@@ -328,7 +346,7 @@ class TestReport:
                 id="verbose, ignored",
             ),
             pytest.param(
-                (2, 3, 4, 5, 0, 3, 2),
+                (2, 3, 4, 5, 0, 0, 3, 2),
                 "default",
                 "verbose",
                 sysu.Pass,
@@ -344,7 +362,7 @@ class TestReport:
                 id="verbose, ignored, plural",
             ),
             pytest.param(
-                (1, 1, 1, 1, 0, 0, 0),
+                (1, 1, 1, 1, 0, 0, 0, 0),
                 "default",
                 "default",
                 sysu.Pass,
@@ -353,22 +371,31 @@ class TestReport:
                 id="normal",
             ),
             pytest.param(
-                (0, 0, 0, 1, 0, 0, 0),
+                (0, 0, 0, 1, 0, 0, 0, 0),
                 "default",
                 "default",
                 sysu.Pass,
                 True,
                 "Looks good!",
-                id="failures",
+                id="no-changes",
             ),
             pytest.param(
-                (1, 1, 1, 1, 1, 1, 1),
+                (1, 1, 1, 1, 1, 1, 1, 1),
                 "default",
                 "default",
                 sysu.Pass,
                 True,
-                "Oh no, there is an error!",
-                id="failures-2",
+                "Oh no, there was an error!",
+                id="failure",
+            ),
+            pytest.param(
+                (1, 1, 1, 1, 0, 1, 1, 1),
+                "default",
+                "default",
+                sysu.Pass,
+                True,
+                "Wait a minute, there was an undecidable case!",
+                id="undecidable case",
             ),
         ],
     )
@@ -379,6 +406,7 @@ class TestReport:
             "_changed_files",
             "_unchanged_files",
             "_failures",
+            "_undecidable_case",
             "_ignored_imports",
             "_ignored_paths",
         )

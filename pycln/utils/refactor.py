@@ -183,6 +183,11 @@ class Refactor:
             analyzer = scan.SourceAnalyzer(original_lines)
             analyzer.visit(tree)
             source_stats, import_stats = analyzer.get_stats()
+
+            if regexu.is_init_file(self._path) and not analyzer.has_all():
+                self.reporter.init_without_all_warning(self._path)
+                return None
+
             return source_stats, import_stats
         except Exception as err:
             self.reporter.failure(str(err), self._path)

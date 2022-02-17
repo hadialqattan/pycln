@@ -157,6 +157,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         if not PY38_PLUS and source_lines is None:
             # Bad class usage.
             raise ValueError("Please provide source lines for Python < 3.8.")
+        self._has_all = False  # True if the source has `__all__` dunder.
         self._lines = source_lines
         self._import_stats = ImportStats(set(), set())
         self._imports_to_skip: Set[Union[_nodes.Import, _nodes.ImportFrom]] = set()
@@ -325,6 +326,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             self._source_stats.names_to_skip.add(id_)
         # Support `__all__` dunder overriding cases.
         if id_ == __ALL__:
+            self._has_all = True
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 #: Support normal `__all__` dunder overriding:
                 #:
@@ -348,6 +350,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         id_ = getattr(node.target, "id", None)
         # Support `__all__` with `+=` operator case.
         if id_ == __ALL__:
+            self._has_all = True
             if isinstance(node.value, (ast.List, ast.Tuple, ast.Set)):
                 #: Support `__all__` dunder overriding with
                 #: only `+=` operator:
@@ -532,6 +535,13 @@ class SourceAnalyzer(ast.NodeVisitor):
         """
         return self._source_stats, self._import_stats
 
+    def has_all(self) -> bool:
+        """`self._has_all` getter.
+
+        :returns: True if the source includes `__all__` dunder.
+        """
+        return self._has_all
+
 
 class ImportablesAnalyzer(ast.NodeVisitor):
 
@@ -551,7 +561,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     def __init__(self, path: Path):
         self._not_importables: Set[Union[ast.Name, str]] = set()
         self._importables: Set[str] = set()
-        self._has_all = False
+        self._has_all = False  # True if the source has `__all__` dunder.
         self._path = path
 
     @recursive

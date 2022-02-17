@@ -291,6 +291,31 @@ class Report:
             self._file_removed_imports = -1
         self._failures += 1
 
+    #: Total number of undecidable cases
+    _undecidable_case: int = 0
+
+    def init_without_all_warning(self, path: Path) -> None:
+        """Increment `self._undecidable_case`. Write a msg to stderr.
+
+        :param path: the `__init__.py` file path.
+        """
+        msg = """
+        Pycln can not decide weather the unused imported names
+        are useless or imported to be used somewhere else (exported).
+
+        Please consider adding `__all__` dunder (then re-run Pycln).
+
+        For more info:
+        https://hadialqattan.github.io/pycln/#/?id=init-file-__init__py
+        """
+        if not self.configs.silence:
+            Report.secho(
+                f"{path} file has been skipped ⚠️:\n{msg}",
+                bold=False,
+                iswarning=True,
+            )
+        self._undecidable_case += 1
+
     @property
     def exit_code(self) -> int:
         """Return an exit code.
@@ -375,6 +400,8 @@ class Report:
             changed_files_plural = changed_files
             unchanged_files = "would be left unchanged"
             unchanged_files_plural = unchanged_files
+            undecidable_case = "would be skipped"
+            undecidable_case_plural = undecidable_case
         else:
             removed_imports = "was removed"
             removed_imports_plural = "were removed"
@@ -384,6 +411,8 @@ class Report:
             changed_files_plural = "were changed"
             unchanged_files = "left unchanged"
             unchanged_files_plural = "left unchanged"
+            undecidable_case = "was skipped"
+            undecidable_case_plural = "were skipped"
         failures = "has failed to be cleaned"
         failures_plural = "have failed to be cleaned"
 
@@ -439,6 +468,16 @@ class Report:
                 )
             )
 
+        if self._undecidable_case:
+            plural = self._undecidable_case > 1
+            report.append(
+                typer.style(
+                    f"{self._undecidable_case} undecidable case{'s' if plural else ''} "
+                    f"{undecidable_case_plural if plural else undecidable_case}",
+                    bold=False,
+                )
+            )
+
         if self.configs.verbose:
             ignored_imports = "was ignored"
             ignored_imports_plural = "were ignored"
@@ -466,12 +505,19 @@ class Report:
                 )
 
         if not self._failures:
-            if self._removed_imports or self._expanded_stars:
+            if self._undecidable_case:
+                s = (
+                    "were undecidable cases"
+                    if self._undecidable_case > 1
+                    else "was an undecidable case"
+                )
+                done_msg = f"Wait a minute, there {s}! 😳😅"
+            elif self._removed_imports or self._expanded_stars:
                 done_msg = "All done! 💪 😎"
             else:
                 done_msg = "Looks good! ✨ 🍰 ✨"
         else:
-            s = "are errors" if self._failures > 1 else "is an error"
+            s = "were errors" if self._failures > 1 else "was an error"
             done_msg = f"Oh no, there {s}! 💔 ☹️"
 
         sdone_msg = typer.style(done_msg + "\n", bold=True)

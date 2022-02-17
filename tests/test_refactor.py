@@ -243,16 +243,36 @@ class TestRefactor:
                 assert tmp.readlines() == fixed_lines
 
     @pytest.mark.parametrize(
-        "get_stats_raise, expec_val",
+        "get_stats_raise, has_all_return, is_init_file_return, expec_val",
         [
-            pytest.param(None, ("", ""), id="normal"),
-            pytest.param(Exception(""), None, id="error"),
+            pytest.param(None, False, False, ("", ""), id="normal"),
+            pytest.param(Exception(""), False, False, None, id="error"),
+            pytest.param(None, False, True, None, id="__init__.py - no __all__"),
+            pytest.param(None, True, True, ("", ""), id="__init__.py - __all__"),
+            pytest.param(
+                None, False, False, ("", ""), id="not __init__.py - no __all__"
+            ),
+            pytest.param(None, True, False, ("", ""), id="not __init__.py - __all__"),
         ],
     )
+    @mock.patch(MOCK % "regexu.is_init_file")
+    @mock.patch(MOCK % "scan.SourceAnalyzer.has_all")
     @mock.patch(MOCK % "scan.SourceAnalyzer.get_stats")
-    def test_analyze(self, get_stats, get_stats_raise, expec_val):
+    def test_analyze(
+        self,
+        get_stats,
+        has_all,
+        is_init_file,
+        get_stats_raise,
+        has_all_return,
+        is_init_file_return,
+        expec_val,
+    ):
         get_stats.return_value = ("", "")
         get_stats.side_effect = get_stats_raise
+        has_all.return_value = has_all_return
+        is_init_file.return_value = is_init_file_return
+
         with sysu.std_redirect(sysu.STD.ERR):
             val = self.session_maker._analyze(ast.parse(""), [""])
             assert val == expec_val
