@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.2.0] - 2022-02-18
+
 ### Fixed
 
 - [Pycln removes imported names that should be exported in case of `__init__.py` file without `__all__` dunder by @hadialqattan](https://github.com/hadialqattan/pycln/pull/97)
