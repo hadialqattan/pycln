@@ -243,16 +243,23 @@ class TestRefactor:
                 assert tmp.readlines() == fixed_lines
 
     @pytest.mark.parametrize(
-        "get_stats_raise, has_all_return, is_init_file_return, expec_val",
+        (
+            "get_stats_raise, has_all_return, is_init_file_return,"
+            "expec_is_init_without_all, expec_val"
+        ),
         [
-            pytest.param(None, False, False, ("", ""), id="normal"),
-            pytest.param(Exception(""), False, False, None, id="error"),
-            pytest.param(None, False, True, None, id="__init__.py - no __all__"),
-            pytest.param(None, True, True, ("", ""), id="__init__.py - __all__"),
+            pytest.param(None, False, False, False, ("", ""), id="normal"),
+            pytest.param(Exception(""), False, False, False, None, id="error"),
             pytest.param(
-                None, False, False, ("", ""), id="not __init__.py - no __all__"
+                None, False, True, True, ("", ""), id="__init__.py - no __all__"
             ),
-            pytest.param(None, True, False, ("", ""), id="not __init__.py - __all__"),
+            pytest.param(None, True, True, False, ("", ""), id="__init__.py - __all__"),
+            pytest.param(
+                None, False, False, False, ("", ""), id="not __init__.py - no __all__"
+            ),
+            pytest.param(
+                None, True, False, False, ("", ""), id="not __init__.py - __all__"
+            ),
         ],
     )
     @mock.patch(MOCK % "regexu.is_init_file")
@@ -266,6 +273,7 @@ class TestRefactor:
         get_stats_raise,
         has_all_return,
         is_init_file_return,
+        expec_is_init_without_all,
         expec_val,
     ):
         get_stats.return_value = ("", "")
@@ -276,6 +284,8 @@ class TestRefactor:
         with sysu.std_redirect(sysu.STD.ERR):
             val = self.session_maker._analyze(ast.parse(""), [""])
             assert val == expec_val
+
+        assert self.session_maker._is_init_without_all == expec_is_init_without_all
 
     @pytest.mark.parametrize(
         (
@@ -296,7 +306,10 @@ class TestRefactor:
             ),
             pytest.param(
                 False,
-                (None, True),
+                (
+                    Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)]),
+                    True,
+                ),
                 {"x", "y"},
                 ["import x, y"],
                 False,
@@ -462,6 +475,43 @@ class TestRefactor:
         self.session_maker._import_stats = ImportStats({node}, set())
         fixed_code = self.session_maker._refactor(original_lines)
         assert fixed_code == "".join(expec_fixed_lines)
+
+    @pytest.mark.parametrize(
+        (
+            "_get_used_names_return, is_star_return,"
+            "_is_init_without_all, is_undecidable"
+        ),
+        [
+            pytest.param(None, None, False, False, id="all"),
+            pytest.param(["node"], True, True, True, id="no-all - star - used"),
+            pytest.param([], False, True, True, id="no-all - no-star - no-used"),
+            pytest.param(["node"], False, True, False, id="no-all - no-star - used"),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._expand_import_star")
+    @mock.patch(MOCK % "Refactor._get_used_names")
+    def test_refactor_init_without_all(
+        self,
+        _get_used_names,
+        _expand_import_star,
+        _get_used_names_return,  # we only care about the len.
+        is_star_return,
+        _is_init_without_all,
+        is_undecidable,
+    ):
+        node = Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)])
+        _get_used_names.return_value = _get_used_names_return
+        _expand_import_star.return_value = node, is_star_return
+        self.session_maker._import_stats = ImportStats({node}, set())
+        self.session_maker._is_init_without_all = _is_init_without_all
+
+        with sysu.std_redirect(sysu.STD.ERR):
+            self.session_maker._refactor(["import x"])  # Fake code
+
+        if is_undecidable:
+            assert self.session_maker.reporter._undecidable_case == 1
+        else:
+            assert not self.session_maker.reporter._undecidable_case
 
     @pytest.mark.parametrize(
         "_should_remove_return, node, is_star, expec_names",
