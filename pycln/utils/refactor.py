@@ -69,11 +69,13 @@ class Refactor:
         self._import_stats = scan.ImportStats(set(), set())
         self._source_stats = scan.SourceStats(set(), set(), set())
         self._path = Path("")
+        self._is_init_without_all = False
 
     def _reset(self) -> None:
         self._import_stats = scan.ImportStats(set(), set())
         self._source_stats = scan.SourceStats(set(), set(), set())
         self._path = Path("")
+        self._is_init_without_all = False
 
     @staticmethod
     def remove_useless_passes(source_lines: List[str]) -> List[str]:
@@ -184,9 +186,11 @@ class Refactor:
             analyzer.visit(tree)
             source_stats, import_stats = analyzer.get_stats()
 
+            #: `__init__.py` file with no `__all__` dunder issue:
+            #:
+            #: PR/ISSUE/DOC Ref: https://github.com/hadialqattan/pycln/pull/97
             if regexu.is_init_file(self._path) and not analyzer.has_all():
-                self.reporter.init_without_all_warning(self._path)
-                return None
+                self._is_init_without_all = True
 
             return source_stats, import_stats
         except Exception as err:
@@ -221,6 +225,15 @@ class Refactor:
                 # Get set of used names.
                 used_names = self._get_used_names(node, is_star)
 
+                used_names_len = len(used_names)
+                node_names_len = len(node.names)
+
+                if self._is_init_without_all and (
+                    is_star or used_names_len != node_names_len
+                ):
+                    self.reporter.init_without_all_warning(self._path)
+                    break
+
                 # Depends on `--expand-stars, -x` option.
                 if is_star:
                     if used_names:
@@ -232,7 +245,7 @@ class Refactor:
                         self.reporter.removed_import(self._path, node, star_alias)
 
                 # No alias has removed/added.
-                if used_names and len(used_names) == len(node.names):
+                if used_names and used_names_len == node_names_len:
                     if not self.configs.expand_stars:
                         continue
 
@@ -245,6 +258,10 @@ class Refactor:
                 fixed_lines = self._transform(
                     node.location, used_names, original_lines, fixed_lines
                 )
+            else:
+                continue
+
+            break
 
         return "".join(fixed_lines)
 
@@ -254,7 +271,7 @@ class Refactor:
         """Get set of used names base on given `node` and `self._source_stats`.
 
         :param node: import node to names check.
-        :parma is_star: is '*' import node.
+        :param is_star: is '*' import node.
         :returns: set of used names.
         """
         used_names: Set[str] = set()
@@ -262,7 +279,7 @@ class Refactor:
             if self._should_remove(
                 node, alias, is_star
             ) and not self._is_partially_used(alias, is_star):
-                if not is_star:
+                if not (is_star or self._is_init_without_all):
                     self.reporter.removed_import(self._path, node, alias)
                 continue
             used_names.add(alias.name)
