@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.2.1] - 2022-02-24
+
 ### Fixed
 
 - [Make the `__init__.py` file without `__all__` dunder's warning more precise by @hadialqattan](https://github.com/hadialqattan/pycln/pull/98)
