@@ -514,7 +514,7 @@ class TestRefactor:
             assert not self.session_maker.reporter._undecidable_case
 
     @pytest.mark.parametrize(
-        "_should_remove_return, node, is_star, expec_names",
+        "_should_remove_return, node, is_star, _is_init_without_all, expec_names",
         [
             pytest.param(
                 False,
@@ -525,6 +525,7 @@ class TestRefactor:
                         ast.alias(name="y", asname=None),
                     ],
                 ),
+                False,
                 False,
                 {"x", "y"},
                 id="used",
@@ -539,6 +540,7 @@ class TestRefactor:
                     ],
                 ),
                 False,
+                False,
                 set(),
                 id="not-used",
             ),
@@ -552,19 +554,44 @@ class TestRefactor:
                     ],
                 ),
                 True,
+                False,
                 set(),
                 id="not-used, star",
+            ),
+            pytest.param(
+                True,
+                Import(
+                    NodeLocation((1, 0), 1),
+                    [
+                        ast.alias(name="x", asname=None),
+                        ast.alias(name="y", asname=None),
+                    ],
+                ),
+                False,
+                True,
+                set(),
+                id="unused | init-without-all",
             ),
         ],
     )
     @mock.patch(MOCK % "Refactor._should_remove")
     def test_get_used_names(
-        self, _should_remove, _should_remove_return, node, is_star, expec_names
+        self,
+        _should_remove,
+        _should_remove_return,
+        node,
+        is_star,
+        _is_init_without_all,
+        expec_names,
     ):
         _should_remove.return_value = _should_remove_return
-        with sysu.std_redirect(sysu.STD.OUT):
+        self.session_maker._is_init_without_all = _is_init_without_all
+        with sysu.std_redirect(sysu.STD.OUT) as stdout:
             used_names = self.session_maker._get_used_names(node, is_star)
             assert used_names == expec_names
+
+            if _is_init_without_all:
+                assert stdout.getvalue() == ""
 
     @pytest.mark.parametrize(
         (
