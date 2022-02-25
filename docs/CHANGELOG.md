@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.2.2] - 2022-02-25
+
 ### Fixed
 
 - [`pass` statements are removed from `orelse` parent nodes causing syntax errors by @hadialqattan](https://github.com/hadialqattan/pycln/pull/100)
