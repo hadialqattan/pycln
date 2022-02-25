@@ -4,7 +4,7 @@ import os
 from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union, cast
+from typing import Iterable, List, Optional, Set, Tuple, Union, cast
 
 from . import iou, pathu, regexu, scan
 from ._exceptions import (
@@ -84,16 +84,48 @@ class Refactor:
         :param source_lines: source code lines.
         :returns: clean source code lines.
         """
+
+        def remove_from_children(
+            parent: ast.AST, children: Iterable, body_len: int, wl: Set[ast.AST]
+        ):
+            #: Remove any `ast.Pass` node
+            #: that is both useless and not in the `wl` (white list).
+            #:
+            #: The below case is not going to be touched:
+            #:
+            #: >>> (async) (def) (class) foo:
+            #: >>>      """DOCString"""
+            #: >>>      pass
+            #:
+            for child in children:
+                if isinstance(child, ast.Pass):
+                    if child not in wl:
+                        if isinstance(
+                            parent,
+                            (ast.AsyncFunctionDef, ast.FunctionDef, ast.ClassDef),
+                        ):
+                            if body_len == 2 and ast.get_docstring(parent):
+                                break
+                        if body_len > 1:
+                            body_len -= 1
+                            source_lines[child.lineno - 1] = ""
+
         tree = ast.parse("".join(source_lines))
         for parent in ast.walk(tree):
+
             body = getattr(parent, "body", None)
             if body and hasattr(body, "__len__"):
                 body_len = len(body)
-            for child in ast.iter_child_nodes(parent):
-                if isinstance(child, ast.Pass):
-                    if body_len > 1:
-                        body_len -= 1
-                        source_lines[child.lineno - 1] = ""
+                white_list: Set[ast.AST] = set()
+
+                if hasattr(parent, "orelse"):
+                    orelse = getattr(parent, "orelse")
+                    remove_from_children(parent, orelse, len(orelse), white_list)
+                    white_list = set(orelse)
+
+                children = ast.iter_child_nodes(parent)
+                remove_from_children(parent, children, body_len, white_list)
+
         return "".join(source_lines).splitlines(True)
 
     def session(self, path: Path) -> None:
