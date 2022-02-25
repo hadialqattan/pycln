@@ -116,11 +116,14 @@ class TestRefactor:
                     "class Foo:\n",
                     "    '''docs'''\n",
                     "    pass\n",
+                    "    pass\n",
                     "async def foo():\n",
                     "    '''docs'''\n",
                     "    pass\n",
+                    "    pass\n",
                     "def foo():\n",
                     "    '''docs'''\n",
+                    "    pass\n",
                     "    pass\n",
                 ],
                 [
@@ -134,7 +137,7 @@ class TestRefactor:
                     "    '''docs'''\n",
                     "    pass\n",
                 ],
-                id="useless with docs",
+                id="useless with docstring",
             ),
             pytest.param(
                 [
