@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-    <a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/For%20More%20Information%20See-Pycln%20Docs-B5FFB3.svg?style=flat-square" alt="Code style: prettier"></a>
+    <a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/see-Pycln%20Docs-B5FFB3.svg?style=flat-square" alt="Code style: prettier"></a>
     <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://img.shields.io/github/workflow/status/hadialqattan/pycln/CI/master?label=CI&logo=github&style=flat-square" alt="CI"></a>
     <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACD"><img src="https://img.shields.io/github/workflow/status/hadialqattan/pycln/CD?label=CD&logo=github&style=flat-square" alt="CD"></a>
     <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3AFUZZ"><img src="https://img.shields.io/github/workflow/status/hadialqattan/pycln/FUZZ?label=FUZZ&logo=github&style=flat-square" alt="FUZZ"></a>
