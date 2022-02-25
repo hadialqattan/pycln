@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Consider any import statement that is inlined with `:` as an unsupported case instead of breaking the code by @hadialqattan](https://github.com/hadialqattan/pycln/pull/101)
+
 ## [1.2.2] - 2022-02-25
 
 ### Fixed
