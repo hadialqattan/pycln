@@ -1,0 +1,35 @@
+##############[FUZZ]##############
+#      ONLY MANUAL TRIGGER       #
+##################################
+
+name: FUZZ
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fuzz:
+    name: Fuzz
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10"]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Install  Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+          python -m poetry install --no-root
+
+      - name: Test with pytest by poetry
+        run: |
+          python -m poetry run pytest tests/fuzz.py
