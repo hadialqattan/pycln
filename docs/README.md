@@ -1055,6 +1055,22 @@ finally:
     import y
 ```
 
+## Global
+
+> In case a file contains one of the below cases, the entire file would be skipped.
+
+### Form feed character
+
+> A form feed is a page-breaking ASCII control character. It forces the printer to eject
+> the current page and to continue printing at the top of another.
+
+```python
+# It's a hidden character.
+# Forms:
+\x0c
+\f
+```
+
 # Integrations
 
 ## Version Control Integration
