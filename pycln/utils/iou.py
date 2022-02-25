@@ -7,6 +7,7 @@ from typing import List, Tuple
 from ._exceptions import ReadPermissionError, UnparsableFile, WritePermissionError
 
 # Constants.
+FORM_FEED_CHAR = "\x0c"
 CRLF = "\r\n"
 LF = "\n"
 
@@ -23,6 +24,7 @@ def safe_read(
     :raises WritePermissionError: when `os.W_OK` in permissions
         and the source does not have write permission.
     :raises UnparsableFile: If both a BOM and a cookie are present, but disagree.
+        or some rare characters presented.
     """
     # Check these permissions before openinig the file.
     for permission in permissions:
@@ -35,13 +37,17 @@ def safe_read(
         with tokenize.open(path) as stream:
             source_code = stream.read()
             encoding = stream.encoding
+        if FORM_FEED_CHAR in source_code:
+            raise ValueError(
+                "Pycln can not handle a file containing a form feed character (\\f)"
+            )
         with open(path, "rb") as f:
             if CRLF.encode() in f.readline():
                 newlines = CRLF
             else:
                 newlines = LF
         return source_code, encoding, newlines
-    except SyntaxError as err:
+    except (SyntaxError, ValueError) as err:
         raise UnparsableFile(path, err) from err
 
 

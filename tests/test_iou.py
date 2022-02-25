@@ -64,6 +64,14 @@ class TestIOU:
                 id="bad encoding",
             ),
             pytest.param(
+                "try: pass\x0c;\nfinally: pass",
+                None,
+                None,
+                UnparsableFile,
+                0o0644,
+                id="form feed char",
+            ),
+            pytest.param(
                 "print('Hello')\r\n",
                 "print('Hello')\n\n",
                 iou.CRLF,
