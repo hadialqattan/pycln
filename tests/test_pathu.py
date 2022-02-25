@@ -185,6 +185,13 @@ class TestPathu:
                 id="from ..package import *",
             ),
             pytest.param(
+                "*",
+                ".",
+                1,
+                Path("pycln/tests/__init__.py"),
+                id="from . import *",
+            ),
+            pytest.param(
                 "sysu",
                 "utils",
                 1,
@@ -238,6 +245,18 @@ class TestPathu:
                 "std",
                 None,
                 id="not exists",
+            ),
+            pytest.param(
+                [
+                    #: This represents this case:
+                    #:
+                    #: >>> from . import *
+                    #:
+                    #: while the file is not in a package.
+                ],
+                None,
+                None,
+                id="not exists - no module",
             ),
         ],
     )

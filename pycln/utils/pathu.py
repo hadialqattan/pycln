@@ -250,7 +250,7 @@ def get_local_import_from_path(
             fpath = os.path.join(
                 *dirparts[:i],
                 *packages[:-1] if level > 0 else "",
-                f"{packages[-1]}{PY_EXTENSION}",
+                f"{packages[-1] if packages else '__init__'}{PY_EXTENSION}",
             )
         if os.path.isfile(fpath):
             return Path(fpath)
@@ -289,14 +289,15 @@ def get_module_path(paths: Set[Path], module: str) -> Optional[Path]:
     :param module: module name.
     :returns: `module` path if exist else None.
     """
-    module = module.split(".")[0]
-    for path in paths:
-        name = str(path.parts[-1]).split(".")[0]
-        if name == module:
-            if str(path).endswith(PY_EXTENSION):
-                return path
-            else:
-                return Path(os.path.join(path, __INIT__))
+    if module is not None:
+        module = module.split(".")[0]
+        for path in paths:
+            name = str(path.parts[-1]).split(".")[0]
+            if name == module:
+                if str(path).endswith(PY_EXTENSION):
+                    return path
+                else:
+                    return Path(os.path.join(path, __INIT__))
     # Path not found.
     return None
 
