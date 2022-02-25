@@ -187,8 +187,13 @@ def rebuild_import(
     :raises cst.ParserSyntaxError: in some rare cases.
     :raises UnsupportedCase: in some rare cases.
     """
+
     if ";" in import_stmnt:
         msg = "import statements separated with ';'."
+        raise UnsupportedCase(path, location, msg)
+
+    if ":" in import_stmnt:
+        msg = "an import statement inlined with ':'."
         raise UnsupportedCase(path, location, msg)
 
     # Remove `import_stmnt` indentation/last-"\n".

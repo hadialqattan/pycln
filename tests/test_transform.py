@@ -516,6 +516,15 @@ class TestTransformFunctions:
                 UnsupportedCase,
                 id="not supported case, ';'",
             ),
+            pytest.param(
+                "if True: import x",
+                0,
+                False,
+                "",
+                [""],
+                UnsupportedCase,
+                id="not supported case, ':'",
+            ),
         ],
     )
     @mock.patch(MOCK % "ImportTransformer.__init__")

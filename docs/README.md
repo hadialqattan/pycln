@@ -1017,6 +1017,44 @@ Now let us review the same two cases but with `__all__` dunder:
 You may notice that using `__all__` dunder makes the two cases distinguishable for both
 the developers and QA tools.
 
+# Unsupported Cases
+
+## Specific
+
+> All bellow cases are unsupported and not in the
+> [roadmap](https://github.com/hadialqattan/pycln/projects/3). Only certain import
+> statements are effected (not the entire file). Also, Pycln will not touch these cases
+> at all to avoid any code break.
+
+### Semicolon separation
+
+```python
+import x; import y
+
+#: Pycln can not handle the above format.
+#:
+#: Of course you can fix this issue by rewriting the above code as:
+
+import x
+import y
+```
+
+### Colon inlined
+
+```python
+try: import x
+finally: import y
+
+#: Pycln can not handle the above format.
+#:
+#: Of course you can fix this issue by rewriting the above code as:
+
+try:
+    import x
+finally:
+    import y
+```
+
 # Integrations
 
 ## Version Control Integration
