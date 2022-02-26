@@ -16,7 +16,6 @@ from .utils import sysu
 
 # Constants.
 MOCK = "pycln.utils.scan.%s"
-PY37_PLUS = sys.version_info >= (3, 7)
 PY38_PLUS = sys.version_info >= (3, 8)
 PY310_PLUS = sys.version_info >= (3, 10)
 
@@ -607,8 +606,8 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 {"List", "str"},
                 id="nested-string",
                 marks=pytest.mark.skipif(
-                    not PY37_PLUS,
-                    reason="Nested str annotation is only available in Python >=3.7.",
+                    not PY38_PLUS,
+                    reason="Nested str annotation is only available in Python >=3.8.",
                 ),
             ),
             pytest.param("foobar: '' = 'x'\n", None, id="empty string annotation"),
@@ -680,8 +679,8 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 None,
                 id="const",
                 marks=pytest.mark.skipif(
-                    not PY37_PLUS,
-                    reason="Nested str annotation is only available in Python >=3.7.",
+                    not PY38_PLUS,
+                    reason="Nested str annotation is only available in Python >=3.8.",
                 ),
             ),
         ],
