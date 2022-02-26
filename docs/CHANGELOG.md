@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.2.4] - 2022-02-27
+
 ### Fixed
 
 - [Support nested string type annotation by @hadialqattan](https://github.com/hadialqattan/pycln/pull/110)
