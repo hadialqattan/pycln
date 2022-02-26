@@ -1,12 +1,12 @@
 repos:
   - repo: https://github.com/hadialqattan/pycln
-    rev: v1.1.0 # Possible releases: https://github.com/hadialqattan/pycln/releases
+    rev: v1.2.3 # Possible releases: https://github.com/hadialqattan/pycln/releases
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v4.1.0
     hooks:
       - id: check-toml
       - id: check-yaml
@@ -24,51 +24,51 @@ repos:
       - id: check-executables-have-shebangs
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.2.1
+    rev: v2.5.1
     hooks:
       - id: prettier
         args: [--prose-wrap=always, --print-width=88]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.7.2
+    rev: v2.31.0
     hooks:
       - id: pyupgrade
         args: [--py36-plus]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.5.4
+    rev: 5.10.1
     hooks:
       - id: isort
         files: "\\.(py)$"
         args: [--settings-path=pyproject.toml]
 
   - repo: https://github.com/myint/docformatter
-    rev: v1.3.1
+    rev: v1.4
     hooks:
       - id: docformatter
         args: [--in-place]
 
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 22.1.0
     hooks:
       - id: black
         args: [--config=pyproject.toml]
 
   - repo: https://gitlab.com/pycqa/flake8
-    rev: "3.8.4"
+    rev: "3.9.2"
     hooks:
       - id: flake8
         additional_dependencies: [pep8-naming]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.782
+    rev: v0.782 # Do not update.
     hooks:
       - id: mypy
         exclude: tests/data/
         args: [--config-file=pyproject.toml]
 
   - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v2.6.0
+    rev: v3.0.0a4
     hooks:
       - id: pylint
         args: [--rcfile=.pylintrc]
