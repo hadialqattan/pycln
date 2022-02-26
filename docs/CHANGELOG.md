@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Support nested string type annotation by @hadialqattan](https://github.com/hadialqattan/pycln/pull/110)
+
 ## [1.2.3] - 2022-02-26
 
 ### Added
@@ -139,8 +143,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- [Support implicit imports from sub-packages by @hadialqattan](https://github.com/hadialqattan/pycln/pull/36)
-- [Support semi string type hint by @hadialqattan](https://github.com/hadialqattan/pycln/pull/35)
+- [Support implicit imports from sub-packages by @hadialqattan](https://github.com/hadialqattan/pycln/pull/37)
+- [Support semi string type hint by @hadialqattan](https://github.com/hadialqattan/pycln/pull/36)
 - [Support casting case by @hadialqattan](https://github.com/hadialqattan/pycln/pull/34)
 
 ## [0.0.1-alpha.3] - 2020-10-07
