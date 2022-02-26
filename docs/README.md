@@ -791,7 +791,7 @@ def bar() -> Tuple[int, int]:
 
 All bellow imports are considered as used:
 
-- Fully string A:
+- Fully string:
 
   ```python
   from ast import Import
@@ -801,7 +801,7 @@ All bellow imports are considered as used:
       pass
   ```
 
-- Fully string B:
+- Nested string (Python 3.7+):
 
   ```python
   from ast import Import

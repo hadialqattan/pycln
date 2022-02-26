@@ -16,6 +16,7 @@ from .utils import sysu
 
 # Constants.
 MOCK = "pycln.utils.scan.%s"
+PY37_PLUS = sys.version_info >= (3, 7)
 PY38_PLUS = sys.version_info >= (3, 8)
 PY310_PLUS = sys.version_info >= (3, 10)
 
@@ -602,7 +603,13 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 id="async-function",
             ),
             pytest.param(
-                "foo: \"List['str']\" = []\n", {"List", "str"}, id="nested-string"
+                "foo: \"List['str']\" = []\n",
+                {"List", "str"},
+                id="nested-string",
+                marks=pytest.mark.skipif(
+                    not PY37_PLUS,
+                    reason="Nested str annotation is only available in Python >=3.7.",
+                ),
             ),
             pytest.param("foobar: '' = 'x'\n", None, id="empty string annotation"),
             pytest.param("foobar = 'x'\n", None, id="no string annotation"),
@@ -665,7 +672,17 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             pytest.param("x, y", False, {"x", "y"}, None, id="names, no-attr"),
             pytest.param("x.i, y.j", False, {"x", "y"}, {"i", "j"}, id="names, attrs"),
             pytest.param("'y'", True, {"y"}, None, id="const"),
-            pytest.param("'y'", False, None, None, id="not const"),
+            pytest.param(
+                "'y'",
+                False,
+                None,
+                None,
+                id="not const",
+                marks=pytest.mark.skipif(
+                    not PY37_PLUS,
+                    reason="Nested str annotation is only available in Python >=3.7.",
+                ),
+            ),
             pytest.param("", False, None, None, id="no-names, no-attrs"),
         ],
     )
