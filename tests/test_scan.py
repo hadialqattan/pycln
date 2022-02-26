@@ -671,19 +671,19 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         [
             pytest.param("x, y", False, {"x", "y"}, None, id="names, no-attr"),
             pytest.param("x.i, y.j", False, {"x", "y"}, {"i", "j"}, id="names, attrs"),
-            pytest.param("'y'", True, {"y"}, None, id="const"),
+            pytest.param("", False, None, None, id="no-names, no-attrs"),
+            pytest.param("'y'", False, None, None, id="not const"),
             pytest.param(
                 "'y'",
-                False,
+                True,
+                {"y"},
                 None,
-                None,
-                id="not const",
+                id="const",
                 marks=pytest.mark.skipif(
                     not PY37_PLUS,
                     reason="Nested str annotation is only available in Python >=3.7.",
                 ),
             ),
-            pytest.param("", False, None, None, id="no-names, no-attrs"),
         ],
     )
     def test_add_name_attr_const(
