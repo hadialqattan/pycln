@@ -40,6 +40,7 @@ class Config:
     config: Optional[Path] = None
     include: Pattern[str] = regexu.INCLUDE_REGEX  # type: ignore
     exclude: Pattern[str] = regexu.EXCLUDE_REGEX  # type: ignore
+    extend_exclude: Pattern[str] = regexu.EMPTY_REGEX  # type: ignore
     all_: bool = False
     check: bool = False
     diff: bool = False
@@ -65,12 +66,15 @@ class Config:
             raise typer.Exit(1)
 
     def _check_regex(self) -> None:
-        # Validate `self.include/exclude`.
+        # Validate `self.include/exclude/extend_exclude`.
         self.include: Pattern[str] = regexu.safe_compile(
             str(self.include), regexu.INCLUDE
         )
         self.exclude: Pattern[str] = regexu.safe_compile(
             str(self.exclude), regexu.EXCLUDE
+        )
+        self.extend_exclude: Pattern[str] = regexu.safe_compile(
+            str(self.extend_exclude), regexu.EXCLUDE
         )
 
 

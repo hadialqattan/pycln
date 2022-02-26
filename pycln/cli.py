@@ -46,6 +46,17 @@ def main(  # pylint: disable=R0913,R0914
             " Exclusions are calculated first, inclusions later."
         ),
     ),
+    extend_exclude: str = typer.Option(
+        regexu.EMPTY_REGEX,
+        "--extend-exclude",
+        "-ee",
+        show_default=False,
+        help=(
+            "Like --exclude, but adds additional files"
+            " and directories on top of the excluded ones."
+            " (Useful if you simply want to add to the default)."
+        ),
+    ),
     all_: bool = typer.Option(
         False,
         "--all",
@@ -133,6 +144,7 @@ def main(  # pylint: disable=R0913,R0914
         config=config,
         include=include,  # type: ignore
         exclude=exclude,  # type: ignore
+        extend_exclude=extend_exclude,  # type: ignore
         all_=all_,
         check=check,
         diff=diff,
@@ -149,7 +161,12 @@ def main(  # pylint: disable=R0913,R0914
             path if path.is_dir() else path.parent, configs.no_gitignore
         )
         sources: Generator = pathu.yield_sources(
-            path, configs.include, configs.exclude, gitignore, reporter
+            path,
+            configs.include,
+            configs.exclude,
+            configs.extend_exclude,
+            gitignore,
+            reporter,
         )
         for source in sources:
             session_maker.session(source)

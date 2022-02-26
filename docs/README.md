@@ -322,6 +322,30 @@ directory called `project` and we want to reformat files that not start with `te
 $ pycln /path_to/project/ --exclude test_.*  # or -e test_.*
 ```
 
+### `-ee, --extend-exclude TEXT` option
+
+> Like --exclude, but adds additional files and directories on top of the excluded ones.
+> (Useful if you simply want to add to the default).
+
+#### Default
+
+> `^$` (empty regex)
+
+#### Behaviour
+
+- An empty value means no paths are excluded.
+- Use forward slashes for directories on all platforms (Windows, too).
+- Exclusions are calculated first, inclusions later.
+
+#### Usage
+
+Assume that we have four files (`util_a.py`, `util_b.py`, `test_a.py`, `test_b.py`) on a
+directory called `project` and we want to reformat files that not start with `test_`:
+
+```bash
+$ pycln /path_to/project/ --extend-exclude test_.*  # or -ee test_.*
+```
+
 ### `-a, --all` flag
 
 > Remove all unused imports (not just those

@@ -30,6 +30,7 @@ CONFIG_ATTR = frozenset(
         "paths",
         "include",
         "exclude",
+        "extend_exclude",
         "all_",
         "check",
         "diff",
@@ -44,6 +45,7 @@ DEFAULTS = {
     "paths": [Path(".")],
     "include": re.compile(r".*_util.py$", re.IGNORECASE),
     "exclude": re.compile(r".*_test.py$", re.IGNORECASE),
+    "extend_exclude": re.compile(r".*fuzz.py$", re.IGNORECASE),
     "all": True,  # For `TestParserConfigFile`.
     "all_": True,  # For `TestConfig`.
     "check": False,
@@ -77,6 +79,7 @@ class TestConfig:
             config=config_,
             include=DEFAULTS["include"],
             exclude=DEFAULTS["exclude"],
+            extend_exclude=DEFAULTS["extend_exclude"],
             expand_stars=True,
             verbose=True,
             diff=True,
@@ -216,7 +219,7 @@ class TestParseConfigFile:
         #:  - _parse_yaml.
         #:  - _parse_yml.
         config.ParseConfigFile(file_path, self.configs)
-        for type_ in ("include", "exclude"):
+        for type_ in ("include", "exclude", "extend_exclude"):
             regex = getattr(self.configs, type_)
             setattr(self.configs, type_, re.compile(regex, re.IGNORECASE))
         for attr in CONFIG_ATTR:

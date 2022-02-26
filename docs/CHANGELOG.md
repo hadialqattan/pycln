@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- [Add extend exclude CLI option @hadialqattan](https://github.com/hadialqattan/pycln/pull/108)
+
 ### Fixed
 
 - [Pycln crashes with `IndexError` or `AttributeError` in case of `from . import *` by @hadialqattan](https://github.com/hadialqattan/pycln/pull/103)

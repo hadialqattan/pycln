@@ -28,12 +28,13 @@ class TestPathu:
     """`pathu.py` functions test case."""
 
     @pytest.mark.parametrize(
-        "path, include, exclude, gitignore, expec",
+        "path, include, exclude, extend_exclude, gitignore, expec",
         [
             pytest.param(
                 Path(DATA_DIR / "paths" / "dir"),
                 re.compile(r".*\.py$"),
                 re.compile(r"(.*s\.py|git/)$"),
+                re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", ["*u.py", "utils/"]),
                 {
                     "x.py",
@@ -46,14 +47,25 @@ class TestPathu:
                 Path(DATA_DIR / "paths"),
                 re.compile(r".*\.py$"),
                 re.compile(r"paths/"),
+                re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", []),
                 set(),
                 id="path: directory - excluded",
             ),
             pytest.param(
+                Path(DATA_DIR / "paths"),
+                re.compile(r".*\.py$"),
+                re.compile(regexu.EMPTY_REGEX),
+                re.compile(r"paths/"),
+                PathSpec.from_lines("gitwildmatch", []),
+                set(),
+                id="path: directory - extend-excluded",
+            ),
+            pytest.param(
                 Path(DATA_DIR / "paths" / "dir"),
                 re.compile(r".*\.py$"),
                 re.compile(r"paths/"),
+                re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", []),
                 set(),
                 id="path: nested-directory - excluded",
@@ -61,7 +73,8 @@ class TestPathu:
             pytest.param(
                 Path(DATA_DIR / "paths" / "a.py"),
                 re.compile(r".*\.py$"),
-                re.compile(r""),
+                re.compile(regexu.EMPTY_REGEX),
+                re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", []),
                 {"a.py"},
                 id="path: file",
@@ -69,7 +82,8 @@ class TestPathu:
             pytest.param(
                 Path(DATA_DIR / "paths" / "a.py"),
                 re.compile(r".*\.py$"),
-                re.compile(r""),
+                re.compile(regexu.EMPTY_REGEX),
+                re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", ["a.py"]),
                 set(),
                 id="path: file - ignored",
@@ -77,28 +91,38 @@ class TestPathu:
             pytest.param(
                 Path(DATA_DIR / "paths" / "b.c"),
                 re.compile(r".*\.py$"),
-                re.compile(r""),
+                re.compile(regexu.EMPTY_REGEX),
+                re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", []),
-                {},
+                set(),
                 id="path: non-py-file",
             ),
         ],
     )
     @mock.patch(MOCK % "Report.ignored_path")
     def test_yield_sources(
-        self, ignored_path, path, include, exclude, gitignore, expec
+        self, ignored_path, path, include, exclude, extend_exclude, gitignore, expec
     ):
-        sources = pathu.yield_sources(path, include, exclude, gitignore, Report(None))
-        for source in sources:
-            assert source.parts[-1] in expec
+        sources = pathu.yield_sources(
+            path, include, exclude, extend_exclude, gitignore, Report(None)
+        )
+        sources = list(sources)
+        if sources and expec:
+            for source in sources:
+                assert source.parts[-1] in expec
+        else:
+            assert sources == list(expec)
 
     @mock.patch(MOCK % "Report.ignored_path")
     def test_nested_gitignore(self, ignored_path):
         path = Path(DATA_DIR / "nested_gitignore_tests")
         include = regexu.safe_compile(regexu.INCLUDE_REGEX, regexu.INCLUDE)
         exclude = regexu.safe_compile(regexu.EXCLUDE_REGEX, regexu.EXCLUDE)
+        extend_exclude = regexu.safe_compile(regexu.EMPTY_REGEX, regexu.EXCLUDE)
         gitignore = regexu.get_gitignore(path)
-        sources = pathu.yield_sources(path, include, exclude, gitignore, Report(None))
+        sources = pathu.yield_sources(
+            path, include, exclude, extend_exclude, gitignore, Report(None)
+        )
         expected = [
             Path(path / "x.py"),
             Path(path / "root/b.py"),
