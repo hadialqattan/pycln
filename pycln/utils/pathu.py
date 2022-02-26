@@ -45,6 +45,7 @@ def yield_sources(
     path: Path,
     include: Pattern[str],
     exclude: Pattern[str],
+    extend_exclude: Pattern[str],
     gitignore: PathSpec,
     reporter: Report,
 ) -> Generator[Path, None, None]:
@@ -54,6 +55,7 @@ def yield_sources(
     :param path: A path to start searching from.
     :param include: regex pattern to be included.
     :param exclude: regex pattern to be excluded.
+    :param extend_exclude: regex pattern to be excluded in addition to `exclude`.
     :param gitignore: gitignore PathSpec object.
     :param reporter: a `report.Report` object.
     :returns: generator of `.py` files paths.
@@ -82,6 +84,11 @@ def yield_sources(
             reporter.ignored_path(entry_path, EXCLUDE)
             continue
 
+        # Compute extended exclusions.
+        if is_excluded(entry_path, extend_exclude):
+            reporter.ignored_path(entry_path, EXCLUDE)
+            continue
+
         # Compute `.gitignore`.
         if gitignore.match_file(entry_path):
             reporter.ignored_path(entry_path, GITIGNORE)
@@ -107,6 +114,7 @@ def yield_sources(
             dir_,
             include,
             exclude,
+            extend_exclude,
             gitignore + regexu.get_gitignore(dir_) if gitignore is not None else None,
             reporter,
         )

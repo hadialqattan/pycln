@@ -18,6 +18,7 @@ GITIGNORE = ".gitignore"
 SKIP_FILE_REGEX = r"# *(nopycln *: *file).*"
 SKIP_IMPORT_REGEX = r"# *((noqa *:*)|(nopycln *: *import)).*"
 INIT_FILE_REGEX = r"^__init__.py$"
+EMPTY_REGEX = r"^$"
 INCLUDE_REGEX = r".*\.py$"
 EXCLUDE_REGEX = (
     r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|"

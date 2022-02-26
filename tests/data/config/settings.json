@@ -8,6 +8,7 @@
   "pycln": {
     "include": ".*_util.py$",
     "exclude": ".*_test.py$",
+    "extend_exclude": ".*fuzz.py$",
     "expand_stars": true,
     "verbose": true,
     "diff": true,
