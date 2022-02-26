@@ -288,18 +288,27 @@ class SourceAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_AnnAssign(self, node: ast.AnnAssign):
-        #: Support string type annotations.
-        #: >>> from typing import List
-        #: >>> foo: "List[str]" = []
+        #: Support (nested)string type annotations.
+        #: >>> from ast import Import
+        #: >>> from typing import Tuple
+        #: >>>
+        #: >>> foo: "List[Import]" = []
+        #: >>>
+        #: >>> bar: "List['Import']" = []
         self._visit_string_type_annotation(node)
 
     @recursive
     def visit_arg(self, node: ast.arg):
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)
-        #: Support arg string type annotations.
+        #: Support arg (nested)string type annotations.
+        #: >>> from ast import Import
         #: >>> from typing import Tuple
-        #: >>> def foo(bar: "Tuple[str, int]"):
+        #: >>>
+        #: >>> def foo(bar: "Tuple[Import]"):
+        #: ...     pass
+        #: >>>
+        #: >>> def bar(foo: "Tuple['Import']"):
         #: ...     pass
         self._visit_string_type_annotation(node)
 
@@ -307,9 +316,14 @@ class SourceAnalyzer(ast.NodeVisitor):
     def visit_FunctionDef(self, node: FunctionDefT):
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)
-        #: Support string type annotations.
+        #: Support (nested)string type annotations.
+        #: >>> from ast import Import
         #: >>> from typing import List
-        #: >>> def foo() -> 'List[str]':
+        #: >>>
+        #: >>> def foo() -> "List[Import]":
+        #: >>>     pass
+        #: >>>
+        #: >>> def bar() -> "List['Import']":
         #: >>>     pass
         self._visit_string_type_annotation(node)
 
@@ -403,7 +417,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             annotation = node.annotation
         else:
             annotation = node.returns
-        self._parse_string(annotation)  # type: ignore
+        self._parse_string(annotation, True)  # type: ignore
 
     def _visit_type_comment(
         self, node: Union[ast.Assign, ast.arg, FunctionDefT]
@@ -423,7 +437,7 @@ class SourceAnalyzer(ast.NodeVisitor):
                 mode = "func_type"
             try:
                 tree = parse_ast(type_comment, mode=mode)
-                self._add_name_attr(tree)
+                self._add_name_attr_const(tree)
             except UnparsableFile:
                 #: Ignore errors when it's not a valid type comment.
                 #:
@@ -433,13 +447,15 @@ class SourceAnalyzer(ast.NodeVisitor):
                 #: Issue: https://github.com/hadialqattan/pycln/issues/58
                 pass
 
-    def _parse_string(self, node: Union[ast.Constant, ast.Str]) -> None:
+    def _parse_string(
+        self, node: Union[ast.Constant, ast.Str], is_str_annotation: bool = False
+    ) -> None:
         # Parse string names/attrs.
         if isinstance(node, (ast.Constant, ast.Str)):
             val = getattr(node, "value", "") or getattr(node, "s", "")
             if val and isinstance(val, str):
                 tree = parse_ast(val, mode="eval")
-                self._add_name_attr(tree)
+                self._add_name_attr_const(tree, is_str_annotation)
 
     def _add_concatenated_list_names(self, node: ast.BinOp) -> None:
         #: Safely add `["x", "y"] + ["i", "j"]`
@@ -460,14 +476,16 @@ class SourceAnalyzer(ast.NodeVisitor):
                 if value and isinstance(value, str):
                     self._source_stats.name_.add(value)
 
-    def _add_name_attr(self, tree: ast.AST):
-        # Add any `ast.Name` or `ast.Attribute`
+    def _add_name_attr_const(self, tree: ast.AST, is_str_annotation: bool = False):
+        # Add any `ast.Name`, `ast.Attribute`, and (`ast.Constant` if is_str_annotation)
         # child to `self._source_stats`.
         for node in ast.walk(tree):
             if isinstance(node, ast.Name):
                 self._source_stats.name_.add(node.id)
             elif isinstance(node, ast.Attribute):
                 self._source_stats.attr_.add(node.attr)
+            elif is_str_annotation and isinstance(node, ast.Constant):
+                self._source_stats.name_.add(node.value)
 
     def _get_py38_import_node(self, node: ast.Import) -> _nodes.Import:
         # Convert any Python < 3.8 `ast.Import`

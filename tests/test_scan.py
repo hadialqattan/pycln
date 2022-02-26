@@ -601,6 +601,15 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 {"Tuple", "int"},
                 id="async-function",
             ),
+            pytest.param(
+                "foo: \"List['str']\" = []\n",
+                {"List", "str"},
+                id="nested-string",
+                marks=pytest.mark.skipif(
+                    not PY38_PLUS,
+                    reason="Nested str annotation is only available in Python >=3.8.",
+                ),
+            ),
             pytest.param("foobar: '' = 'x'\n", None, id="empty string annotation"),
             pytest.param("foobar = 'x'\n", None, id="no string annotation"),
         ],
@@ -657,16 +666,30 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
-        "code, expec_names, expec_attrs",
+        "code, is_str_annotation, expec_names, expec_attrs",
         [
-            pytest.param("x, y", {"x", "y"}, None, id="names, no-attr"),
-            pytest.param("x.i, y.j", {"x", "y"}, {"i", "j"}, id="names, attrs"),
-            pytest.param("", None, None, id="no-names, no-attrs"),
+            pytest.param("x, y", False, {"x", "y"}, None, id="names, no-attr"),
+            pytest.param("x.i, y.j", False, {"x", "y"}, {"i", "j"}, id="names, attrs"),
+            pytest.param("", False, None, None, id="no-names, no-attrs"),
+            pytest.param("'y'", False, None, None, id="not const"),
+            pytest.param(
+                "'y'",
+                True,
+                {"y"},
+                None,
+                id="const",
+                marks=pytest.mark.skipif(
+                    not PY38_PLUS,
+                    reason="Nested str annotation is only available in Python >=3.8.",
+                ),
+            ),
         ],
     )
-    def test_add_name_attr(self, code, expec_names, expec_attrs):
+    def test_add_name_attr_const(
+        self, code, is_str_annotation, expec_names, expec_attrs
+    ):
         analyzer = scan.SourceAnalyzer([])
-        analyzer._add_name_attr(ast.parse(code))
+        analyzer._add_name_attr_const(ast.parse(code), is_str_annotation)
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
