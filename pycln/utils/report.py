@@ -300,10 +300,10 @@ class Report:
         :param path: the `__init__.py` file path.
         """
         msg = """
-        Pycln can not decide weather the unused imported names
+        Pycln can not decide whether the unused imported names
         are useless or imported to be used somewhere else (exported).
 
-        Please consider adding `__all__` dunder (then re-run Pycln).
+        Please consider adding an `__all__` dunder (then re-run Pycln).
 
         For more info:
         https://hadialqattan.github.io/pycln/#/?id=init-file-__init__py

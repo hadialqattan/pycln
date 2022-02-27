@@ -938,8 +938,8 @@ __all__ = ["os", "time"]
 
 ### Init file (`__init__.py`)
 
-> Pycln can not decide weather the unused imported names are useless or imported to be
-> used somewhere else (exported) in case of `__init__.py` file with no `__all__` dunder.
+> Pycln can not decide whether the unused imported names are useless or imported to be
+> used somewhere else (exported) in case of an `__init__.py` file with no `__all__` dunder.
 
 A detailed description of the problem:
 
@@ -988,13 +988,13 @@ consider the following two cases below:
   ```
 
 Due to the nature of Pycln where it checks every file individually, it can not decide
-weather `x` and `y` are imported to be exported (case a1) or imported but unused (case
-a2), therefore, I consider using `__all__` dunder is a good solution for this problem.
+whether `x` and `y` are imported to be exported (case a1) or imported but unused (case
+a2), therefore, I consider using an `__all__` dunder is a good solution for this problem.
 
-NOTE: in case you're not sure about what does the `__all__` dunder do, please consider
+NOTE: in case you're not sure about what an `__all__` dunder does, please consider
 reading this stackoverflow [answer](https://stackoverflow.com/a/35710527/12738844)
 
-Now let us review the same two cases but with `__all__` dunder:
+Now let us review the same two cases but with an `__all__` dunder:
 
 - case b1:
 
@@ -1032,14 +1032,14 @@ Now let us review the same two cases but with `__all__` dunder:
   where `__init__.py`:
 
   ```python
-  import x, y  #: In this case where `__all__` dunder is used, Pycln
+  import x, y  #: In this case where an `__all__` dunder is used, Pycln
               #: can consider these names as unused confidently
               #: where they are inaccessible from other files
               #: (not exported).
   __all__ = ["something else or even an empty list"]
   ```
 
-You may notice that using `__all__` dunder makes the two cases distinguishable for both
+You may notice that using an `__all__` dunder makes the two cases distinguishable for both
 the developers and QA tools.
 
 # Unsupported Cases
