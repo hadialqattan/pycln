@@ -157,7 +157,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         if not PY38_PLUS and source_lines is None:
             # Bad class usage.
             raise ValueError("Please provide source lines for Python < 3.8.")
-        self._has_all = False  # True if the source has `__all__` dunder.
+        self._has_all = False  # True if the source has an `__all__` dunder.
         self._lines = source_lines
         self._import_stats = ImportStats(set(), set())
         self._imports_to_skip: Set[Union[_nodes.Import, _nodes.ImportFrom]] = set()
@@ -556,7 +556,7 @@ class SourceAnalyzer(ast.NodeVisitor):
     def has_all(self) -> bool:
         """`self._has_all` getter.
 
-        :returns: True if the source includes `__all__` dunder.
+        :returns: True if the source includes an `__all__` dunder.
         """
         return self._has_all
 
@@ -579,7 +579,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     def __init__(self, path: Path):
         self._not_importables: Set[Union[ast.Name, str]] = set()
         self._importables: Set[str] = set()
-        self._has_all = False  # True if the source has `__all__` dunder.
+        self._has_all = False  # True if the source has an `__all__` dunder.
         self._path = path
 
     @recursive
