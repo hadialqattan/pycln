@@ -939,7 +939,8 @@ __all__ = ["os", "time"]
 ### Init file (`__init__.py`)
 
 > Pycln can not decide whether the unused imported names are useless or imported to be
-> used somewhere else (exported) in case of an `__init__.py` file with no `__all__` dunder.
+> used somewhere else (exported) in case of an `__init__.py` file with no `__all__`
+> dunder.
 
 A detailed description of the problem:
 
@@ -989,7 +990,8 @@ consider the following two cases below:
 
 Due to the nature of Pycln where it checks every file individually, it can not decide
 whether `x` and `y` are imported to be exported (case a1) or imported but unused (case
-a2), therefore, I consider using an `__all__` dunder is a good solution for this problem.
+a2), therefore, I consider using an `__all__` dunder is a good solution for this
+problem.
 
 NOTE: in case you're not sure about what an `__all__` dunder does, please consider
 reading this stackoverflow [answer](https://stackoverflow.com/a/35710527/12738844)
@@ -1039,8 +1041,8 @@ Now let us review the same two cases but with an `__all__` dunder:
   __all__ = ["something else or even an empty list"]
   ```
 
-You may notice that using an `__all__` dunder makes the two cases distinguishable for both
-the developers and QA tools.
+You may notice that using an `__all__` dunder makes the two cases distinguishable for
+both the developers and QA tools.
 
 # Unsupported Cases
 
