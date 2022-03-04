@@ -1,8 +1,8 @@
 <img src="https://raw.githubusercontent.com/hadialqattan/pycln/master/docs/_media/logo-background.png" width="100%" alt="Logo">
 
-<p align="center">
+<h2 align="center">
     A formatter for finding and removing unused import statements.
-</p>
+</h2>
 
 <p align="center">
     <a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/more%20info-Pycln%20Docs-B5FFB3.svg?style=flat-square" alt="Pycln Docs"></a>
@@ -41,6 +41,108 @@
 
 ---
 
-<p align="center">
-For more information see: https://hadialqattan.github.io/pycln
-</p>
+**[Read the documentation on Github pages!](https://hadialqattan.github.io/pycln)**
+
+---
+
+## Installation and usage
+
+### Installation
+
+Pycln requires Python 3.6+ and can be easily installed using the most common Python
+packaging tools. We recommend installing the latest stable release from PyPI with pip:
+
+```bash
+$ pip install pycln
+```
+
+### Usage
+
+By **default** Pycln will remove any unused import statement, So the simplest usage is
+to specify the path only:
+
+```bash
+$ pycln [PATH]
+```
+
+Also, it's possible to run `pycln` as a package:
+
+```bash
+$ python3 -m pycln [PATH]
+```
+
+NOTE: you may need to use `-a/--all` option for more satisfying results. see
+[-a/--all flag](https://hadialqattan.github.io/pycln/#/?id=-a-all-flag).
+
+Further information can be found in our docs:
+
+- [Usage and Configuration](https://hadialqattan.github.io/pycln/#/?id=usage)
+
+## Configuration
+
+**Pycln** is able to read project-specific default values for its command line options
+from a configuration file like `pyproject.toml` or `setup.cfg`. This is especially
+useful for specifying custom CLI arguments/options like `path/paths`, `--include`,
+`--exclude`/`--extend-exclude`, or even `--all`.
+
+You can find more details in our documentation:
+
+- [--config [PATH] CLI option](https://hadialqattan.github.io/pycln/#/?id=-config-path-option)
+
+And if you're looking for more general configuration documentation:
+
+- [Usage and Configuration](https://hadialqattan.github.io/pycln/#/?id=usage)
+
+## Used by
+
+The following notable open-source projects trust and use _Pycln_:
+
+- [pybind11](https://github.com/pybind/pybind11)
+- [cibuildwheel](https://github.com/pypa/cibuildwheel)
+- [Pyodide](https://github.com/pyodide/pyodide)
+- [Open Event Server](https://github.com/fossasia/open-event-server)
+
+The following organizations use _Pycln_:
+
+- [Scikit-HEP](https://github.com/scikit-hep)
+- [Python Packaging Authority](https://github.com/pypa)
+- [FOSSASIA](https://github.com/fossasia)
+
+Are we missing anyone? Let us know.
+
+## License
+
+MIT
+
+## Contributing
+
+A big welcome for considering contributing to make the project better!
+
+You can get started by reading this:
+
+- [General guidlines](https://hadialqattan.github.io/pycln/#/CONTRIBUTING?id=general-guidelines)
+
+You can also dive directly into the technicalities:
+
+- [Contributing technicalities](https://hadialqattan.github.io/pycln/#/CONTRIBUTING?id=technicalities)
+
+## Change log
+
+The log has become rather long. It moved to its own file.
+
+See [CHANGELOG](https://hadialqattan.github.io/pycln/#/CHANGELOG).
+
+## Authors
+
+The author list is quite long nowadays, so it lives in its own file.
+
+See [AUTHORS](https://hadialqattan.github.io/pycln/#/AUTHORS)
+
+## Code of Conduct
+
+Everyone participating in the _Pycln_ project, and in particular in the issue tracker,
+and pull requests is expected to treat other people with respect.
+
+---
+
+Give a ⭐️ if this project helped you!

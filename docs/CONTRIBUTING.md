@@ -3,17 +3,12 @@
 A big welcome for considering contributing to make the project better! Have you read the
 entire user [documentation](README) yet?
 
-Reading and following these guidelines will help us make the contribution process easy
-and effective for everyone involved. It also communicates that you agree to respect the
-time of the developers managing and developing this open source project. In return, we
-will reciprocate that respect by addressing your issue, assessing changes, and helping
-you finalize your pull requests.
-
 ## Code of Conduct
 
-We take our open source community seriously and hold ourselves and other contributors to
-high standards of communication. By participating and contributing to this project, you
-agree to uphold our [Code of Conduct](CODE_OF_CONDUCT.md).
+Everyone participating in the **Pycln** project, and in particular in the issue tracker,
+and pull requests is expected to treat other people with respect. By participating and
+contributing to this project, you agree to uphold our
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## General guidelines
 
@@ -29,9 +24,7 @@ guidelines that cover both:
 ## Issue
 
 **Issues** should be used to report a bug, add a new feature, or discuss potential
-changes **before creating a PR**. When you're creating a new Issue, a template will be
-loaded that will guide you through collecting and providing the information we need to
-investigate.
+changes.
 
 If you find an issue that addresses the problem you're having, please add your own
 reproduction information to the existing issue rather than creating a new one. Adding a
@@ -48,10 +41,15 @@ look:**
 PRs to our project are always welcome and can be a quick way to get your fix or
 improvement slated for the next release. In general, PRs should:
 
-- Only contain changes related to an opened issue.
+- Only contain changes related to a certain issue/feature.
 - Add or edit our tests suite for fixed or changed functionality (if a test suite
   already exists).
 - Include documentation on our [README](README).
+
+_In case the problem was very clear, you can create a PR directly without opening an
+issue._
+
+## Technicalities
 
 In general, we follow the ["fork-and-pull"](https://github.com/susam/gitpr) Git
 workflow:
@@ -62,10 +60,9 @@ workflow:
 4. Commit changes to the branch.
 5. Follow any formatting and testing guidelines specific to this repo.
 6. Push changes to your fork.
-7. Open a PR in our repository and follow the PR template so that we can efficiently
-   review the changes.
+7. Open a PR in our repository.
 
-## Technicalities
+Detailed steps are demonstrated below:
 
 ### Fork Repository
 
@@ -84,11 +81,10 @@ workflow:
 
 ### Setup Branch
 
-Create a branch locally using this pattern `i{issue_number}` (for issue number 88 it
-should be `i88`)
+Create a branch locally:
 
 ```bash
-$ git checkout -b i{issue_number}
+$ git checkout -b {branch_name}
 ```
 
 ### Install Pycln Development Requirements
@@ -104,7 +100,7 @@ $ git checkout -b i{issue_number}
 
 ### Testing
 
-After doing your changes, you should run the tests by the following command:
+After finishing, you should run the tests by the following command:
 
 ```bash
 $ ./scripts/tests_runner.sh

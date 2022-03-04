@@ -48,7 +48,7 @@ Pycln requires Python 3.6+ and can be easily installed using the most common Pyt
 packaging tools. We recommend installing the latest stable release from PyPI with pip:
 
 ```bash
-$ pip3 install pycln
+$ pip install pycln
 ```
 
 ## Unreleased (REPOSITORY)
@@ -78,7 +78,7 @@ using
 
 ## Uninstall
 
-It doesn't matter which installation method you has used, Uninstall can be done with
+It doesn't matter which installation method you have used, Uninstall can be done with
 [`uninstall.sh`](https://github.com/hadialqattan/pycln/tree/master/scripts/uninstall.sh)
 (pip):
 
@@ -90,8 +90,8 @@ $ ./scripts/uninstall.sh
 
 ## The Simplest Usage
 
-By **default** Pycln will **remove** any unused import statement, So the simplest usage
-is to specify only the path:
+By **default** Pycln **removes** any unused import statement, So the simplest usage is
+to specify only the path:
 
 ```bash
 $ pycln [PATH]
@@ -99,7 +99,7 @@ $ pycln [PATH]
 
 ## Pycln Skips
 
-### Import Skips
+### Import Skip
 
 > Skip an import statement from Pycln check.
 
@@ -124,7 +124,7 @@ $ pycln [PATH]
   )
   ```
 
-### File Wide Skips
+### File Wide Skip
 
 > Skip a file by typing `# nopycln: file` anywhere on it.
 
