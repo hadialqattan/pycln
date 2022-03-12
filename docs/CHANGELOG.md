@@ -12,6 +12,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- [Pycln does not cleanup `finally` block body from useless `pass` statements by @hadialqattan](https://github.com/hadialqattan/pycln/pull/114)
+
 - [Pycln unnecessarily skips `try..except` imports when standard import exception(s) exist(s) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/113)
 
 ## [1.2.4] - 2022-02-27
