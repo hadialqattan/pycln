@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.2.5] - 2022-03-12
+
 ### Fixed
 
 - [Pycln does not cleanup `finally` blocks' bodies from useless `pass` statements by @hadialqattan](https://github.com/hadialqattan/pycln/pull/114)
