@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Pycln unnecessarily skips `try..except` imports when standard import exception(s) exist(s) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/113)
+
 ## [1.2.4] - 2022-02-27
 
 ### Fixed

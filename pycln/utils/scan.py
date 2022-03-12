@@ -14,7 +14,6 @@ from ._exceptions import ReadPermissionError, UnexpandableImportStar, Unparsable
 # Constants.
 PY38_PLUS = sys.version_info >= (3, 8)
 PY39_PLUS = sys.version_info >= (3, 9)
-IMPORT_EXCEPTIONS = {"ImportError", "ImportWarning", "ModuleNotFoundError"}
 __ALL__ = "__all__"
 NAMES_TO_SKIP = frozenset(
     {
@@ -232,59 +231,6 @@ class SourceAnalyzer(ast.NodeVisitor):
                     #:
                     #: Issue: https://github.com/hadialqattan/pycln/issues/41
                     pass
-
-    @recursive
-    def visit_Try(self, node: ast.Try):
-        """Support any try/except block that has import error(s).
-
-        Add any import that placed on try/except block that has import error
-        to `self._imports_to_skip`.
-
-        exp:- two of these imports would not be used and should not be removed:
-            >>> try:
-            >>>     import foo2
-            >>> except ModuleNotFoundError:
-            >>>     import foo3
-            >>> else:
-            >>>     import foo38
-
-        supported exceptions (`IMPORT_EXCEPTIONS`):
-            - ModuleNotFoundError
-            - ImportError.
-            - ImportWarning.
-
-        supported blocks:
-            - try.
-            - except.
-            - else.
-        """
-        is_skip_case = False
-
-        def add_imports_to_skip(body: List[ast.stmt]) -> None:
-            """Add all try/except/else blocks body import children to
-            `self._imports_to_skip`.
-
-            :param body: ast.List to iterate over.
-            """
-            for child in body:
-                if hasattr(child, "names"):
-                    self._imports_to_skip.add(child)  # type: ignore
-
-        for handler in node.handlers:
-            if hasattr(handler.type, "elts"):
-                for name in getattr(handler.type, "elts", []):
-                    if hasattr(name, "id") and name.id in IMPORT_EXCEPTIONS:
-                        is_skip_case = True
-                        break
-            elif hasattr(handler.type, "id"):
-                if getattr(handler.type, "id", "") in IMPORT_EXCEPTIONS:
-                    is_skip_case = True
-            if is_skip_case:
-                add_imports_to_skip(handler.body)
-
-        if is_skip_case:
-            for body in (node.body, node.orelse):
-                add_imports_to_skip(body)
 
     @recursive
     def visit_AnnAssign(self, node: ast.AnnAssign):

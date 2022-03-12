@@ -719,41 +719,6 @@ Some behaviours:
   - `HasSideEffects.MAYBE` ~> considered as used.
   - `HasSideEffects.NO` ~> considered as not used.
 
-### Try..Except
-
-> Pycln can understand `try..except (Some Import Exceptions..)` case.
-
-Supported built-in exceptions:
-
-- [ModuleNotFoundError](https://docs.python.org/3/library/exceptions.html#ModuleNotFoundError).
-- [ImportError](https://docs.python.org/3/library/exceptions.html#ImportError).
-- [ImportWarning](https://docs.python.org/3/library/exceptions.html#ImportWarning).
-
-Supported blocks:
-
-- [try](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
-- [except](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
-- [else](https://docs.python.org/3/tutorial/errors.html#handling-exceptions).
-
-All bellow imports are considered as used:
-
-- `try..except`:
-  ```python
-  try:
-      import x_for_py38
-  except ModuleNotFoundError:  # Can be tuple of exceptions.
-      import x_for_py36
-  ```
-- `try..except..else`:
-  ```python
-  try:
-      import x_for_py38
-  except ModuleNotFoundError:  # Can be tuple of exceptions.
-      import x_for_py36
-  else:
-      import y
-  ```
-
 ### Implicit Imports From Sub-Packages
 
 > Pycln can deal with implicit imports from sub-packages.
