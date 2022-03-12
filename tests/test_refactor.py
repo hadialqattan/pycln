@@ -194,6 +194,22 @@ class TestRefactor:
                 ],
                 id="orelse parent - no-else",
             ),
+            pytest.param(
+                [
+                    "try:\n",
+                    "   pass\n",
+                    "finally:\n",
+                    "   pass\n",
+                    "   pass\n",
+                ],
+                [
+                    "try:\n",
+                    "   pass\n",
+                    "finally:\n",
+                    "   pass\n",
+                ],
+                id="finalbody parent",
+            ),
         ],
     )
     def test_remove_useless_passes(self, source_lines, expec_lines):
