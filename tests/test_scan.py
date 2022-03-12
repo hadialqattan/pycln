@@ -66,7 +66,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             assert imports
             assert imports[0].names[0].name == expec_name
         else:
-            assert not imports
+            assert not imports  # pragma: nocover
 
     def _get_import(self, import_stmnt: str, expec_end_lineno: Optional[int]) -> tuple:
         ast_impt = ast.parse(import_stmnt).body[0]
@@ -431,80 +431,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
-
-    @pytest.mark.parametrize(
-        "code, expec_name",
-        [
-            pytest.param(
-                (
-                    "try:\n"
-                    "    import x\n"
-                    "except ModuleNotFoundError:\n"
-                    "    pass\n"
-                ),
-                "x",
-                id="try : ModuleNotFoundError",
-            ),
-            pytest.param(
-                ("try:\n" "    import x\n" "except ImportError:\n" "    pass\n"),
-                "x",
-                id="try : ImportError",
-            ),
-            pytest.param(
-                ("try:\n" "    import x\n" "except ImportWarning:\n" "    pass\n"),
-                "x",
-                id="try : ImportWarning",
-            ),
-            pytest.param(
-                (
-                    "try:\n"
-                    "    import x\n"
-                    "except ("
-                    "ImportWarning, "
-                    "ImportError, "
-                    "ModuleNotFoundError"
-                    "):\n"
-                    "    pass\n"
-                ),
-                "x",
-                id="All supported errors",
-            ),
-            pytest.param(
-                ("try:\n" "    pass\n" "except ImportError:\n" "    import x\n"),
-                "x",
-                id="except : ImportError",
-            ),
-            pytest.param(
-                (
-                    "try:\n"
-                    "    pass\n"
-                    "except ImportError:\n"
-                    "    pass\n"
-                    "else:\n"
-                    "    import x\n"
-                ),
-                "x",
-                id="else : ImportError",
-            ),
-            pytest.param(
-                (
-                    "try:\n"
-                    "    pass\n"
-                    "except ImportError:\n"
-                    "    pass\n"
-                    "else:\n"
-                    "    pass\n"
-                    "finally:\n"
-                    "    import x"
-                ),
-                None,
-                id="finally : ImportError",
-            ),
-        ],
-    )
-    def test_visit_Try(self, code, expec_name):
-        analyzer = self._get_analyzer(code)
-        self._assert_name_equal_or_not(list(analyzer._imports_to_skip), expec_name)
 
     @pytest.mark.parametrize(
         "code, expec_names, expec_names_to_skip",
