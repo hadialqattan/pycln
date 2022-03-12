@@ -66,7 +66,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             assert imports
             assert imports[0].names[0].name == expec_name
         else:
-            assert not imports
+            assert not imports  # pragma: nocover
 
     def _get_import(self, import_stmnt: str, expec_end_lineno: Optional[int]) -> tuple:
         ast_impt = ast.parse(import_stmnt).body[0]
