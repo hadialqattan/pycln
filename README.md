@@ -97,16 +97,17 @@ And if you're looking for more general configuration documentation:
 
 The following notable open-source projects trust and use _Pycln_:
 
-- [pybind11](https://github.com/pybind/pybind11)
 - [cibuildwheel](https://github.com/pypa/cibuildwheel)
-- [Pyodide](https://github.com/pyodide/pyodide)
 - [Open Event Server](https://github.com/fossasia/open-event-server)
+- [pybind11](https://github.com/pybind/pybind11)
+- [Pyodide](https://github.com/pyodide/pyodide)
+- [Rich](https://github.com/Textualize/rich)
 
 The following organizations use _Pycln_:
 
-- [Scikit-HEP](https://github.com/scikit-hep)
-- [Python Packaging Authority](https://github.com/pypa)
 - [FOSSASIA](https://github.com/fossasia)
+- [Python Packaging Authority](https://github.com/pypa)
+- [Scikit-HEP](https://github.com/scikit-hep)
 
 Are we missing anyone? Let us know.
 
