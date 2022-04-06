@@ -5,7 +5,7 @@ from typing import Generator, List, Optional
 import typer
 
 from . import __doc__, __name__, version_callback
-from .utils import pathu, refactor, regexu, report
+from .utils import iou, pathu, refactor, regexu, report
 from .utils.config import Config
 
 app = typer.Typer(name=__name__, add_completion=True)
@@ -157,17 +157,20 @@ def main(  # pylint: disable=R0913,R0914
     reporter = report.Report(configs)
     session_maker = refactor.Refactor(configs, reporter)
     for path in configs.paths:
-        gitignore = regexu.get_gitignore(
-            path if path.is_dir() else path.parent, configs.no_gitignore
-        )
-        sources: Generator = pathu.yield_sources(
-            path,
-            configs.include,
-            configs.exclude,
-            configs.extend_exclude,
-            gitignore,
-            reporter,
-        )
+        if path == iou.STDIN_NOTATION:
+            sources: List[Path] = [iou.STDIN_FILE]
+        else:
+            gitignore = regexu.get_gitignore(
+                path if path.is_dir() else path.parent, configs.no_gitignore
+            )
+            sources: Generator = pathu.yield_sources(  # type: ignore
+                path,
+                configs.include,
+                configs.exclude,
+                configs.extend_exclude,
+                gitignore,
+                reporter,
+            )
         for source in sources:
             session_maker.session(source)
     # Print the report.

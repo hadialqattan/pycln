@@ -101,6 +101,11 @@ class Report:
         typer.echo(diff_str)
 
     @staticmethod
+    def output_stdin_to_stdout(fixed_lines: List[str]) -> None:
+        formatted_code = "".join(fixed_lines)
+        typer.echo(formatted_code)
+
+    @staticmethod
     def rebuild_report_import(
         node: Union[_nodes.Import, _nodes.ImportFrom],
         alias: ast.alias,

@@ -10,7 +10,7 @@ import toml
 import typer
 import yaml
 
-from . import regexu
+from . import iou, regexu
 
 # Constants.
 CONFIG_SECTIONS = {
@@ -55,6 +55,8 @@ class Config:
         if self.paths:
             for path in self.paths.copy():
                 if not (path.is_dir() or path.is_file()):
+                    if path == iou.STDIN_NOTATION:
+                        continue
                     self.paths.remove(path)
 
         if not self.paths:
