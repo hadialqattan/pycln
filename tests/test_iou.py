@@ -1,5 +1,7 @@
 """pycln/utils/iou.py tests."""
 # pylint: disable=R0201,W0613
+import os
+from typing import List
 from unittest import mock
 
 import pytest
@@ -63,7 +65,7 @@ class TestIOU:
     )
     @mock.patch(MOCK % "sys.stdin.buffer.read")
     def test_read_stdin(
-        self, stdin, content: str, expec_code: str, expec_newline: str, expec_err: str
+        self, stdin, content: str, expec_code: str, expec_newline: str, expec_err
     ):
         with pytest.raises(expec_err):
             stdin.return_value = content.encode()
@@ -125,7 +127,7 @@ class TestIOU:
             ),
             pytest.param(
                 "print('Hello')\r\n",
-                "print('Hello')\n",
+                "print('Hello')\n\n",
                 iou.CRLF,
                 sysu.Pass,
                 0o0644,
@@ -138,14 +140,15 @@ class TestIOU:
                 sysu.Pass,
                 0o0644,
                 id="detect LF",
-                marks=pytest.mark.skipif(
-                    ISWIN, reason="Unnecessary as long as WindowsOS uses CRLF."
-                ),
             ),
         ],
     )
-    def test_safe_read(self, content, expec_code, expec_newline, expec_err, chmod):
+    def test_safe_read(
+        self, content: str, expec_code: str, expec_newline: str, expec_err, chmod: int
+    ):
         with pytest.raises(expec_err):
+            if expec_newline:
+                content = content.replace(os.linesep, expec_newline)
             with sysu.reopenable_temp_file(content) as tmp_path:
                 set_mode(str(tmp_path), chmod)
                 # default param: permissions: tuple = (os.R_OK, os.W_OK).
@@ -182,7 +185,7 @@ class TestIOU:
                 iou.CRLF,
                 sysu.Pass,
                 0o0644,
-                id="newlines - CRLF",
+                id="newline - CRLF",
             ),
             pytest.param(
                 ["import time\r\n", "time.time()\r\n"],
@@ -190,17 +193,24 @@ class TestIOU:
                 iou.LF,
                 sysu.Pass,
                 0o0644,
-                id="newlines - LF",
+                id="newline - LF",
             ),
         ],
     )
-    def test_safe_write(self, fixed_lines, expec_code, expec_newline, expec_err, chmod):
+    def test_safe_write(
+        self,
+        fixed_lines: List[str],
+        expec_code: str,
+        expec_newline: str,
+        expec_err,
+        chmod: int,
+    ):
         with pytest.raises(expec_err):
             with sysu.reopenable_temp_file("".join(fixed_lines)) as tmp_path:
                 set_mode(str(tmp_path), chmod)
                 iou.safe_write(tmp_path, fixed_lines, "utf-8", expec_newline)
-                with open(tmp_path) as tmp:
-                    assert tmp.read() == expec_code
-                with open(tmp_path, "rb") as tmp:
-                    assert expec_newline.encode() in tmp.readline()
+                with open(tmp_path) as tmp0:
+                    assert tmp0.read() == expec_code
+                with open(tmp_path, "rb") as tmp1:
+                    assert expec_newline.encode() in tmp1.readline()
             raise sysu.Pass()

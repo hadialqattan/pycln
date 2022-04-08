@@ -84,15 +84,13 @@ def safe_read(
         raise UnparsableFile(path, err) from err
 
 
-def safe_write(
-    path: Path, fixed_lines: List[str], encoding: str, newlines: str
-) -> None:
+def safe_write(path: Path, fixed_lines: List[str], encoding: str, newline: str) -> None:
     """Write file content based on given `encoding`.
 
     :param path: `.py` file path.
     :param encoding: file encoding.
     :param fixed_lines: fixed source code lines.
-    :param newlines: original file newlines (CRFL | FL).
+    :param newline: original file's newline (CRFL | FL).
     :raises WritePermissionError: when `os.W_OK` in permissions
         and the source does not have write permission.
     """
@@ -100,4 +98,4 @@ def safe_write(
         raise WritePermissionError(13, "Permission denied [WRITE]", path)
     with open(path, mode="w", encoding=encoding) as destination:
         for line in fixed_lines:
-            destination.write(line.replace(os.linesep, newlines))
+            destination.write(line.replace(os.linesep, newline))
