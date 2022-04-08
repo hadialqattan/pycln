@@ -107,7 +107,7 @@ class Report:
         :param fixed_lines: fixed soruce code lines.
         """
         formatted_code = "".join(fixed_lines)
-        typer.echo(formatted_code)
+        typer.echo(formatted_code, nl=False)
 
     @staticmethod
     def rebuild_report_import(

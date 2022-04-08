@@ -63,6 +63,12 @@ class TestReport:
                 "\n"
             )
 
+    def test_output_stdin_to_stdout(self):
+        fixed_lines = ["import x\n", "print()"]
+        with sysu.std_redirect(sysu.STD.OUT) as stdout:
+            report.Report.output_stdin_to_stdout(fixed_lines)
+            assert stdout.getvalue() == ("import x\n" "print()")
+
     @pytest.mark.parametrize(
         "node, alias, expec_imp_stmnt",
         [

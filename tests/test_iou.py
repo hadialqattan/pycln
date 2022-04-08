@@ -31,6 +31,7 @@ class TestIOU:
             pytest.param(
                 "print('Hello')", "print('Hello')", iou.LF, sysu.Pass, id="best case"
             ),
+            pytest.param("", "", iou.LF, sysu.Pass, id="empty stdin"),
             pytest.param(
                 #: Make conflict between BOM and encoding Cookie.
                 #: For more information: https://bit.ly/32o3eVl

@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 from typer import Exit
 
-from pycln.utils import config
+from pycln.utils import config, iou
 
 from . import CONFIG_DIR
 from .utils import sysu
@@ -105,6 +105,9 @@ class TestConfig:
                 [Path(__file__), Path(__file__).parent.joinpath("test_cli.py")],
                 [Path(__file__), Path(__file__).parent.joinpath("test_cli.py")],
                 id="mltiple files",
+            ),
+            pytest.param(
+                [iou.STDIN_NOTATION], [iou.STDIN_NOTATION], id="stdin pseudopath"
             ),
         ],
     )
