@@ -144,7 +144,6 @@ class Refactor:
             if path == iou.STDIN_FILE:
                 content, encoding, newline = iou.read_stdin()
             else:
-                # Safly read the file.
                 permissions = [os.R_OK]
                 if not self.configs.check and not self.configs.diff:
                     permissions.append(os.W_OK)
@@ -152,7 +151,6 @@ class Refactor:
                     self._path, tuple(permissions)
                 )
 
-            # Refactor and output the `content`.
             fixed_lines = self._code_session(content).splitlines(True)
             self._output(fixed_lines, content.splitlines(True), encoding, newline)
         except (

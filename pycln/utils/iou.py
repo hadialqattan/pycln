@@ -22,21 +22,36 @@ NewLine = str
 
 
 def read_stdin() -> Tuple[FileContent, Encoding, NewLine]:
-    src_buf = io.BytesIO(sys.stdin.buffer.read())
-    encoding, lines = tokenize.detect_encoding(src_buf.readline)
-    if not lines:
-        return "", encoding, LF
+    """Read the content of STDIN with encoding and new line type detection.
 
-    newline = CRLF if CRLF == lines[0][-2:] else LF
-    src_buf.seek(0)
-    with io.TextIOWrapper(src_buf, encoding) as wrapper:
-        return wrapper.read(), encoding, newline
+    :returns: decoded source code, file encoding, and a newline.
+    :raises UnparsableFile: If both a BOM and a cookie are present, but disagree.
+        or some rare characters presented.
+    """
+    try:
+        source_code_buf = io.BytesIO(sys.stdin.buffer.read())
+        encoding, lines = tokenize.detect_encoding(source_code_buf.readline)
+        if not lines:
+            return "", encoding, LF
+
+        newline = CRLF if CRLF == lines[0][-2:] else LF
+        source_code_buf.seek(0)
+        with io.TextIOWrapper(source_code_buf, encoding) as wrapper:
+            source_code = wrapper.read()
+
+        if FORM_FEED_CHAR in source_code:
+            raise ValueError(
+                "Pycln can not handle a file containing a form feed character (\\f)"
+            )
+        return source_code, encoding, newline
+    except (SyntaxError, ValueError) as err:
+        raise UnparsableFile(STDIN_FILE, err) from err
 
 
 def safe_read(
     path: Path, permissions: tuple = (os.R_OK, os.W_OK)
 ) -> Tuple[FileContent, Encoding, NewLine]:
-    """Read file content with encode detecting support.
+    """Read file content with encoding and new line type detection.
 
     :param path: `.py` file path.
     :returns: decoded source code, file encoding, and a newline.
