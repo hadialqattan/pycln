@@ -1,6 +1,6 @@
 """pycln/utils/iou.py tests."""
 # pylint: disable=R0201,W0613
-import os
+from unittest import mock
 
 import pytest
 from oschmod import set_mode
@@ -15,13 +15,65 @@ from pycln.utils._exceptions import (
 
 from .utils import sysu
 
+# Constants.
+MOCK = "pycln.utils.iou.%s"
+
 
 class TestIOU:
 
     """`iou.py` functions test case."""
 
     @pytest.mark.parametrize(
-        "content, expec_code, expec_newlines, expec_err, chmod",
+        "content, expec_code, expec_newline, expec_err",
+        [
+            pytest.param(
+                "print('Hello')", "print('Hello')", iou.LF, sysu.Pass, id="best case"
+            ),
+            pytest.param(
+                #: Make conflict between BOM and encoding Cookie.
+                #: For more information: https://bit.ly/32o3eVl
+                "\ufeff\n# -*- coding: utf-32 -*-\nbad encoding",
+                "",
+                None,
+                UnparsableFile,
+                id="bad encoding",
+            ),
+            pytest.param(
+                "try: pass\x0c;\nfinally: pass",
+                "",
+                None,
+                UnparsableFile,
+                id="form feed char",
+            ),
+            pytest.param(
+                "print('Hello')\r\n",
+                "print('Hello')\n",
+                iou.CRLF,
+                sysu.Pass,
+                id="detect CRLF",
+            ),
+            pytest.param(
+                "print('Hello')\n",
+                "print('Hello')\n",
+                iou.LF,
+                sysu.Pass,
+                id="detect LF",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "sys.stdin.buffer.read")
+    def test_read_stdin(
+        self, stdin, content: str, expec_code: str, expec_newline: str, expec_err: str
+    ):
+        with pytest.raises(expec_err):
+            stdin.return_value = content.encode()
+            source_code, _, newline = iou.read_stdin()
+            assert source_code == expec_code
+            assert newline == expec_newline
+            raise sysu.Pass()
+
+    @pytest.mark.parametrize(
+        "content, expec_code, expec_newline, expec_err, chmod",
         [
             pytest.param(
                 "print('Hello')",
@@ -73,7 +125,7 @@ class TestIOU:
             ),
             pytest.param(
                 "print('Hello')\r\n",
-                "print('Hello')\n\n",
+                "print('Hello')\n",
                 iou.CRLF,
                 sysu.Pass,
                 0o0644,
@@ -92,20 +144,18 @@ class TestIOU:
             ),
         ],
     )
-    def test_safe_read(self, content, expec_code, expec_newlines, expec_err, chmod):
+    def test_safe_read(self, content, expec_code, expec_newline, expec_err, chmod):
         with pytest.raises(expec_err):
-            if expec_newlines:
-                content = content.replace(os.linesep, expec_newlines)
             with sysu.reopenable_temp_file(content) as tmp_path:
                 set_mode(str(tmp_path), chmod)
                 # default param: permissions: tuple = (os.R_OK, os.W_OK).
-                source_code, _, newlines = iou.safe_read(tmp_path)
+                source_code, _, newline = iou.safe_read(tmp_path)
                 assert source_code == expec_code
-                assert newlines == expec_newlines
+                assert newline == expec_newline
             raise sysu.Pass()
 
     @pytest.mark.parametrize(
-        "fixed_lines, expec_code, expec_newlines, expec_err, chmod",
+        "fixed_lines, expec_code, expec_newline, expec_err, chmod",
         [
             pytest.param(
                 ["import time\n", "time.time()\n"],
@@ -144,15 +194,13 @@ class TestIOU:
             ),
         ],
     )
-    def test_safe_write(
-        self, fixed_lines, expec_code, expec_newlines, expec_err, chmod
-    ):
+    def test_safe_write(self, fixed_lines, expec_code, expec_newline, expec_err, chmod):
         with pytest.raises(expec_err):
             with sysu.reopenable_temp_file("".join(fixed_lines)) as tmp_path:
                 set_mode(str(tmp_path), chmod)
-                iou.safe_write(tmp_path, fixed_lines, "utf-8", expec_newlines)
+                iou.safe_write(tmp_path, fixed_lines, "utf-8", expec_newline)
                 with open(tmp_path) as tmp:
                     assert tmp.read() == expec_code
                 with open(tmp_path, "rb") as tmp:
-                    assert expec_newlines.encode() in tmp.readline()
+                    assert expec_newline.encode() in tmp.readline()
             raise sysu.Pass()

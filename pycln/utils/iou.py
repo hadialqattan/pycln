@@ -34,7 +34,7 @@ def read_stdin() -> Tuple[FileContent, Encoding, NewLine]:
         if not lines:
             return "", encoding, LF
 
-        newline = CRLF if CRLF == lines[0][-2:] else LF
+        newline = CRLF if CRLF.encode() == lines[0][-2:] else LF
         source_code_buf.seek(0)
         with io.TextIOWrapper(source_code_buf, encoding) as wrapper:
             source_code = wrapper.read()
