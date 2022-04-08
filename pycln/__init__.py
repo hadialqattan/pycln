@@ -6,6 +6,11 @@ from pathlib import Path
 import toml
 import typer
 
+#: Add vendor directory to module search path
+VENDOR_PATH = Path(__file__).parent.joinpath("vendor")
+sys.path.append(str(VENDOR_PATH))
+
+
 #: Fixes `UnicodeEncodeError` in non-utf8 terminals.
 #: For more info: https://github.com/hadialqattan/pycln/issues/54
 UTF8 = "utf-8"

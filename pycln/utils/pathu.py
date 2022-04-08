@@ -8,6 +8,8 @@ from typing import Generator, Optional, Pattern, Set
 
 from pathspec import PathSpec
 
+from vendor.custom import _site
+
 from .. import ISWIN
 from . import regexu
 from .report import Report
@@ -17,6 +19,7 @@ EXCLUDE = "exclude"
 INCLUDE = "include"
 GITIGNORE = "gitignore"
 PY_EXTENSION = ".py"
+PTH_EXTENSION = ".pth"
 __INIT__ = "__init__.py"
 LIB_DYNLOAD = "Lib" if ISWIN else "lib-dynload"
 SITE_PACKAGES = "site-packages"
@@ -180,6 +183,7 @@ def get_third_party_lib_paths() -> Set[Path]:
     :returns: set of paths to third party library modules.
     """
     paths: Set[Path] = set()
+    local_pth: Set[Path] = set()
 
     packages_paths: Set[str] = {
         path
@@ -190,10 +194,13 @@ def get_third_party_lib_paths() -> Set[Path]:
     for path in packages_paths:
 
         for name in os.listdir(path):
-            if not name.startswith("_") and not name.endswith(BIN_PY_EXTENSIONS):
-                paths.add(Path(os.path.join(path, name)))
+            if name.endswith(PTH_EXTENSION):
+                for pth_path in _site.addpackage(path, name):
+                    local_pth.add(Path(pth_path))
+            elif not name.startswith("_") and not name.endswith(BIN_PY_EXTENSIONS):
+                paths.add(Path(path).joinpath(name))
 
-    return paths
+    return paths, local_pth
 
 
 def get_local_import_path(path: Path, module: str) -> Optional[Path]:
@@ -205,7 +212,7 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
     :param module: module name.
     :returns: a full `module/__init__.py` path.
     """
-    dirnames = Path(os.path.dirname(path)).parts
+    dirnames = path.parts if path.is_dir() else path.parent.parts
     names = module.split(".")
 
     # Test different levels.
@@ -305,7 +312,7 @@ def get_module_path(paths: Set[Path], module: str) -> Optional[Path]:
                 if str(path).endswith(PY_EXTENSION):
                     return path
                 else:
-                    return Path(os.path.join(path, __INIT__))
+                    return Path(path).joinpath(__INIT__)
     # Path not found.
     return None
 
@@ -328,7 +335,12 @@ def get_import_path(path: Path, module: str) -> Optional[Path]:
         return get_module_path(get_standard_lib_paths(), module)
 
     else:
-        return get_module_path(get_third_party_lib_paths(), module)
+        paths, local_paths = get_third_party_lib_paths()
+        for path in local_paths:
+            mpath = get_local_import_path(path, module)
+            if mpath:
+                return mpath
+        return get_module_path(paths, module)
 
 
 @lru_cache()
