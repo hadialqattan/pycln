@@ -68,8 +68,8 @@ class TestIOU:
     def test_read_stdin(
         self, stdin, content: str, expec_code: str, expec_newline: str, expec_err
     ):
+        stdin.return_value = content.encode()
         with pytest.raises(expec_err):
-            stdin.return_value = content.encode()
             source_code, _, newline = iou.read_stdin()
             assert source_code == expec_code
             assert newline == expec_newline
