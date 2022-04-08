@@ -4,7 +4,7 @@ import sys
 from distutils import sysconfig
 from functools import lru_cache
 from pathlib import Path
-from typing import Generator, Optional, Pattern, Set
+from typing import Generator, Optional, Pattern, Set, Tuple
 
 from pathspec import PathSpec
 
@@ -177,13 +177,14 @@ def get_standard_lib_names() -> Set[str]:
 
 
 @lru_cache()
-def get_third_party_lib_paths() -> Set[Path]:
+def get_third_party_lib_paths() -> Tuple[Set[Path], Set[Path]]:
     """Get paths to third party library modules.
 
-    :returns: set of paths to third party library modules.
+    :returns: a tuple of a set of paths of third party library modules
+        and a set of paths from `.pth` file(s) content, respectively.
     """
     paths: Set[Path] = set()
-    local_pth: Set[Path] = set()
+    pth_paths: Set[Path] = set()
 
     packages_paths: Set[str] = {
         path
@@ -196,11 +197,11 @@ def get_third_party_lib_paths() -> Set[Path]:
         for name in os.listdir(path):
             if name.endswith(PTH_EXTENSION):
                 for pth_path in _site.addpackage(path, name):
-                    local_pth.add(Path(pth_path))
+                    pth_paths.add(Path(pth_path))
             elif not name.startswith("_") and not name.endswith(BIN_PY_EXTENSIONS):
                 paths.add(Path(path).joinpath(name))
 
-    return paths, local_pth
+    return paths, pth_paths
 
 
 def get_local_import_path(path: Path, module: str) -> Optional[Path]:
@@ -245,6 +246,7 @@ def get_local_import_from_path(
     :param level: `ast.ImportFrom.level`.
     :returns: a full `module/__init__.py` path.
     """
+    # TODO: double check the accuracy of dirname:
     dirname = Path(os.path.dirname(path))
     dirparts = dirname.parts[: (level * -1) + 1] if level > 1 else dirname.parts
     modules = module.split(".") if module != "*" and module else []
@@ -335,8 +337,9 @@ def get_import_path(path: Path, module: str) -> Optional[Path]:
         return get_module_path(get_standard_lib_paths(), module)
 
     else:
-        paths, local_paths = get_third_party_lib_paths()
-        for path in local_paths:
+        paths, pth_paths = get_third_party_lib_paths()
+        # TODO: create `get_local_import_pth_path`:
+        for path in pth_paths:
             mpath = get_local_import_path(path, module)
             if mpath:
                 return mpath
@@ -365,13 +368,17 @@ def get_import_from_path(
         module = package
 
     if module in get_standard_lib_names():
+        # TODO: deal with the new `get_standard_lib_paths` API:
         return get_module_path(get_standard_lib_paths(), module)
 
     elif package in get_standard_lib_names():
+        # TODO: deal with the new `get_standard_lib_paths` API:
         return get_module_path(get_standard_lib_paths(), package)
 
     else:
+        # TODO: deal with the new `get_standard_lib_paths` API:
         path = get_module_path(get_third_party_lib_paths(), module)
         if not path and package:
+            # TODO: deal with the new `get_standard_lib_paths` API:
             path = get_module_path(get_third_party_lib_paths(), package)
         return path
