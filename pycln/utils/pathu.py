@@ -211,7 +211,7 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
     Written FOR `ast.Import`.
 
     :param path: where `module` has imported.
-    :param module: module name.
+    :param module: a module name.
     :returns: a full `module/__init__.py` path.
     """
     dirnames = path.parts if path.is_dir() else path.parent.parts
@@ -235,6 +235,13 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
 
 
 def get_local_import_pth_path(pth_paths: Set[Path], module: str) -> Optional[Path]:
+    """Find the given local module file.py/__init__.py path base on the
+    provided `pth_paths` set.
+
+    :param pth_paths: a set of local paths read from a `.pth` file.
+    :param module: a module name.
+    :returns: a full `module/__init__.py` path.
+    """
     for path in pth_paths:
         local_path = get_local_import_path(path, module)
         if local_path:
@@ -253,8 +260,8 @@ def get_local_import_from_path(
     Written FOR `ast.ImportFrom`.
 
     :param path: where `module` has imported.
-    :param module: module name.
-    :param package: package name.
+    :param module: a module name.
+    :param package: a package name.
     :param level: `ast.ImportFrom.level`.
     :returns: a full `module/__init__.py` path.
     """
@@ -313,6 +320,17 @@ def get_local_import_from_path(
 def get_local_import_from_pth_path(
     pth_paths: Set[Path], module: str, package: str, level: int
 ) -> Optional[Path]:
+    """Find the given local module file.py/__init__.py path base on the
+    provided `pth_paths` set.
+
+    Written FOR `ast.ImportFrom`.
+
+    :param pth_paths: a set of local paths read from a `.pth` file.
+    :param module: a module name.
+    :param package: a package name.
+    :param level: `ast.ImportFrom.level`.
+    :returns: a full `module/__init__.py` path.
+    """
     for path in pth_paths:
         local_path = get_local_import_from_path(path, module, package, level)
         if local_path:
