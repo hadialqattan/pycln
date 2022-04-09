@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 from libcst import ParserSyntaxError
 
-from pycln.utils import config, refactor, report
+from pycln.utils import config, iou, refactor, report
 from pycln.utils._exceptions import (
     ReadPermissionError,
     UnexpandableImportStar,
@@ -217,31 +217,57 @@ class TestRefactor:
         assert fixed_code == expec_lines
 
     @pytest.mark.parametrize(
-        "safe_read_raise, _code_session_raise",
+        "path, read_stdin_raise, safe_read_raise, _code_session_raise",
         [
-            pytest.param(None, None, id="without errors"),
+            pytest.param(Path("pseudopath"), None, None, None, id="no-err[file]"),
+            pytest.param(iou.STDIN_FILE, None, None, None, id="no-err[stdin]"),
             pytest.param(
-                ReadPermissionError(13, "", Path("")), None, id="ReadPermissionError"
+                Path("pseudopath"),
+                None,
+                ReadPermissionError(13, "", Path("")),
+                None,
+                id="ReadPermissionError[file]",
             ),
             pytest.param(
-                WritePermissionError(13, "", Path("")), None, id="WritePermissionError"
+                Path("pseudopath"),
+                None,
+                WritePermissionError(13, "", Path("")),
+                None,
+                id="WritePermissionError[file]",
             ),
             pytest.param(
-                None, UnparsableFile(Path(""), SyntaxError("")), id="UnparsableFile"
+                Path("pseudopath"),
+                None,
+                None,
+                UnparsableFile(Path(""), SyntaxError("")),
+                id="UnparsableFile[code-session]",
             ),
         ],
     )
     @mock.patch(MOCK % "Refactor._output")
     @mock.patch(MOCK % "Refactor._code_session")
     @mock.patch(MOCK % "iou.safe_read")
+    @mock.patch(MOCK % "iou.read_stdin")
     def test_session(
-        self, safe_read, _code_session, _output, safe_read_raise, _code_session_raise
+        self,
+        read_stdin,
+        safe_read,
+        _code_session,
+        _output,
+        path,
+        read_stdin_raise,
+        safe_read_raise,
+        _code_session_raise,
     ):
-        safe_read.return_value = ("code...\ncode...\n", "utf-8", "\n")
+        safe_read.return_value = read_stdin.return_value = (
+            "code...\ncode...\n",
+            "utf-8",
+            "\n",
+        )
         safe_read.side_effect = safe_read_raise
         _code_session.return_value = "code...\ncode...\n"
         _code_session.side_effect = _code_session_raise
-        self.session_maker.session(Path("modified"))
+        self.session_maker.session(path)
         assert self.session_maker._path == Path("")
 
     @pytest.mark.parametrize(
@@ -303,22 +329,46 @@ class TestRefactor:
         ],
     )
     @mock.patch(MOCK % "Refactor.remove_useless_passes")
-    def test_output(self, x, fixed_lines, original_lines, mode, expec_output):
-        x.return_value = fixed_lines
+    def test_output(
+        self, remove_useless_passes, fixed_lines, original_lines, mode, expec_output
+    ):
+        remove_useless_passes.return_value = fixed_lines
         setattr(self.configs, mode, True)
         with sysu.std_redirect(sysu.STD.OUT) as stdout:
             self.session_maker._output(fixed_lines, original_lines, "utf-8", "\n")
             assert expec_output in stdout.getvalue()
 
     @mock.patch(MOCK % "Refactor.remove_useless_passes")
-    def test_output_write(self, x):
+    def test_output_write(self, remove_useless_passes):
         fixed_lines, original_lines = ["import x\n"], ["import x, y\n"]
-        x.return_value = fixed_lines
+        remove_useless_passes.return_value = fixed_lines
         with sysu.reopenable_temp_file("".join(original_lines)) as tmp_path:
             with open(tmp_path) as tmp:
                 self.session_maker._path = tmp_path
                 self.session_maker._output(fixed_lines, original_lines, "utf-8", "\n")
                 assert tmp.readlines() == fixed_lines
+
+    @pytest.mark.parametrize(
+        "fixed_lines, original_lines, expec_output",
+        [
+            pytest.param(
+                ["import x\n"], ["import x, y\n"], "import x\n", id="modified"
+            ),
+            pytest.param(
+                ["import x, y\n"], ["import x, y\n"], "import x, y\n", id="not-modified"
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor.remove_useless_passes")
+    def test_output_stdin(
+        self, remove_useless_passes, fixed_lines, original_lines, expec_output
+    ):
+        remove_useless_passes.return_value = fixed_lines
+        setattr(self.configs, "silence", True)
+        with sysu.std_redirect(sysu.STD.OUT) as stdout:
+            self.session_maker._path = iou.STDIN_FILE
+            self.session_maker._output(fixed_lines, original_lines, "utf-8", "\n")
+            assert stdout.getvalue() == expec_output
 
     @pytest.mark.parametrize(
         (

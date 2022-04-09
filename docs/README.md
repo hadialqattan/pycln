@@ -144,11 +144,11 @@ $ pycln [PATH]
 
 ### Paths
 
-> Directories or files paths.
+> Directories' paths and/or files' paths and/or reading from stdin.
 
 #### Usage
 
-- Specify a directory to handle all it's subdirs/files (recursively):
+- Specify a directory to handle all its subdirs/files (recursively):
   ```bash
   $ pycln my/project/directory
   ```
@@ -160,6 +160,19 @@ $ pycln [PATH]
   ```bash
   $ pycln dir1/ dir2/ main.py cli.py
   ```
+- Reading from `STDIN` (`-` as a file path):
+  ```bash
+  $ cat file.py | pycln -  # please read the notes below which clarifies the necessity of using `-s/--silence` flag.
+  ```
+
+Notes about reading from `STDIN`:
+
+- For the time being, both the final report and the formatted code will be sent to
+  `STDOUT`, therefore, it's necessary to use
+  [`-s/--silence`](https://hadialqattan.github.io/pycln/#/?id=-s-silence-flag) flag in
+  order to receive only the formatted code via `STDOUT`.
+- You can read from `STDIN` and provide normal paths at the same time (the order doesn't
+  matter).
 
 ## CLI Options
 

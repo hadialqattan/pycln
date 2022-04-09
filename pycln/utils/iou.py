@@ -1,5 +1,7 @@
 """Pycln file IO utility."""
+import io
 import os
+import sys
 import tokenize
 from pathlib import Path
 from typing import List, Tuple
@@ -7,18 +9,52 @@ from typing import List, Tuple
 from ._exceptions import ReadPermissionError, UnparsableFile, WritePermissionError
 
 # Constants.
+STDIN_FILE = Path("STDIN")
+STDIN_NOTATION = Path("-")
 FORM_FEED_CHAR = "\x0c"
 CRLF = "\r\n"
 LF = "\n"
 
+# Types
+FileContent = str
+Encoding = str
+NewLine = str
+
+
+def read_stdin() -> Tuple[FileContent, Encoding, NewLine]:
+    """Read the content of STDIN with encoding and new line type detection.
+
+    :returns: decoded source code, file encoding, and a newline.
+    :raises UnparsableFile: If both a BOM and a cookie are present, but disagree.
+        or some rare characters presented.
+    """
+    try:
+        source_code_buf = io.BytesIO(sys.stdin.buffer.read())
+        encoding, lines = tokenize.detect_encoding(source_code_buf.readline)
+        if not lines:
+            return "", encoding, LF
+
+        newline = CRLF if CRLF.encode() == lines[0][-2:] else LF
+        source_code_buf.seek(0)
+        with io.TextIOWrapper(source_code_buf, encoding) as wrapper:
+            source_code = wrapper.read()
+
+        if FORM_FEED_CHAR in source_code:
+            raise ValueError(
+                "Pycln can not handle a file containing a form feed character (\\f)"
+            )
+        return source_code, encoding, newline
+    except (SyntaxError, ValueError) as err:
+        raise UnparsableFile(STDIN_FILE, err) from err
+
 
 def safe_read(
     path: Path, permissions: tuple = (os.R_OK, os.W_OK)
-) -> Tuple[str, str, str]:
-    """Read file content with encode detecting support.
+) -> Tuple[FileContent, Encoding, NewLine]:
+    """Read file content with encoding and new line type detection.
 
     :param path: `.py` file path.
-    :returns: decoded source code, file encoding and newlines.
+    :returns: decoded source code, file encoding, and a newline.
     :raises ReadPermissionError: when `os.R_OK` in permissions
         and the source does not have read permission.
     :raises WritePermissionError: when `os.W_OK` in permissions
@@ -42,24 +78,19 @@ def safe_read(
                 "Pycln can not handle a file containing a form feed character (\\f)"
             )
         with open(path, "rb") as f:
-            if CRLF.encode() in f.readline():
-                newlines = CRLF
-            else:
-                newlines = LF
-        return source_code, encoding, newlines
+            newline = CRLF if CRLF.encode() == f.readline()[-2:] else LF
+        return source_code, encoding, newline
     except (SyntaxError, ValueError) as err:
         raise UnparsableFile(path, err) from err
 
 
-def safe_write(
-    path: Path, fixed_lines: List[str], encoding: str, newlines: str
-) -> None:
+def safe_write(path: Path, fixed_lines: List[str], encoding: str, newline: str) -> None:
     """Write file content based on given `encoding`.
 
     :param path: `.py` file path.
     :param encoding: file encoding.
     :param fixed_lines: fixed source code lines.
-    :param newlines: original file newlines (CRFL | FL).
+    :param newline: original file's newline (CRFL | FL).
     :raises WritePermissionError: when `os.W_OK` in permissions
         and the source does not have write permission.
     """
@@ -67,4 +98,4 @@ def safe_write(
         raise WritePermissionError(13, "Permission denied [WRITE]", path)
     with open(path, mode="w", encoding=encoding) as destination:
         for line in fixed_lines:
-            destination.write(line.replace(os.linesep, newlines))
+            destination.write(line.replace(os.linesep, newline))

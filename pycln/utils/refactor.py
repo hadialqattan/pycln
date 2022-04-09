@@ -141,15 +141,18 @@ class Refactor:
         """
         self._path = path
         try:
-            # Safly read the file.
-            permissions = [os.R_OK]
-            if not self.configs.check and not self.configs.diff:
-                permissions.append(os.W_OK)
-            content, encoding, newlines = iou.safe_read(self._path, tuple(permissions))
+            if path == iou.STDIN_FILE:
+                content, encoding, newline = iou.read_stdin()
+            else:
+                permissions = [os.R_OK]
+                if not self.configs.check and not self.configs.diff:
+                    permissions.append(os.W_OK)
+                content, encoding, newline = iou.safe_read(
+                    self._path, tuple(permissions)
+                )
 
-            # Refactor and output the `content`.
             fixed_lines = self._code_session(content).splitlines(True)
-            self._output(fixed_lines, content.splitlines(True), encoding, newlines)
+            self._output(fixed_lines, content.splitlines(True), encoding, newline)
         except (
             ReadPermissionError,
             WritePermissionError,
@@ -186,16 +189,18 @@ class Refactor:
         fixed_lines: List[str],
         original_lines: List[str],
         encoding: str,
-        newlines: str,
+        newline: str,
     ) -> None:
         """Output the given `fixed_lines`.
 
         :param fixed_lines: the refactored source lines.
         :param original_lines: unmodified source lines.
         :param encoding: file encoding.
-        :param newlines: original file newlines (CRFL | FL).
+        :param newline: original file newline (CRFL | FL).
         """
         if fixed_lines == original_lines:
+            if self._path == iou.STDIN_FILE:
+                self.reporter.output_stdin_to_stdout(fixed_lines)
             self.reporter.unchanged_file(self._path)
         else:
             self.reporter.changed_file(self._path)
@@ -206,7 +211,10 @@ class Refactor:
                         self._path, original_lines, fixed_lines
                     )
                 else:
-                    iou.safe_write(self._path, fixed_lines, encoding, newlines)
+                    if self._path == iou.STDIN_FILE:
+                        self.reporter.output_stdin_to_stdout(fixed_lines)
+                    else:
+                        iou.safe_write(self._path, fixed_lines, encoding, newline)
 
     def _analyze(
         self, tree: ast.AST, original_lines: List[str]

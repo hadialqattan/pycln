@@ -4,6 +4,7 @@ import pytest
 from typer.testing import CliRunner
 
 from pycln import __doc__, __version__, cli
+from pycln.utils import iou
 
 from . import CONFIG_DIR
 from .utils.sysu import reopenable_temp_file
@@ -16,8 +17,8 @@ class TestCli:
 
     """some `cli.py` tests."""
 
-    def _assert_code_in(self, expec_out, *args, expec_exit_code=0):
-        results = self.cli.invoke(cli.app, args)
+    def _assert_code_in(self, expec_out, *args, stdin=b"", expec_exit_code=0):
+        results = self.cli.invoke(cli.app, args, input=stdin)
         if expec_out:
             assert expec_out in results.stdout
         assert results.exit_code == expec_exit_code
@@ -60,3 +61,8 @@ class TestCli:
                     assert tmp.read() == content.replace(", y", "")
                 else:
                     assert tmp.read() == content
+
+    def test_integrations_stdin(self):
+        content = "import x, y\nx\n"
+        args = (str(iou.STDIN_NOTATION), "--all")
+        self._assert_code_in("1 import was removed", *args, stdin=content)

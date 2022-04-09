@@ -77,8 +77,8 @@ class Report:
         """Writeout colored and normalized diff.
 
         :param path: a file path.
-        :param original_lines: original path code lines.
-        :param fixed_lines: fixed path code lines.
+        :param original_lines: original source code lines.
+        :param fixed_lines: fixed soruce code lines.
         """
         diff_gen = unified_diff(
             original_lines,
@@ -99,6 +99,15 @@ class Report:
             diff_str += line
         diff_str = diff_str.rstrip("\n ") + "\n"
         typer.echo(diff_str)
+
+    @staticmethod
+    def output_stdin_to_stdout(fixed_lines: List[str]) -> None:
+        """Printout the given fixed lines to STDOUT.
+
+        :param fixed_lines: fixed soruce code lines.
+        """
+        formatted_code = "".join(fixed_lines)
+        typer.echo(formatted_code, nl=False)
 
     @staticmethod
     def rebuild_report_import(
