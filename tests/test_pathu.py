@@ -155,7 +155,8 @@ class TestPathu:
         assert len(standard_names) > 180
 
     def test_get_third_party_lib_paths(self):
-        third_paths = pathu.get_third_party_lib_paths()
+        # TODO: add more test cases for `.pth`.
+        third_paths, local_pth_paths = pathu.get_third_party_lib_paths()
         dirs = {path.parts[-2] for path in third_paths}
         for dir_ in dirs:
             assert dir_ in {"site-packages", "dist-packages"}
