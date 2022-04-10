@@ -340,11 +340,15 @@ def get_local_import_from_pth_path(
     return None
 
 
-def get_module_path(paths: Set[Path], module: str) -> Optional[Path]:
+def get_module_path(
+    paths: Set[Path], module: str, package: str = "", level: int = 0
+) -> Optional[Path]:
     """Get the `module` path from the given `paths`.
 
     :param paths: a list of paths to search.
-    :param module: module name.
+    :param module: a module name.
+    :param package: a package name.
+    :param level: `ast.ImportFrom.level`.
     :returns: `module` path if exist else None.
     """
     if module is not None:
@@ -356,6 +360,10 @@ def get_module_path(paths: Set[Path], module: str) -> Optional[Path]:
                     return path
                 else:
                     return Path(path).joinpath(__INIT__)
+            if name == package:
+                mpath = get_local_import_from_path(path, module, package, level)
+                if mpath:
+                    return mpath
     # Path not found.
     return None
 
@@ -419,5 +427,5 @@ def get_import_from_path(
             return mpath
         path = get_module_path(paths, module)
         if not path and package:
-            path = get_module_path(paths, package)
+            path = get_module_path(paths, module, package, level)
         return path

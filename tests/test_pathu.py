@@ -179,7 +179,6 @@ class TestPathu:
         #: `DATA_DIR/site-packages/custom/path/1` custom path.
         data_site: Path = DATA_DIR / "site-packages"
         sys.path.append(str(data_site))
-        pathu.get_third_party_lib_paths.cache_clear()
         third_paths, pth_paths = pathu.get_third_party_lib_paths()
         dirs = {path.parts[-2] for path in third_paths}
         for dir_ in dirs:
@@ -389,7 +388,6 @@ class TestPathu:
         ],
     )
     def test_get_import_path(self, module: str, expec_path: Path):
-        pathu.get_import_path.cache_clear()
         # Add the path containing `custom.pth` file.
         sys.path.append(str(DATA_DIR / "site-packages"))
         path = pathu.get_import_path(Path(__file__), module)
@@ -447,7 +445,7 @@ class TestPathu:
                 "colors",
                 "typer",
                 0,
-                Path("typer/__init__.py"),
+                Path("typer/colors.py"),
                 id="from package import file : third party",
             ),
             pytest.param(
@@ -470,7 +468,6 @@ class TestPathu:
     def test_get_import_from_path(
         self, module: str, package: str, level: int, expec_path: Path
     ):
-        pathu.get_import_from_path.cache_clear()
         # Add the path containing `custom.pth` file.
         sys.path.append(str(DATA_DIR / "site-packages"))
         path = pathu.get_import_from_path(Path(__file__), module, package, level)
