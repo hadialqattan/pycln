@@ -1,3 +1,5 @@
+exclude: "vendor/"
+
 repos:
   - repo: https://github.com/hadialqattan/pycln
     rev: v1.2.5 # Possible releases: https://github.com/hadialqattan/pycln/releases

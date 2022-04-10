@@ -974,7 +974,7 @@ class TestRefactor:
         has_side_effects.side_effect = has_side_effects_raise
         with sysu.std_redirect(sysu.STD.ERR):
             node = Import(NodeLocation((1, 0), 1), [])
-            val = self.session_maker._has_side_effects("", node)
+            val = self.session_maker._has_side_effects("", node, cache={})
             assert val == has_side_effects_return
 
     @pytest.mark.parametrize(

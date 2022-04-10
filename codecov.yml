@@ -16,3 +16,4 @@ comment:
 ignore:
   - "setup.py"
   - "tests/fuzz.py"
+  - "vendor"
