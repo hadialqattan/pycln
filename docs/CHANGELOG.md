@@ -12,7 +12,13 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- [Add support for `.pth` files @hadialqattan](https://github.com/hadialqattan/pycln/pull/120)
+
 - [Add support for reading from STDIN @hadialqattan](https://github.com/hadialqattan/pycln/pull/118)
+
+### Fixed
+
+- [Pycln crashes when facing a `.pth` file @hadialqattan](https://github.com/hadialqattan/pycln/pull/120)
 
 ## [1.2.5] - 2022-03-12
 
