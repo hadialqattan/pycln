@@ -467,7 +467,7 @@ class Refactor:
 
         cached_result = cache.get(module_source, None)
         if cached_result is not None:
-            return cached_result
+            return cached_result  # pragma: nocover
 
         try:
             code, _, _ = iou.safe_read(module_source, permissions=(os.R_OK,))
