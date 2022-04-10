@@ -1,7 +1,6 @@
 """Pycln code refactoring utility."""
 import ast
 import os
-from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union, cast
@@ -447,9 +446,8 @@ class Refactor:
                 [name in self._source_stats.attr_ for name in name[1:]]
             )
 
-    @lru_cache()
-    def _has_side_effects(
-        self, module: str, node: Union[Import, ImportFrom]
+    def _has_side_effects(  # pylint: disable=dangerous-default-value
+        self, module: str, node: Union[Import, ImportFrom], *, cache: dict = {}
     ) -> scan.HasSideEffects:
         """Check if the given import file tree has side effects.
 
@@ -467,20 +465,30 @@ class Refactor:
         if not module_source:
             return scan.HasSideEffects.NOT_MODULE
 
+        cached_result = cache.get(module_source, None)
+        if cached_result is not None:
+            return cached_result
+
         try:
             code, _, _ = iou.safe_read(module_source, permissions=(os.R_OK,))
             tree = scan.parse_ast(code, module_source)
         except (ReadPermissionError, UnparsableFile) as err:
             self.reporter.failure(str(err))
-            return scan.HasSideEffects.NOT_KNOWN
+            assumption = scan.HasSideEffects.NOT_KNOWN
+            cache[module_source] = assumption
+            return assumption
 
         try:
             analyzer = scan.SideEffectsAnalyzer()
             analyzer.visit(tree)
-            return analyzer.has_side_effects()
+            assumption = analyzer.has_side_effects()
+            cache[module_source] = assumption
+            return assumption
         except Exception as err:
             self.reporter.failure(str(err), self._path)
-            return scan.HasSideEffects.NOT_KNOWN
+            assumption = scan.HasSideEffects.NOT_KNOWN
+            cache[module_source] = assumption
+            return assumption
 
     @staticmethod
     def _insert(

@@ -24,9 +24,28 @@ else:
     PYVER = f"python{sys.version_info[0]}.{sys.version_info[1]}"
 
 
+LRU_CACHED_FUNCS = frozenset(
+    {
+        "get_standard_lib_paths",
+        "get_standard_lib_names",
+        "get_third_party_lib_paths",
+        "get_local_import_path",
+        "get_local_import_from_path",
+        "get_import_path",
+        "get_import_from_path",
+    }
+)
+
+
 class TestPathu:
 
     """`pathu.py` functions test case."""
+
+    @pytest.fixture(autouse=True)
+    def clear_all_lru_cache(self):
+        for func_name in LRU_CACHED_FUNCS:
+            getattr(pathu, func_name).cache_clear()
+        yield
 
     @pytest.mark.parametrize(
         "path, include, exclude, extend_exclude, gitignore, expec",
