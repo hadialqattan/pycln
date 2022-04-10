@@ -1,5 +1,6 @@
 """pycln `__init__.py`/`pyproject.toml` metadata tests."""
 # pylint: disable=R0201,W0613
+import sys
 from os import getenv
 
 import pytest
@@ -8,7 +9,14 @@ import toml
 from semver import VersionInfo
 from typer import Exit
 
-from pycln import PYPROJECT_PATH, __doc__, __name__, __version__, version_callback
+from pycln import (
+    PYPROJECT_PATH,
+    VENDOR_PATH,
+    __doc__,
+    __name__,
+    __version__,
+    version_callback,
+)
 
 from .utils import sysu
 
@@ -21,6 +29,10 @@ PYCLN_PYPI_URL = f"https://pypi.org/project/{__name__}/"
 class TestMetadata:
 
     """`__init__.py`/`pyproject.toml` test case."""
+
+    def test_vendor_path(self):
+        assert VENDOR_PATH.is_dir()
+        assert str(VENDOR_PATH) in sys.path
 
     def test_pyproject_path(self):
         assert PYPROJECT_PATH.is_file()
