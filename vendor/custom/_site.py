@@ -19,8 +19,6 @@ All functions have been copied without any modification except `addpackage`.
 
 Only relevant functions have been added to this file.
 """
-
-import io
 import os
 import sys
 
@@ -42,9 +40,9 @@ def addpackage(sitedir, name):  #, known_paths):
     """
     fullname = os.path.join(sitedir, name)
     try:
-        # locale encoding is not ideal especially on Windows. But we have used
-        # it for a long time. setuptools uses the locale encoding too.
-        f = io.TextIOWrapper(io.open_code(fullname))
+        # f = io.TextIOWrapper(io.open_code(fullname))
+        # change to the following code to make it compatible with Python3.6:
+        f = open(fullname, "r")
     except OSError:
         return
     with f:
