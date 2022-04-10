@@ -362,37 +362,39 @@ class TestPathu:
     @pytest.mark.parametrize(
         "module, expec_path",
         [
-            pytest.param("pycln", "pycln/__init__.py", id="import module : local"),
+            pytest.param(
+                "pycln", Path("pycln/__init__.py"), id="import module : local"
+            ),
             pytest.param(
                 "test_pathu",
-                "tests/test_pathu.py",
+                Path("tests/test_pathu.py"),
                 id="import file : local",
             ),
             pytest.param(
                 "distutils",
-                "distutils/__init__.py",
+                Path("distutils/__init__.py"),
                 id="import module : standard",
             ),
             pytest.param(
                 "typer",
-                "typer/__init__.py",
+                Path("typer/__init__.py"),
                 id="import module : third party",
             ),
             pytest.param(
                 "hi",
-                "custom/path/1/hi.py",
+                Path("custom/path/1/hi.py"),
                 id="import file : local third party (.pth)",
             ),
             pytest.param("not-exists", None, id="not exists"),
         ],
     )
-    def test_get_import_path(self, module, expec_path):
+    def test_get_import_path(self, module: str, expec_path: Path):
         pathu.get_import_path.cache_clear()
         # Add the path containing `custom.pth` file.
         sys.path.append(str(DATA_DIR / "site-packages"))
         path = pathu.get_import_path(Path(__file__), module)
         if expec_path:
-            assert str(path).endswith(expec_path)
+            assert str(path).endswith(str(expec_path))
         else:
             assert path is None
 
@@ -403,63 +405,63 @@ class TestPathu:
                 "utils",
                 "pycln",
                 2,
-                "utils/__init__.py",
+                Path("utils/__init__.py"),
                 id="from ..package import module : local",
             ),
             pytest.param(
                 "*",
                 "pycln",
                 2,
-                "pycln/__init__.py",
+                Path("pycln/__init__.py"),
                 id="from ..package import * : local",
             ),
             pytest.param(
                 "sysu",
                 "utils",
                 1,
-                "utils/sysu.py",
+                Path("utils/sysu.py"),
                 id="from .package import file : local",
             ),
             pytest.param(
                 "*",
                 "test_pathu",
                 1,
-                "tests/test_pathu.py",
+                Path("tests/test_pathu.py"),
                 id="from .file import * : local",
             ),
             pytest.param(
                 "AST",
                 "ast",
                 0,
-                f"{PYVER}/ast.py",
+                Path(f"{PYVER}/ast.py"),
                 id="from package import file : standard",
             ),
             pytest.param(
                 "*",
                 "distutils",
                 0,
-                "distutils/__init__.py",
+                Path("distutils/__init__.py"),
                 id="from package import * : standard",
             ),
             pytest.param(
                 "colors",
                 "typer",
                 0,
-                "typer/__init__.py",
+                Path("typer/__init__.py"),
                 id="from package import file : third party",
             ),
             pytest.param(
                 "*",
                 "typer",
                 0,
-                "typer/__init__.py",
+                Path("typer/__init__.py"),
                 id="from package import * : third party",
             ),
             pytest.param(
                 "hi",
                 "hi",
                 0,
-                "custom/path/1/hi.py",
+                Path("custom/path/1/hi.py"),
                 id="from file import func : local third party (.pth)",
             ),
             pytest.param("not-exists", "", 0, None, id="not exists"),
@@ -471,6 +473,6 @@ class TestPathu:
         sys.path.append(str(DATA_DIR / "site-packages"))
         path = pathu.get_import_from_path(Path(__file__), module, package, level)
         if expec_path:
-            assert str(path).endswith(expec_path)
+            assert str(path).endswith(str(expec_path))
         else:
             assert path is None
