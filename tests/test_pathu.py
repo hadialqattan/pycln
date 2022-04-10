@@ -382,7 +382,7 @@ class TestPathu:
             ),
             pytest.param(
                 "hi",
-                Path("custom/path/1/hi.py"),
+                Path("1/hi.py"),
                 id="import file : local third party (.pth)",
             ),
             pytest.param("not-exists", None, id="not exists"),
@@ -394,7 +394,7 @@ class TestPathu:
         sys.path.append(str(DATA_DIR / "site-packages"))
         path = pathu.get_import_path(Path(__file__), module)
         if expec_path:
-            assert str(path).endswith(str(expec_path))
+            assert path.parts[-2:] == expec_path.parts
         else:
             assert path is None
 
@@ -461,18 +461,20 @@ class TestPathu:
                 "hi",
                 "hi",
                 0,
-                Path("custom/path/1/hi.py"),
+                Path("1/hi.py"),
                 id="from file import func : local third party (.pth)",
             ),
             pytest.param("not-exists", "", 0, None, id="not exists"),
         ],
     )
-    def test_get_import_from_path(self, module, package, level, expec_path):
+    def test_get_import_from_path(
+        self, module: str, package: str, level: int, expec_path: Path
+    ):
         pathu.get_import_from_path.cache_clear()
         # Add the path containing `custom.pth` file.
         sys.path.append(str(DATA_DIR / "site-packages"))
         path = pathu.get_import_from_path(Path(__file__), module, package, level)
         if expec_path:
-            assert str(path).endswith(str(expec_path))
+            assert path.parts[-2:] == expec_path.parts
         else:
             assert path is None
