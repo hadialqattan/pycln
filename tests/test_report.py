@@ -19,7 +19,7 @@ class TestReport:
     """`Report` methods test case."""
 
     def setup_method(self, method):
-        self.configs = config.Config(paths=[Path("")])
+        self.configs = config.Config(paths=[Path("")], skip_imports=set({}))
         self.reporter = report.Report(self.configs)
         # Needed for some tests.
         self.alias = ast.alias(name="x", asname=None)

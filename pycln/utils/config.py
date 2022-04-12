@@ -4,7 +4,7 @@ import json
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Pattern, Union
+from typing import List, Optional, Pattern, Set, Union
 
 import toml
 import typer
@@ -35,8 +35,11 @@ class Config:
         else:
             self._check_path()
             self._check_regex()
+            self._parse_skip_imports()
+            self._check_skip_imports()
 
     paths: List[Path]
+    skip_imports: Set[str]
     config: Optional[Path] = None
     include: Pattern[str] = regexu.INCLUDE_REGEX  # type: ignore
     exclude: Pattern[str] = regexu.EXCLUDE_REGEX  # type: ignore
@@ -49,6 +52,19 @@ class Config:
     silence: bool = False
     expand_stars: bool = False
     no_gitignore: bool = False
+
+    def _parse_skip_imports(self) -> None:
+        #: Converts "x,y,z" syntax into {"x", "y", "z"} set.
+        #:
+        #: Given {"x,y,z", "m", "n"}, `self.skip_imports`
+        #: turns into {"x", "y", "z", "m", "n"}.
+        names: Set[str] = set({})
+        for name in self.skip_imports:
+            if "," in name:
+                names.update(name.strip(",").split(","))
+            else:
+                names.add(name)
+        self.skip_imports = names
 
     def _check_path(self) -> None:
         # Validate `self.paths`.
@@ -66,6 +82,16 @@ class Config:
                 err=True,
             )
             raise typer.Exit(1)
+
+    def _check_skip_imports(self) -> None:
+        #: Validate `self.skip_imports`.
+        #:
+        #: NOTE: This method should be invocated
+        #: just after `_parse_skip_imports`.
+        for name in self.skip_imports:
+            if not name.isidentifier():
+                typer.secho("Blah Blah Blah Error", bold=True, err=True)
+                raise typer.Exit(1)
 
     def _check_regex(self) -> None:
         # Validate `self.include/exclude/extend_exclude`.

@@ -14,6 +14,12 @@ app = typer.Typer(name=__name__, add_completion=True)
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main(  # pylint: disable=R0913,R0914
     paths: List[Path] = typer.Argument(None, help="Directories or files paths."),
+    skip_imports: List[str] = typer.Option(
+        [],
+        "--skip-imports",
+        show_default=False,
+        help="Blah Blah Blah...",
+    ),
     config: Optional[Path] = typer.Option(
         None,
         "--config",
@@ -141,6 +147,7 @@ def main(  # pylint: disable=R0913,R0914
 ):
     configs = Config(
         paths=paths,
+        skip_imports=set(skip_imports),
         config=config,
         include=include,  # type: ignore
         exclude=exclude,  # type: ignore

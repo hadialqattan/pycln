@@ -495,7 +495,7 @@ class SourceAnalyzer(ast.NodeVisitor):
     def get_stats(self) -> Tuple[SourceStats, ImportStats]:
         """Get source analyzer results.
 
-        :returns: tuple of `ImportStats` and `SourceStats`.
+        :returns: tuple of `SourceStats` and `ImportStats`.
         """
         return self._source_stats, self._import_stats
 

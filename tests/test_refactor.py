@@ -29,7 +29,7 @@ class TestRefactor:
     """`Refactor` methods test case."""
 
     def setup_method(self, method):
-        self.configs = config.Config(paths=[Path("")])
+        self.configs = config.Config(paths=[Path("")], skip_imports=set({}))
         self.reporter = report.Report(self.configs)
         self.session_maker = refactor.Refactor(self.configs, self.reporter)
 
@@ -801,6 +801,14 @@ class TestRefactor:
         enode, is_star = self.session_maker._expand_import_star(node)
         assert (enode, is_star) == (node, expec_is_star)
 
+    def test_expand_import_star_skip_imports(self):
+        #: Test the case where the module name is in the `skip_imports` set.
+        self.configs.skip_imports = {"x"}
+        node = ImportFrom(NodeLocation((1, 0), 1), [ast.alias(name="*")], "x", 0)
+        enode, is_star = self.session_maker._expand_import_star(node)
+        assert enode == node
+        assert is_star is None
+
     @pytest.mark.parametrize(
         "_has_used_return, name, asname, expec_val",
         [
@@ -863,6 +871,27 @@ class TestRefactor:
         node = Import(NodeLocation((1, 0), 1), [alias])
         val = self.session_maker._should_remove(node, alias, False)
         assert val == expec_val
+
+    @pytest.mark.parametrize(
+        "node",
+        [
+            pytest.param(
+                Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname="y")]),
+                id="import",
+            ),
+            pytest.param(
+                ImportFrom(
+                    NodeLocation((1, 0), 1), [ast.alias(name="x", asname="y")], "x", 0
+                ),
+                id="import-from",
+            ),
+        ],
+    )
+    def test_should_remove_skip_imports(self, node):
+        #: Test the case where the module name is in the `skip_imports` set.
+        self.configs.skip_imports = {"x"}
+        val = self.session_maker._should_remove(node, node.names[0], False)
+        assert val is False
 
     @pytest.mark.parametrize(
         "name, is_star, expec_val",
