@@ -90,7 +90,11 @@ class Config:
         #: just after `_parse_skip_imports`.
         for name in self.skip_imports:
             if not name.isidentifier():
-                typer.secho("Blah Blah Blah Error", bold=True, err=True)
+                typer.secho(
+                    f"--skip-imports: {name!r} is not a valid module name! 😅",
+                    bold=True,
+                    err=True,
+                )
                 raise typer.Exit(1)
 
     def _check_regex(self) -> None:
@@ -159,6 +163,18 @@ class ParseConfigFile:
             return v
 
         configs = {k: cast_bool(v) for k, v in cfg_data.items()}
+
+        if configs.get("skip_imports", None) is not None:
+            #: parse `skip_imports` cases:
+            #:
+            #: skip_imports = [x, y]
+            #: skip_imports = x,y
+            skip_imports = configs["skip_imports"]
+            skip_imports = set(
+                skip_imports.strip('[]"').replace(" ", "").split(",")  # type: ignore
+            )
+            configs["skip_imports"] = skip_imports
+
         self._config_loader(configs)
 
     def _parse_toml(self) -> None:
@@ -195,9 +211,13 @@ class ParseConfigFile:
                 if k == "all":
                     k = "all_"
 
-                # Set CLI options.
+                # Set defaultable CLI options.
                 if hasattr(Config, k):
                     setattr(self._config, k, v)
+
+                # Set non-defaultable CLI options manually.
+                elif k == "skip_imports":
+                    setattr(self._config, k, set(v))
 
                 # Both `path` and `paths` can be used as `paths` CLI arg.
                 if k in ("path", "paths"):

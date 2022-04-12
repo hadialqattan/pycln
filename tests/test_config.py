@@ -18,7 +18,9 @@ CONFIG_SECTIONS = config.CONFIG_SECTIONS
 CONFIG_FILES = {
     CONFIG_DIR.joinpath(path)
     for path in (
-        "setup.cfg",
+        "setup[0].cfg",
+        "setup[1].cfg",
+        "setup[2].cfg",
         "pyproject.toml",
         "settings.json",
         "pycln.yaml",
@@ -267,5 +269,12 @@ class TestParseConfigFile:
             regex = getattr(self.configs, type_)
             setattr(self.configs, type_, re.compile(regex, re.IGNORECASE))
         for attr in CONFIG_ATTR:
-            if attr != "all":
+            if attr == "skip_imports":
+                if (
+                    file_path.name == "setup[0].cfg"
+                ):  # a special case coz of manual parsing.
+                    assert getattr(self.configs, attr) == set({})
+                else:
+                    assert getattr(self.configs, attr) == {"x", "y"}
+            elif attr != "all":
                 assert getattr(self.configs, attr) == DEFAULTS[attr]

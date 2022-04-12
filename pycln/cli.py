@@ -18,7 +18,16 @@ def main(  # pylint: disable=R0913,R0914
         [],
         "--skip-imports",
         show_default=False,
-        help="Blah Blah Blah...",
+        help=(
+            "A list of module/package names to be skipped globally."
+            " This works similar to `# nopycln: import`"
+            " (to skip certain import statements)"
+            " but at a global scope where you provide a comma separated list"
+            " of module/package/library names"
+            " to be skipped via the CLI option like `--skip-imports os,time,pycln`"
+            " or by passing a list via a config file"
+            " such as `skip_imports: [os, time, pycln]` (recommended)."
+        ),
     ),
     config: Optional[Path] = typer.Option(
         None,

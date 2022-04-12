@@ -1,4 +1,5 @@
 pycln:
+  skip_imports: ["x", "y"]
   include: .*_util.py$
   exclude: .*_test.py$
   extend_exclude: .*fuzz.py$
