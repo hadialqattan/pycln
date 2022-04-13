@@ -43,7 +43,6 @@ hypothesmith = "^0.2.0"
 # Pre-commit hooks related config.
 [tool.pycln]
 all = true
-skip_imports = ["x", "y", "z", "m", "n"]
 
 [mypy]
 ignore_missing_imports = true
