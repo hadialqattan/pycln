@@ -12,7 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- [A global module/package/library names skipping option (`--skip-imports`) @hadialqattan](https://github.com/hadialqattan/pycln/pull/121)
+- [A global module/package/library imports skipping option (`--skip-imports`) @hadialqattan](https://github.com/hadialqattan/pycln/pull/121)
 
 - [Add support for `.pth` files @hadialqattan](https://github.com/hadialqattan/pycln/pull/120)
 
