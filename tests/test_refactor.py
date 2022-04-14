@@ -801,13 +801,30 @@ class TestRefactor:
         enode, is_star = self.session_maker._expand_import_star(node)
         assert (enode, is_star) == (node, expec_is_star)
 
-    def test_expand_import_star_skip_imports(self):
+    @pytest.mark.parametrize(
+        "node, should_assert",
+        [
+            pytest.param(
+                ImportFrom(NodeLocation((1, 0), 1), [ast.alias(name="*")], "x", 0),
+                True,
+                id="from x import *",
+            ),
+            pytest.param(
+                ImportFrom(NodeLocation((1, 0), 1), [ast.alias(name="*")], None, 0),
+                False,
+                id="from . import * [pass]",
+            ),
+        ],
+    )
+    def test_expand_import_star_skip_imports(self, node, should_assert):
         #: Test the case where the module name is in the `skip_imports` set.
-        self.configs.skip_imports = {"x"}
-        node = ImportFrom(NodeLocation((1, 0), 1), [ast.alias(name="*")], "x", 0)
-        enode, is_star = self.session_maker._expand_import_star(node)
-        assert enode == node
-        assert is_star is None
+        with pytest.raises(sysu.Pass):
+            self.configs.skip_imports = {"x"}
+            enode, is_star = self.session_maker._expand_import_star(node)
+            if should_assert:
+                assert enode == node
+                assert is_star is None
+            raise sysu.Pass()
 
     @pytest.mark.parametrize(
         "_has_used_return, name, asname, expec_val",
@@ -873,25 +890,37 @@ class TestRefactor:
         assert val == expec_val
 
     @pytest.mark.parametrize(
-        "node",
+        "node, should_assert",
         [
             pytest.param(
                 Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname="y")]),
+                True,
                 id="import",
             ),
             pytest.param(
                 ImportFrom(
                     NodeLocation((1, 0), 1), [ast.alias(name="x", asname="y")], "x", 0
                 ),
+                True,
                 id="import-from",
+            ),
+            pytest.param(
+                ImportFrom(
+                    NodeLocation((1, 0), 1), [ast.alias(name="x", asname="y")], None, 0
+                ),
+                False,
+                id="from . import x [pass]",
             ),
         ],
     )
-    def test_should_remove_skip_imports(self, node):
+    def test_should_remove_skip_imports(self, node, should_assert):
         #: Test the case where the module name is in the `skip_imports` set.
-        self.configs.skip_imports = {"x"}
-        val = self.session_maker._should_remove(node, node.names[0], False)
-        assert val is False
+        with pytest.raises(sysu.Pass):
+            self.configs.skip_imports = {"x"}
+            val = self.session_maker._should_remove(node, node.names[0], False)
+            if should_assert:
+                assert val is False
+            raise sysu.Pass()
 
     @pytest.mark.parametrize(
         "name, is_star, expec_val",

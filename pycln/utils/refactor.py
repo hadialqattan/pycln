@@ -375,8 +375,11 @@ class Refactor:
         try:
             is_star = False
             if node.names[0].name == "*":
-                if node.module.split(".")[0] in self.configs.skip_imports:
-                    return node, None
+
+                if node.module:
+                    if node.module.split(".")[0] in self.configs.skip_imports:
+                        return node, None
+
                 is_star = True
                 node = cast(ImportFrom, scan.expand_import_star(node, self._path))
             return node, is_star
@@ -412,8 +415,10 @@ class Refactor:
         """
         real_name = node.module if isinstance(node, ImportFrom) else alias.name
         used_name = alias.asname if alias.asname else alias.name
-        if real_name.split(".")[0] in self.configs.skip_imports:
+
+        if real_name and real_name.split(".")[0] in self.configs.skip_imports:
             return False
+
         if (
             not self._has_used(used_name, is_star)
             and real_name not in pathu.IMPORTS_WITH_SIDE_EFFECTS
