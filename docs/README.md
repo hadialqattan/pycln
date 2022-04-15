@@ -140,6 +140,14 @@ $ pycln [PATH]
   # nopycln: file
   ```
 
+### Global skip
+
+> Skip module/package/library imports for all files (globally).
+
+Please see
+[--skip-imports](https://hadialqattan.github.io/pycln/#/?id=-skip-imports-option)
+option.
+
 ## CLI Arguments
 
 ### Paths
@@ -175,6 +183,47 @@ Notes about reading from `STDIN`:
   matter).
 
 ## CLI Options
+
+### `--skip-imports` option
+
+> Skip module/package/library imports for all files (globally).
+
+#### Default
+
+> `[]`
+
+#### Behaviour
+
+- Takes a list of module/package/library names and skips any import belonging to them.
+
+#### Usage
+
+- Via CLI by providing:
+
+  - a list of names in a pythonic list format:
+    ```bash
+    $ pycln --skip-imports [x, y, z]
+    ```
+  - a list of names in a comma separated str format:
+    ```bash
+    $ pycln --skip-imports x,y,z
+    ```
+  - `--skip-imports` multiple times:
+    ```bash
+    $ pycln --skip-imports x --skip-imports y
+    ```
+
+- Via a [config file](https://hadialqattan.github.io/pycln/#/?id=-config-path-option)
+  (`.toml`, `.cfg`, `.yaml`, `.yml`, `.json`) by providing:
+  - a list of names in a pythonic list format (`.toml` example):
+    ```.toml
+    skip_imports = [x, y, z]
+    ```
+  - a list of names in a comma separated str format (`.toml` example):
+    ```.toml
+    skip_imports = "x,y,z"
+    ```
+  - unlike CLI, you can't provide multiple `skip_imports` keys.
 
 ### `--config PATH` option
 

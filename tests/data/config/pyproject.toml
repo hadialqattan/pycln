@@ -3,6 +3,7 @@ line_length=88
 verbose=true
 
 [tool.pycln]
+skip_imports = ["x", "y"]
 include=".*_util.py$"
 exclude=".*_test.py$"
 extend_exclude = ".*fuzz.py$"

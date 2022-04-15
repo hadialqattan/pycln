@@ -18,7 +18,9 @@ CONFIG_SECTIONS = config.CONFIG_SECTIONS
 CONFIG_FILES = {
     CONFIG_DIR.joinpath(path)
     for path in (
-        "setup.cfg",
+        "setup[0].cfg",
+        "setup[1].cfg",
+        "setup[2].cfg",
         "pyproject.toml",
         "settings.json",
         "pycln.yaml",
@@ -28,6 +30,7 @@ CONFIG_FILES = {
 CONFIG_ATTR = frozenset(
     {
         "paths",
+        "skip_imports",
         "include",
         "exclude",
         "extend_exclude",
@@ -43,6 +46,7 @@ CONFIG_ATTR = frozenset(
 )
 DEFAULTS = {
     "paths": [Path(".")],
+    "skip_imports": set({}),
     "include": re.compile(r".*_util.py$", re.IGNORECASE),
     "exclude": re.compile(r".*_test.py$", re.IGNORECASE),
     "extend_exclude": re.compile(r".*fuzz.py$", re.IGNORECASE),
@@ -76,6 +80,7 @@ class TestConfig:
         init.return_value = None
         configs = config.Config(
             paths=[Path(".")],
+            skip_imports=DEFAULTS["skip_imports"],
             config=config_,
             include=DEFAULTS["include"],
             exclude=DEFAULTS["exclude"],
@@ -89,6 +94,21 @@ class TestConfig:
             if attr != "all":
                 assert getattr(configs, attr) == DEFAULTS[attr]
         assert configs.paths == [Path(".")]
+
+    @pytest.mark.parametrize(
+        "skip_imports, expec_set",
+        [
+            pytest.param({"x", "y"}, {"x", "y"}, id="normal"),
+            pytest.param({"x,y,z"}, {"x", "y", "z"}, id="comma-sepa"),
+            pytest.param({",x,y,z,"}, {"x", "y", "z"}, id="comma-sepa[strip]"),
+        ],
+    )
+    @mock.patch(MOCK % "Config._check_path")
+    @mock.patch(MOCK % "Config._check_regex")
+    @mock.patch(MOCK % "Config._check_skip_imports")
+    def test_parse_skip_imports(self, cp, cr, csi, skip_imports, expec_set):
+        configs = config.Config(paths=DEFAULTS["paths"], skip_imports=skip_imports)
+        assert configs.skip_imports == expec_set
 
     @pytest.mark.parametrize(
         "paths, expec_paths",
@@ -112,8 +132,10 @@ class TestConfig:
         ],
     )
     @mock.patch(MOCK % "Config._check_regex")
-    def test_check_path(self, _check_regex, paths, expec_paths):
-        configs = config.Config(paths=paths)
+    @mock.patch(MOCK % "Config._parse_skip_imports")
+    @mock.patch(MOCK % "Config._check_skip_imports")
+    def test_check_path(self, csi, psi, cr, paths, expec_paths):
+        configs = config.Config(paths=paths, skip_imports=DEFAULTS["skip_imports"])
         assert configs.paths == expec_paths
 
     @pytest.mark.xfail(raises=Exit)
@@ -132,9 +154,27 @@ class TestConfig:
         ],
     )
     @mock.patch(MOCK % "Config._check_regex")
-    def test_check_path_xfail(self, _check_regex, paths):
+    @mock.patch(MOCK % "Config._parse_skip_imports")
+    @mock.patch(MOCK % "Config._check_skip_imports")
+    def test_check_path_xfail(self, csi, psi, cr, paths):
         with sysu.std_redirect(sysu.STD.ERR):
-            config.Config(paths=paths)
+            config.Config(paths=paths, skip_imports=DEFAULTS["skip_imports"])
+
+    @pytest.mark.parametrize(
+        "skip_imports, expec_err",
+        [
+            pytest.param({"x", "y"}, sysu.Pass, id="pass"),
+            pytest.param({"x-y"}, Exit, id="invalid-name"),
+        ],
+    )
+    @mock.patch(MOCK % "Config._check_path")
+    @mock.patch(MOCK % "Config._check_regex")
+    @mock.patch(MOCK % "Config._parse_skip_imports")
+    def test_check_skip_imports(self, cp, cr, psi, skip_imports, expec_err):
+        with sysu.std_redirect(sysu.STD.ERR):
+            with pytest.raises(expec_err):
+                config.Config(paths=DEFAULTS["paths"], skip_imports=skip_imports)
+                raise sysu.Pass
 
 
 class TestParseConfigFile:
@@ -144,7 +184,10 @@ class TestParseConfigFile:
     @mock.patch(MOCK % "ParseConfigFile.__init__")
     @mock.patch(MOCK % "Config.__post_init__")
     def setup_method(self, method, post_init, init):
-        self.configs = config.Config(paths=[Path(".")])
+        self.configs = config.Config(
+            paths=[Path(".")],
+            skip_imports=DEFAULTS["skip_imports"],
+        )
 
     def test_cast_paths(self):
         str_paths = ["./pycln/src", "home/src/__init__.py"]
@@ -226,5 +269,12 @@ class TestParseConfigFile:
             regex = getattr(self.configs, type_)
             setattr(self.configs, type_, re.compile(regex, re.IGNORECASE))
         for attr in CONFIG_ATTR:
-            if attr != "all":
+            if attr == "skip_imports":
+                if (
+                    file_path.name == "setup[0].cfg"
+                ):  # a special case coz of manual parsing.
+                    assert getattr(self.configs, attr) == set({})
+                else:
+                    assert getattr(self.configs, attr) == {"x", "y"}
+            elif attr != "all":
                 assert getattr(self.configs, attr) == DEFAULTS[attr]

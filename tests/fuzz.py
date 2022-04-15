@@ -34,7 +34,7 @@ def test_idempotent_any_syntatically_valid_python(src_contents: str) -> None:
         compile(src_contents, "<string>", "exec")  # else the bug is in hypothesmith
 
         # Then format the code...
-        configs = config.Config(paths=[Path("pycln/")], all_=True)
+        configs = config.Config(paths=[Path("pycln/")], skip_imports=set({}), all_=True)
         reporter = report.Report(configs)
         session_maker = refactor.Refactor(configs, reporter)
         dst_contents = session_maker._code_session(src_contents)
