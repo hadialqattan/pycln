@@ -10,6 +10,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.3.1] - 2022-04-16 (A quick release solving a critical problem)
+
+### Fixed
+
+- [Include `vendor/` directory in the final distribution avoiding `No module named 'vendor'` error @hadialqattan]()
+
 ## [1.3.0] - 2022-04-16
 
 ### Added
