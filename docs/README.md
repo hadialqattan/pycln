@@ -144,9 +144,7 @@ $ pycln [PATH]
 
 > Skip module/package/library imports for all files (globally).
 
-Please see
-[--skip-imports](https://hadialqattan.github.io/pycln/#/?id=-skip-imports-option)
-option.
+Please see [--skip-imports](?id=-skip-imports-option) option.
 
 ## CLI Arguments
 
@@ -176,9 +174,8 @@ option.
 Notes about reading from `STDIN`:
 
 - For the time being, both the final report and the formatted code will be sent to
-  `STDOUT`, therefore, it's necessary to use
-  [`-s/--silence`](https://hadialqattan.github.io/pycln/#/?id=-s-silence-flag) flag in
-  order to receive only the formatted code via `STDOUT`.
+  `STDOUT`, therefore, it's necessary to use [`-s/--silence`](?id=-s-silence-flag) flag
+  in order to receive only the formatted code via `STDOUT`.
 - You can read from `STDIN` and provide normal paths at the same time (the order doesn't
   matter).
 
@@ -213,8 +210,8 @@ Notes about reading from `STDIN`:
     $ pycln --skip-imports x --skip-imports y
     ```
 
-- Via a [config file](https://hadialqattan.github.io/pycln/#/?id=-config-path-option)
-  (`.toml`, `.cfg`, `.yaml`, `.yml`, `.json`) by providing:
+- Via a [config file](?id=-config-path-option) (`.toml`, `.cfg`, `.yaml`, `.yml`,
+  `.json`) by providing:
   - a list of names in a pythonic list format (`.toml` example):
     ```.toml
     skip_imports = [x, y, z]
@@ -1135,7 +1132,7 @@ finally:
 
   ```yaml
   - repo: https://github.com/hadialqattan/pycln
-    rev: v1.2.5 # Possible releases: https://github.com/hadialqattan/pycln/releases
+    rev: v1.3.0 # Possible releases: https://github.com/hadialqattan/pycln/releases
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]

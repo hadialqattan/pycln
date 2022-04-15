@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.3.0] - 2022-04-16
+
 ### Added
 
 - [A global module/package/library imports skipping option (`--skip-imports`) @hadialqattan](https://github.com/hadialqattan/pycln/pull/121)
