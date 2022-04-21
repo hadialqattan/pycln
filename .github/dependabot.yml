@@ -1,6 +1,8 @@
-# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+# For more info about configuring dependabot:
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 version: 2
 updates:
+  # (Poetry)
   - package-ecosystem: pip
     directory: "/"
     schedule:
@@ -10,6 +12,7 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
 
+  # (Github actions)
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
