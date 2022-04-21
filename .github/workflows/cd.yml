@@ -24,7 +24,7 @@ jobs:
     name: Check CI Status
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python3.8
         uses: actions/setup-python@v3
@@ -53,7 +53,7 @@ jobs:
         shell: bash
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Get Changelog Entry
         id: changelog_reader
@@ -81,7 +81,7 @@ jobs:
     needs: [ci_succeed, create_release]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build and publish to pypi
         uses: JRubics/poetry-publish@v1.8
         with:
