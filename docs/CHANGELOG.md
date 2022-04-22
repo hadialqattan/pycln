@@ -10,6 +10,26 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.3.2] - 2022-04-22 (Bump dependencies)
+
+- [Bump pyyaml from 5.4.1 to 6.0 @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/131)
+
+- [Bump libcst from 0.3.23 to 0.4.1 @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/133)
+
+- [Bump JRubics/poetry-publish from 1.8 to 1.10 @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/127)
+
+- [Bump pytest-cov from 2.12.1 to 3.0.0 @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/130)
+
+- [Bump actions/checkout from 2 to 3 @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/129)
+
+- [Bump pytest from 6.2.5 to 7.0.1 @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/132)
+
+- [Bump codecov/codecov-action from 2.1.0 to 3.1.0 @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/126)
+
+- [Bump actions/setup-python from 2 to 3 @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/128)
+
+- [Add dependabot.yml @PerchunPak](https://github.com/hadialqattan/pycln/pull/124)
+
 ## [1.3.1] - 2022-04-16 (A quick release solving a critical problem)
 
 ### Fixed
