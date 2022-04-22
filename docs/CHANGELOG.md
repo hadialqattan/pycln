@@ -10,25 +10,43 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-## [1.3.1] - 2022-04-16 (A quick release solving a critical problem)
+### Changed
+
+- [Bump libcst from 0.3.23 to 0.4.1 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/133)
+
+- [Bump pytest from 6.2.5 to 7.0.1 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/132)
+
+- [Bump pyyaml from 5.4.1 to 6.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/131)
+
+- [Bump pytest-cov from 2.12.1 to 3.0.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/130)
+
+- [Bump actions/checkout from 2 to 3 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/129)
+
+- [Bump actions/setup-python from 2 to 3 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/128)
+
+- [Bump JRubics/poetry-publish from 1.8 to 1.10 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/127)
+
+- [Bump codecov/codecov-action from 2.1.0 to 3.1.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/126)
+
+## [1.3.1] - 2022-04-16 (a quick release solving v1.3.0 problem)
 
 ### Fixed
 
-- [Include `vendor/` directory in the final distribution avoiding `No module named 'vendor'` error @hadialqattan]()
+- [Include `vendor/` directory in the final distribution avoiding `No module named 'vendor'` error by @hadialqattan]()
 
-## [1.3.0] - 2022-04-16
+## [1.3.0] - 2022-04-16 (a broken release, goto v1.3.1)
 
 ### Added
 
-- [A global module/package/library imports skipping option (`--skip-imports`) @hadialqattan](https://github.com/hadialqattan/pycln/pull/121)
+- [A global module/package/library imports skipping option (`--skip-imports`) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/121)
 
-- [Add support for `.pth` files @hadialqattan](https://github.com/hadialqattan/pycln/pull/120)
+- [Add support for `.pth` files by @hadialqattan](https://github.com/hadialqattan/pycln/pull/120)
 
-- [Add support for reading from STDIN @hadialqattan](https://github.com/hadialqattan/pycln/pull/118)
+- [Add support for reading from STDIN by @hadialqattan](https://github.com/hadialqattan/pycln/pull/118)
 
 ### Fixed
 
-- [Pycln crashes when facing a `.pth` file @hadialqattan](https://github.com/hadialqattan/pycln/pull/120)
+- [Pycln crashes when facing a `.pth` file by @hadialqattan](https://github.com/hadialqattan/pycln/pull/120)
 
 ## [1.2.5] - 2022-03-12
 
