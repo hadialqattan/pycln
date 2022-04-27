@@ -54,11 +54,7 @@ jobs:
 
       - name: Test with pytest by poetry
         run: |
-          python -m poetry run pytest tests/ .github/
-
-      - name: Generate coverage report
-        run: |
-          python -m poetry run pytest tests/ .github/ --cov=./ --cov-report=xml
+          python -m poetry run pytest tests/ .github/ -vv --cov=./ --cov-report=xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3.1.0
