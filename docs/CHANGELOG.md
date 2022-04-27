@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.3.2] - 2022-04-27
+
 ### Changed
 
 - [Bump libcst from 0.3.23 to 0.4.1 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/133)
