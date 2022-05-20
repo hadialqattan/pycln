@@ -100,12 +100,14 @@ The following notable open-source projects trust and use _Pycln_:
 - [cibuildwheel](https://github.com/pypa/cibuildwheel)
 - [Open Event Server](https://github.com/fossasia/open-event-server)
 - [pybind11](https://github.com/pybind/pybind11)
+- [Poetry](https://github.com/python-poetry/poetry)
 - [Pyodide](https://github.com/pyodide/pyodide)
 - [Rich](https://github.com/Textualize/rich)
 
 The following organizations use _Pycln_:
 
 - [FOSSASIA](https://github.com/fossasia)
+- [Poetry](https://github.com/python-poetry)
 - [Python Packaging Authority](https://github.com/pypa)
 - [Scikit-HEP](https://github.com/scikit-hep)
 
