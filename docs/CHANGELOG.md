@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Support `typing.TypeVar` when types passed as `str` @hadialqattan](https://github.com/hadialqattan/pycln/pull/137)
+
 ## [1.3.2] - 2022-04-27
 
 ### Changed
@@ -111,7 +115,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - [Pycln does not skip imports that have "# nopycln: import" or "# noqa" on the last line by @hadialqattan](https://github.com/hadialqattan/pycln/pull/88)
-- [Pycln removes extra lines in import-from multiline case (shown bellow) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/87)
+- [Pycln removes extra lines in import-from multiline case (shown below) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/87)
 
   ```python3
   from xxx import (i,

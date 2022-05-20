@@ -707,7 +707,7 @@ $ pycln --show-completion
 
 ## General
 
-> All bellow cases and more are considered as used.
+> All the cases below and more are considered as used.
 
 ### Single Line
 
@@ -813,7 +813,7 @@ def bar() -> Tuple[int, int]:
 
 > Pycln can understand string type hints.
 
-All bellow imports are considered as used:
+All the imports below are considered as used:
 
 - Fully string:
 
@@ -851,7 +851,7 @@ All bellow imports are considered as used:
 > [Python 3.8+ variable annotations](https://www.python.org/dev/peps/pep-0526/) into
 > account.
 
-All bellow imports are considered as used:
+All the imports below are considered as used:
 
 - Assign:
 
@@ -886,13 +886,27 @@ All bellow imports are considered as used:
 
 > Pycln can understand `typing.cast` case.
 
-All bellow imports are considered as used:
+All the imports below are considered as used:
 
 ```python
 from typing import cast
 import foo, bar
 
 baz = cast("foo", bar)  # or typing.cast("foo", bar)
+```
+
+#### TypeVar
+
+> Pycln can understand `typing.TypeVar` 'str' cases.
+
+All the imports below are considered as used:
+
+```python
+from typing import TypeVar
+import Foo, Bar, Baz
+
+T1 = TypeVar("T1", "Foo", "Bar")  # unbounded
+T2 = TypeVar("T2", bound="Baz")  # bounded
 ```
 
 ### All (`__all__`)
@@ -1072,7 +1086,7 @@ both the developers and QA tools.
 
 ## Specific
 
-> All bellow cases are unsupported and not in the
+> All the cases below are unsupported and not in the
 > [roadmap](https://github.com/hadialqattan/pycln/projects/3). Only certain import
 > statements are effected (not the entire file). Also, Pycln will not touch these cases
 > at all to avoid any code break.

@@ -90,7 +90,7 @@ class Refactor:
             #: Remove any `ast.Pass` node
             #: that is both useless and not in the `wl` (white list).
             #:
-            #: The below case is not going to be touched:
+            #: The case below is not going to be touched:
             #:
             #: >>> (async) (def) (class) foo:
             #: >>>      """DOCString"""
