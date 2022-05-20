@@ -335,6 +335,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @pytest.mark.parametrize(
         "code, expec_names, expec_attrs",
         [
+            # `typing.cast` cases.
             pytest.param(
                 (
                     "from typing import cast\n"
@@ -370,6 +371,37 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 {"cast", "foo", "bar", "baz"},
                 {"x"},
                 id="cast attr-1",
+            ),
+            # `typing.TypeVar` cases.
+            pytest.param(
+                (
+                    "from typing import TypeVar\n"
+                    "import Foo, Bar\n"
+                    "T_1 = TypeVar('T1', 'Foo', 'Bar')\n"
+                ),
+                {"TypeVar", "T_1", "Foo", "Bar"},
+                set(),
+                id="TypeVar unbounded",
+            ),
+            pytest.param(
+                (
+                    "import typing\n"
+                    "import Foo, Bar\n"
+                    "T_1 = typing.TypeVar('T1', 'Foo', 'Bar')\n"
+                ),
+                {"typing", "T_1", "Foo", "Bar"},
+                {"TypeVar"},
+                id="TypeVar[attr] unbounded",
+            ),
+            pytest.param(
+                (
+                    "from typing import TypeVar\n"
+                    "import Foo\n"
+                    "T_1 = TypeVar('T1', bound='Foo')\n"
+                ),
+                {"TypeVar", "T_1", "Foo"},
+                set(),
+                id="TypeVar bounded",
             ),
         ],
     )

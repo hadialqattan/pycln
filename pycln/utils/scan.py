@@ -191,17 +191,38 @@ class SourceAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_Call(self, node: ast.Call):
+        func = node.func
+
         #: Support casting case.
         #: >>> from typing import cast
         #: >>> import xxx, yyy
         #: >>> zzz = cast("xxx", yyy)
         #: Issue: https://github.com/hadialqattan/pycln/issues/26
-        func = node.func
         if getattr(func, "id", "") == "cast" or (
             getattr(func, "attr", "") == "cast"
             and getattr(func.value, "id", "") == "typing"  # type: ignore
         ):
             self._parse_string(node.args[0])  # type: ignore
+
+        #: Support TypeVar cases (when types passed as str).
+        #: >>> from typing import TypeVar
+        #: >>> import X, Y
+        #: >>> XType = TypeVar("XType", "X")
+        #: >>> YBoundedType = TypeVar("YBoundedType", bound="Y")
+        if getattr(func, "id", "") == "TypeVar" or (
+            getattr(func, "attr", "") == "TypeVar"
+            and getattr(func.value, "id", "") == "typing"  # type: ignore
+        ):
+            args = getattr(node, "args", [])[1:]  # Skip the TypeVar's name.
+            for arg in args:
+                self._parse_string(arg)
+
+            # Support bounded types (bound="Type")
+            kwargs = getattr(node, "keywords", [])
+            for kwarg in kwargs:
+                if getattr(kwarg, "arg", "") == "bound":
+                    self._parse_string(getattr(kwarg, "value", None))
+                    break
 
     @recursive
     def visit_Subscript(self, node: ast.Subscript) -> None:
