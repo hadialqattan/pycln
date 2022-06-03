@@ -88,13 +88,16 @@ $ ./scripts/uninstall.sh
 
 # Usage
 
+> NOTE: Make sure the Python version you run Pycln with is the same or more recent than
+> the Python version your codebase targets.
+
 ## The Simplest Usage
 
 By **default** Pycln **removes** any unused import statement, So the simplest usage is
 to specify only the path:
 
 ```bash
-$ pycln [PATH]
+$ pycln [PATH]  # using -a/--all flag is recommended.
 ```
 
 ## Pycln Skips
