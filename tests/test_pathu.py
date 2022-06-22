@@ -315,26 +315,26 @@ class TestPathu:
         [
             pytest.param(
                 [
-                    Path("pycln/pycln/utils/pathu.py"),
-                    Path("pycln/tests/utils/sysu.py"),
+                    Path("pycln/utils/pathu.py"),
+                    Path("tests/utils/sysu.py"),
                 ],
                 "sysu",
-                Path("pycln/tests/utils/sysu.py"),
+                Path("tests/utils/sysu.py"),
                 id="module",
             ),
             pytest.param(
                 [
-                    Path("pycln/pycln/utils/pathu.py"),
-                    Path("pycln/tests/utils"),
+                    Path("pycln/utils/pathu.py"),
+                    Path("tests/utils"),
                 ],
                 "utils.sysu",
-                Path("pycln/tests/utils/__init__.py"),
+                Path("tests/utils/__init__.py"),
                 id="package.module",
             ),
             pytest.param(
                 [
-                    Path("pycln/pycln/setup.py"),
-                    Path("pycln/tests/utils/temp.py"),
+                    Path("pycln/setup.py"),
+                    Path("tests/utils/temp.py"),
                 ],
                 "std",
                 None,
@@ -351,6 +351,12 @@ class TestPathu:
                 None,
                 None,
                 id="not exists - no module",
+            ),
+            pytest.param(
+                [Path("tests/data/lib-dynload/math.ver.so0")],
+                "math",
+                None,
+                id="non-py non-dir containing module name",
             ),
         ],
     )

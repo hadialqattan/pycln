@@ -358,7 +358,7 @@ def get_module_path(
             if name == module:
                 if str(path).endswith(PY_EXTENSION):
                     return path
-                else:
+                if Path(path).is_dir():
                     return Path(path).joinpath(__INIT__)
             if name == package:
                 mpath = get_local_import_from_path(path, module, package, level)
