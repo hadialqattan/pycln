@@ -210,6 +210,23 @@ class TestRefactor:
                 ],
                 id="finalbody parent",
             ),
+            pytest.param(
+                ["try:\n", "   x = 1\n", "   y = 2\n", "finally:\n", "   pass\n"],
+                ["try:\n", "   x = 1\n", "   y = 2\n", "finally:\n", "   pass\n"],
+                id="finalbody parent - useful",
+            ),
+            pytest.param(
+                [
+                    "try:\n",
+                    "   x = 1\n",
+                    "   y = 2\n",
+                    "finally:\n",
+                    "   pass\n",
+                    "   pass\n",
+                ],
+                ["try:\n", "   x = 1\n", "   y = 2\n", "finally:\n", "   pass\n"],
+                id="finalbody parent - useless",
+            ),
         ],
     )
     def test_remove_useless_passes(self, source_lines, expec_lines):
