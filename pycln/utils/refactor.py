@@ -120,12 +120,12 @@ class Refactor:
                 if hasattr(parent, "orelse"):
                     orelse = getattr(parent, "orelse")
                     remove_from_children(parent, orelse, len(orelse), white_list)
-                    white_list = set(orelse)
+                    white_list |= set(orelse)
 
                 if hasattr(parent, "finalbody"):
                     finalbody = getattr(parent, "finalbody")
                     remove_from_children(parent, finalbody, len(finalbody), white_list)
-                    white_list = set(finalbody)
+                    white_list |= set(finalbody)
 
                 children = ast.iter_child_nodes(parent)
                 remove_from_children(parent, children, body_len, white_list)
