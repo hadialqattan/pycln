@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.3.4] - 2022-06-22
+
 ### Fixed
 
 - [`pass` statements are removed from `finallybody` parent nodes causing syntax errors by @hadialqattan](https://github.com/hadialqattan/pycln/pull/143)
