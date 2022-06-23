@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.3.5] - 2022-06-23
+
 ### Fixed
 
 - [in the modules' path finding functionality non-directory paths are treated as directories causing `Permission denied` errors crashing Pycln by @hadialqattan](https://github.com/hadialqattan/pycln/pull/145)
