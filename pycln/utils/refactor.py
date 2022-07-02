@@ -204,7 +204,7 @@ class Refactor:
             self.reporter.unchanged_file(self._path)
         else:
             self.reporter.changed_file(self._path)
-            if not self.configs.check:
+            if not self.configs.check or self.configs.diff:
                 fixed_lines = Refactor.remove_useless_passes(fixed_lines)
                 if self.configs.diff:
                     self.reporter.colored_unified_diff(
@@ -294,7 +294,7 @@ class Refactor:
                         continue
 
                 # Depends on `--check, -c` option.
-                if self.configs.check:
+                if self.configs.check and not self.configs.diff:
                     fixed_lines.append(CHANGE_MARK)
                     continue
 
