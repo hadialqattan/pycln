@@ -344,42 +344,44 @@ class TestRefactor:
             assert fixed_code == expec_fixed_code
 
     @pytest.mark.parametrize(
-        "fixed_lines, original_lines, mode, expec_output",
+        "fixed_lines, original_lines, modes, expec_output",
         [
             pytest.param(
-                ["code..\n"], ["code..\n"], "verbose", "looks good!", id="unchanged"
+                ["code..\n"], ["code..\n"], ["verbose"], "looks good!", id="unchanged"
             ),
             pytest.param(
                 ["fixed.code..\n"],
                 ["original.code..\n"],
-                "check",
+                ["check"],
                 "🚀",
                 id="changed-check",
             ),
             pytest.param(
                 ["import x\n"],
                 ["import x, y\n"],
-                "diff",
+                ["diff"],
                 "-import x, y\n+import x\n",
                 id="changed-diff",
             ),
             pytest.param(
                 ["import x\n"],
                 ["import x, y\n"],
-                "diff",
+                ["diff", "check"],
                 "-import x, y\n+import x\n",
-                id="changed-diff",
+                id="changed-[diff & check]",
             ),
         ],
     )
     @mock.patch(MOCK % "Refactor.remove_useless_passes")
     def test_output(
-        self, remove_useless_passes, fixed_lines, original_lines, mode, expec_output
+        self, remove_useless_passes, fixed_lines, original_lines, modes, expec_output
     ):
         remove_useless_passes.return_value = fixed_lines
-        setattr(self.configs, mode, True)
+        for mode in modes:
+            setattr(self.configs, mode, True)
         with sysu.std_redirect(sysu.STD.OUT) as stdout:
             self.session_maker._output(fixed_lines, original_lines, "utf-8", "\n")
+            assert expec_output, "Expected output mustn't be empty str."
             assert expec_output in stdout.getvalue()
 
     @mock.patch(MOCK % "Refactor.remove_useless_passes")
