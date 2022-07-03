@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [outputting code diff when both `--check` and `--diff` options are used by @hadialqattan](https://github.com/hadialqattan/pycln/pull/147)
+
 ## [1.3.5] - 2022-06-23
 
 ### Fixed
