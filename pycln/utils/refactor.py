@@ -2,9 +2,10 @@
 import ast
 import os
 from importlib import import_module
-from pathlib import Path
+from pathlib import Path, _posix_flavour, _windows_flavour  # type: ignore
 from typing import Iterable, List, Optional, Set, Tuple, Union, cast
 
+from .. import ISWIN
 from . import iou, pathu, regexu, scan
 from ._exceptions import (
     ReadPermissionError,
@@ -23,6 +24,21 @@ NOPYCLN = "nopycln"
 CHANGE_MARK = "\n_CHANGED_"
 TRANSFORM = ".transform"
 PYCLN_UTILS = "pycln.utils"
+
+
+class PyPath(Path):
+
+    """Path subclass that has `is_stub` property."""
+
+    _flavour = _windows_flavour if ISWIN else _posix_flavour
+
+    def __init__(self, *args) -> None:  # pylint: disable=unused-argument
+        super().__init__()  # Path.__init__ does not take any args.
+        self._is_stub = regexu.is_stub_file(self)
+
+    @property
+    def is_stub(self) -> bool:
+        return self._is_stub
 
 
 class LazyLibCSTLoader:
@@ -67,13 +83,13 @@ class Refactor:
         # Resetables.
         self._import_stats = scan.ImportStats(set(), set())
         self._source_stats = scan.SourceStats(set(), set(), set())
-        self._path = Path("")
+        self._path = PyPath("")
         self._is_init_without_all = False
 
     def _reset(self) -> None:
         self._import_stats = scan.ImportStats(set(), set())
         self._source_stats = scan.SourceStats(set(), set(), set())
-        self._path = Path("")
+        self._path = PyPath("")
         self._is_init_without_all = False
 
     @staticmethod
@@ -139,7 +155,7 @@ class Refactor:
 
         :param path: `.py` file to refactor.
         """
-        self._path = path
+        self._path = PyPath(path)
         try:
             if path == iou.STDIN_FILE:
                 content, encoding, newline = iou.read_stdin()
@@ -416,6 +432,14 @@ class Refactor:
         """
         real_name = node.module if isinstance(node, ImportFrom) else alias.name
         used_name = alias.asname if alias.asname else alias.name
+
+        #: (for `.pyi`) PEP 484 - Redundant Module/Symbol Aliases rule:
+        #:
+        #: >>> import X as X  # exported (should be treated as used)
+        #:
+        #: More info: https://peps.python.org/pep-0484/#stub-files
+        if self._path.is_stub and alias.name == alias.asname:
+            return False
 
         if real_name and real_name.split(".")[0] in self.configs.skip_imports:
             return False

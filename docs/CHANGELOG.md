@@ -10,17 +10,25 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- [Pycln skips redundant alias imports in compliance with PEP 484 in stub files (`.pyi`) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/150)
+
+### Changed
+
+- [Now Pycln treats `.pyi` files as regular `.py` files in the pathfinding functionality by @hadialqattan](https://github.com/hadialqattan/pycln/pull/150)
+
 ### Fixed
 
-- [outputting code diff when both `--check` and `--diff` options are used by @hadialqattan](https://github.com/hadialqattan/pycln/pull/147)
+- [Outputting code diff when both `--check` and `--diff` options are used by @hadialqattan](https://github.com/hadialqattan/pycln/pull/147)
 
 ## [1.3.5] - 2022-06-23
 
 ### Fixed
 
-- [in the modules' path finding functionality non-directory paths are treated as directories causing `Permission denied` errors crashing Pycln by @hadialqattan](https://github.com/hadialqattan/pycln/pull/145)
+- [In the modules' path finding functionality non-directory paths are treated as directories causing `Permission denied` errors crashing Pycln by @hadialqattan](https://github.com/hadialqattan/pycln/pull/145)
 
-- [useful `pass` statements are removed from `orelse` parent nodes when both `finallybody` and `orelse` exist causing syntax errors by @hadialqattan](https://github.com/hadialqattan/pycln/pull/144)
+- [Useful `pass` statements are removed from `orelse` parent nodes when both `finallybody` and `orelse` exist causing syntax errors by @hadialqattan](https://github.com/hadialqattan/pycln/pull/144)
 
 ## [1.3.4] - 2022-06-22
 
