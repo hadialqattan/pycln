@@ -52,8 +52,8 @@ def yield_sources(
     gitignore: PathSpec,
     reporter: Report,
 ) -> Generator[Path, None, None]:
-    """Yields `.py` paths to handle. Walk throw path sub-directories/files
-    recursively.
+    """Yields `.py` and `.pyi` paths to handle. Walk throw path sub-
+    directories/files recursively.
 
     :param path: A path to start searching from.
     :param include: regex pattern to be included.
@@ -61,7 +61,7 @@ def yield_sources(
     :param extend_exclude: regex pattern to be excluded in addition to `exclude`.
     :param gitignore: gitignore PathSpec object.
     :param reporter: a `report.Report` object.
-    :returns: generator of `.py` files paths.
+    :returns: generator of `.py` and `.pyi` files paths.
     """
 
     dirs: Set[Path] = set()

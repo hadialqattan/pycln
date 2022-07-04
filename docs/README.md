@@ -155,6 +155,9 @@ Please see [--skip-imports](?id=-skip-imports-option) option.
 
 > Directories' paths and/or files' paths and/or reading from stdin.
 
+NOTE: Pycln treats `.pyi` files as regular `.py` files in the pathfinding functionality,
+so anything true for `.py` files is true for `.pyi` files as well.
+
 #### Usage
 
 - Specify a directory to handle all its subdirs/files (recursively):
@@ -170,17 +173,18 @@ Please see [--skip-imports](?id=-skip-imports-option) option.
   $ pycln dir1/ dir2/ main.py cli.py
   ```
 - Reading from `STDIN` (`-` as a file path):
+
   ```bash
   $ cat file.py | pycln -  # please read the notes below which clarifies the necessity of using `-s/--silence` flag.
   ```
 
-Notes about reading from `STDIN`:
+  Notes about reading from `STDIN`:
 
-- For the time being, both the final report and the formatted code will be sent to
-  `STDOUT`, therefore, it's necessary to use [`-s/--silence`](?id=-s-silence-flag) flag
-  in order to receive only the formatted code via `STDOUT`.
-- You can read from `STDIN` and provide normal paths at the same time (the order doesn't
-  matter).
+  - For the time being, both the final report and the formatted code will be sent to
+    `STDOUT`, therefore, it's necessary to use [`-s/--silence`](?id=-s-silence-flag)
+    flag in order to receive only the formatted code via `STDOUT`.
+  - You can read from `STDIN` and provide normal paths at the same time (the order
+    doesn't matter).
 
 ## CLI Options
 
@@ -343,7 +347,7 @@ pycln:
 
 #### Default
 
-> `.*\.py$`
+> `.*\.pyi?$`
 
 #### Behaviour
 
@@ -1084,6 +1088,23 @@ Now let us review the same two cases but with an `__all__` dunder:
 
 You may notice that using an `__all__` dunder makes the two cases distinguishable for
 both the developers and QA tools.
+
+### Stub files (`.pyi`) redundant aliases
+
+> Pycln skips redundant alias imports in compliance with
+> [PEP 484](https://peps.python.org/pep-0484/#stub-files) for the purposes of exporting
+> modules and symbols for static type checking.
+
+- case a:
+
+  ```python
+  import X as X  # marked as used.
+  ```
+
+- case b:
+  ```python
+  from X import Y as Y  # marked as used.
+  ```
 
 # Unsupported Cases
 

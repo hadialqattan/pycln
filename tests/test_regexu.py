@@ -94,7 +94,12 @@ class TestRegexU:
             pytest.param(
                 Path("path/to/__init__.py"),
                 True,
-                id="exact - true",
+                id=".py - true",
+            ),
+            pytest.param(
+                Path("path/to/__init__.pyi"),
+                True,
+                id=".pyi - true",
             ),
             pytest.param(
                 Path("path/to/not__init__.py"),
@@ -110,6 +115,29 @@ class TestRegexU:
     )
     def test_is_init_file(self, path, expec):
         assert regexu.is_init_file(path) == expec
+
+    @pytest.mark.parametrize(
+        "path, expec",
+        [
+            pytest.param(
+                Path("path/to/a.pyi"),
+                True,
+                id="ext:pyi",
+            ),
+            pytest.param(
+                Path("path/to/a.py"),
+                False,
+                id="ext:py",
+            ),
+            pytest.param(
+                Path("path/to/a.so"),
+                False,
+                id="ext:so",
+            ),
+        ],
+    )
+    def test_is_stub_file(self, path, expec):
+        assert regexu.is_stub_file(path) == expec
 
     @pytest.mark.parametrize(
         "path, regex, expec",

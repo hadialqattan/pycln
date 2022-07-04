@@ -17,9 +17,10 @@ EXCLUDE = "exclude"
 GITIGNORE = ".gitignore"
 SKIP_FILE_REGEX = r"# *(nopycln *: *file).*"
 SKIP_IMPORT_REGEX = r"# *((noqa *:*)|(nopycln *: *import)).*"
-INIT_FILE_REGEX = r"^__init__.py$"
+INIT_FILE_REGEX = r"^__init__.pyi?$"
+STUB_FILE_REGEX = r".*\.pyi$"
 EMPTY_REGEX = r"^$"
-INCLUDE_REGEX = r".*\.py$"
+INCLUDE_REGEX = r".*\.pyi?$"
 EXCLUDE_REGEX = (
     r"(\.eggs|\.git|\.hg|\.mypy_cache|__pycache__|\.nox|"
     + r"\.tox|\.venv|\.svn|buck-out|build|dist)/"
@@ -61,13 +62,23 @@ def strpath(path: Path) -> str:
 
 
 def is_init_file(path: Path) -> bool:
-    """Check if the file name is `__init__.py`.
+    """Check if the file name is `__init__.py(i)`.
 
     :param path: file-system path to check.
-    :returns: True if the file is `__init__.py` else False.
+    :returns: True if the file is `__init__.py(i)` else False.
     """
     regex: Pattern[str] = safe_compile(INIT_FILE_REGEX, INCLUDE)
     return bool(regex.match(path.name))
+
+
+def is_stub_file(path: Path) -> bool:
+    """Check if the file extension is `.pyi`.
+
+    :param path: file-system path to check.
+    :returns: True if the file extension is `.pyi` else False.
+    """
+    regex: Pattern[str] = safe_compile(STUB_FILE_REGEX, INCLUDE)
+    return bool(regex.search(path.name))
 
 
 def is_included(path: Path, regex: Pattern[str]) -> bool:

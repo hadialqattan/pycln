@@ -24,6 +24,22 @@ from .utils import sysu
 MOCK = "pycln.utils.refactor.%s"
 
 
+class TestPyPath:
+
+    """`PyPath` class test case."""
+
+    def test_is_subclass_of_pathlib_path(self):
+        assert issubclass(refactor.PyPath, Path)
+
+    @pytest.mark.parametrize(
+        "path, expected_is_stub",
+        [pytest.param("a.py", False), pytest.param("a.pyi", True)],
+    )
+    def test_is_stub_property(self, path, expected_is_stub):
+        pypath = refactor.PyPath(path)
+        assert pypath.is_stub == expected_is_stub
+
+
 class TestRefactor:
 
     """`Refactor` methods test case."""
@@ -934,6 +950,43 @@ class TestRefactor:
         node = Import(NodeLocation((1, 0), 1), [alias])
         val = self.session_maker._should_remove(node, alias, False)
         assert val == expec_val
+
+    @pytest.mark.parametrize(
+        "node, expec_should_remove",
+        [
+            pytest.param(
+                Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname="x")]),
+                False,
+                id="x as x",
+            ),
+            pytest.param(
+                Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname="y")]),
+                True,
+                id="x as y",
+            ),
+            pytest.param(
+                Import(NodeLocation((1, 0), 1), [ast.alias(name="x", asname=None)]),
+                True,
+                id="no as",
+            ),
+        ],
+    )
+    @mock.patch(MOCK % "Refactor._has_side_effects")
+    @mock.patch(MOCK % "Refactor._has_used")
+    @mock.patch(MOCK % "PyPath.is_stub")
+    def test_should_remove_skip_pep484(
+        self, is_stub, _has_used, _has_side_effects, node, expec_should_remove
+    ):
+        #: Test PEP 484 - Redundant Module/Symbol Aliases rule for stub files:
+        #:
+        #: >>> import X as X  # exported (should be treated as used)
+        #:
+        #: More info: https://peps.python.org/pep-0484/#stub-files
+        is_stub.return_value = True
+        _has_used.return_value = False
+        self.session_maker.configs.all_ = True
+        val = self.session_maker._should_remove(node, node.names[0], False)
+        assert val == expec_should_remove
 
     @pytest.mark.parametrize(
         "node, should_assert",

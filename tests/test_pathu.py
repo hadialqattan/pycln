@@ -52,11 +52,12 @@ class TestPathu:
         [
             pytest.param(
                 Path(DATA_DIR / "paths" / "dir"),
-                re.compile(r".*\.py$"),
+                re.compile(r".*\.pyi?$"),
                 re.compile(r"(.*s\.py|git/)$"),
                 re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", ["*u.py", "utils/"]),
                 {
+                    "a.pyi",
                     "x.py",
                     "y.py",
                     "z.py",
@@ -65,7 +66,7 @@ class TestPathu:
             ),
             pytest.param(
                 Path(DATA_DIR / "paths"),
-                re.compile(r".*\.py$"),
+                re.compile(r".*\.pyi?$"),
                 re.compile(r"paths/"),
                 re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", []),
@@ -74,7 +75,7 @@ class TestPathu:
             ),
             pytest.param(
                 Path(DATA_DIR / "paths"),
-                re.compile(r".*\.py$"),
+                re.compile(r".*\.pyi?$"),
                 re.compile(regexu.EMPTY_REGEX),
                 re.compile(r"paths/"),
                 PathSpec.from_lines("gitwildmatch", []),
@@ -83,7 +84,7 @@ class TestPathu:
             ),
             pytest.param(
                 Path(DATA_DIR / "paths" / "dir"),
-                re.compile(r".*\.py$"),
+                re.compile(r".*\.pyi?$"),
                 re.compile(r"paths/"),
                 re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", []),
@@ -92,16 +93,25 @@ class TestPathu:
             ),
             pytest.param(
                 Path(DATA_DIR / "paths" / "a.py"),
-                re.compile(r".*\.py$"),
+                re.compile(r".*\.pyi?$"),
                 re.compile(regexu.EMPTY_REGEX),
                 re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", []),
                 {"a.py"},
-                id="path: file",
+                id="path: file .py",
+            ),
+            pytest.param(
+                Path(DATA_DIR / "paths" / "b.pyi"),
+                re.compile(r".*\.pyi?$"),
+                re.compile(regexu.EMPTY_REGEX),
+                re.compile(regexu.EMPTY_REGEX),
+                PathSpec.from_lines("gitwildmatch", []),
+                {"b.pyi"},
+                id="path: file .pyi",
             ),
             pytest.param(
                 Path(DATA_DIR / "paths" / "a.py"),
-                re.compile(r".*\.py$"),
+                re.compile(r".*\.pyi?$"),
                 re.compile(regexu.EMPTY_REGEX),
                 re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", ["a.py"]),
@@ -110,7 +120,7 @@ class TestPathu:
             ),
             pytest.param(
                 Path(DATA_DIR / "paths" / "b.c"),
-                re.compile(r".*\.py$"),
+                re.compile(r".*\.pyi?$"),
                 re.compile(regexu.EMPTY_REGEX),
                 re.compile(regexu.EMPTY_REGEX),
                 PathSpec.from_lines("gitwildmatch", []),
