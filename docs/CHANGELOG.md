@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.0.1] - 2022-07-05
+
 ### Added
 
 - [Pycln skips redundant alias imports in compliance with PEP 484 in stub files (`.pyi`) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/150)
