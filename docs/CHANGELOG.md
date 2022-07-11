@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [Bump typer from 0.4.1 to 0.5.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/151)
+
 ## [2.0.1] - 2022-07-05
 
 ### Added
