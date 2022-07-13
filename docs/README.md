@@ -1093,7 +1093,9 @@ both the developers and QA tools.
 
 > Pycln skips redundant alias imports in compliance with
 > [PEP 484](https://peps.python.org/pep-0484/#stub-files) for the purposes of exporting
-> modules and symbols for static type checking.
+> modules and symbols for static type checking. Additionally, all symbols imported using
+> `from foo import *` imports are considered publicly exported in a stub file, so these
+> import statements are also ignored for `.pyi` extensions.
 
 - case a:
 
@@ -1104,6 +1106,11 @@ both the developers and QA tools.
 - case b:
   ```python
   from X import Y as Y  # marked as used.
+  ```
+
+- case c:
+  ```python
+  from socket import *  # marked as used.
   ```
 
 # Unsupported Cases

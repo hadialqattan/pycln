@@ -279,7 +279,7 @@ class Refactor:
 
                 # Expand any import '*' before checking.
                 node, is_star = self._expand_import_star(node)
-                if is_star is None:
+                if is_star is None or (is_star and self._path.is_stub):
                     continue
 
                 # Get set of used names.
