@@ -837,16 +837,18 @@ class TestRefactor:
             assert fixed_lines == updated_lines
 
     @pytest.mark.parametrize(
-        "expand_import_star_raise, name, expec_is_star",
+        "expand_import_star_raise, name, is_stub, expec_is_star",
         [
-            pytest.param(None, "*", True, id="star"),
-            pytest.param(None, "!*", False, id="not-star"),
+            pytest.param(None, "*", False, True, id="star"),
+            pytest.param(None, "!*", False, False, id="not-star"),
             pytest.param(
                 UnexpandableImportStar(Path(""), NodeLocation((1, 0), 1), ""),
                 "*",
+                False,
                 None,
                 id="not-star",
             ),
+            pytest.param(None, "*", True, None, id="star-stub(pyi)"),
         ],
     )
     @mock.patch(MOCK % "scan.expand_import_star")
@@ -855,11 +857,14 @@ class TestRefactor:
         expand_import_star,
         expand_import_star_raise,
         name,
+        is_stub,
         expec_is_star,
     ):
         node = ImportFrom(NodeLocation((1, 0), 1), [ast.alias(name=name)], "xxx", 0)
         expand_import_star.return_value = node
         expand_import_star.side_effect = expand_import_star_raise
+        if is_stub:
+            self.session_maker._path = refactor.PyPath("stub.pyi")
         enode, is_star = self.session_maker._expand_import_star(node)
         assert (enode, is_star) == (node, expec_is_star)
 
