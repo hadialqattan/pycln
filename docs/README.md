@@ -1104,6 +1104,7 @@ both the developers and QA tools.
   ```
 
 - case b:
+
   ```python
   from X import Y as Y  # marked as used.
   ```
