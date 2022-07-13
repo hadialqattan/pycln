@@ -393,6 +393,14 @@ class Refactor:
             is_star = False
             if node.names[0].name == "*":
 
+                #: [for `.pyi` files] PEP 484 - Star Imports rule:
+                #:
+                #: >>> from X import *  # exported (should be treated as used)
+                #:
+                #: More info: https://peps.python.org/pep-0484/#stub-files
+                if self._path.is_stub:
+                    return node, None
+
                 if node.module:
                     if node.module.split(".")[0] in self.configs.skip_imports:
                         return node, None
@@ -433,7 +441,7 @@ class Refactor:
         real_name = node.module if isinstance(node, ImportFrom) else alias.name
         used_name = alias.asname if alias.asname else alias.name
 
-        #: (for `.pyi`) PEP 484 - Redundant Module/Symbol Aliases rule:
+        #: [for `.pyi` files] PEP 484 - Redundant Module/Symbol Aliases rule:
         #:
         #: >>> import X as X  # exported (should be treated as used)
         #:
