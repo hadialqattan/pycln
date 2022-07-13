@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.0.2] - 2022-07-13
+
 ### Added
 
 - [Pycln skips `from foo import *` imports in compliance with PEP 484 in stub files (`.pyi`) by @AlexWaygood](https://github.com/hadialqattan/pycln/pull/153)
