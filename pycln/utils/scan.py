@@ -413,7 +413,7 @@ class SourceAnalyzer(ast.NodeVisitor):
                 mode = "func_type"
             try:
                 tree = parse_ast(type_comment, mode=mode)
-                self._add_name_attr_const(tree)
+                self._add_name_attr_const(tree, True)
             except UnparsableFile:
                 #: Ignore errors when it's not a valid type comment.
                 #:
@@ -472,7 +472,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             elif isinstance(node, ast.Attribute):
                 self._source_stats.attr_.add(node.attr)
             elif is_str_annotation and isinstance(node, ast.Constant):
-                self._source_stats.name_.add(node.value)
+                self._parse_string(node, is_str_annotation)
 
     def _get_py38_import_node(self, node: ast.Import) -> _nodes.Import:
         # Convert any Python < 3.8 `ast.Import`

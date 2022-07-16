@@ -12,6 +12,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- [Fully, nested, and semi string type commnets get ignored by @hadialqattan](https://github.com/hadialqattan/pycln/pull/156)
+
 - [Semi string third-party generic type annotations get ignored by @hadialqattan](https://github.com/hadialqattan/pycln/pull/155)
 
 ## [2.0.2] - 2022-07-13
