@@ -443,6 +443,10 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 "foo: \"Bar['Baz']\" = []",
                 {"foo", "Bar", "Baz"},
                 id="nested-string",
+                marks=pytest.mark.skipif(
+                    not PY38_PLUS,
+                    reason="Nested str annotations are only available in Python >=3.8.",
+                ),
             ),
             pytest.param(
                 "foo: Bar['Baz'] = []",
@@ -468,6 +472,10 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 ("def foo(bar: \"Baz['x']\"):\n" "   pass"),
                 {"Baz", "x"},
                 id="nested-string",
+                marks=pytest.mark.skipif(
+                    not PY38_PLUS,
+                    reason="Nested str annotations are only available in Python >=3.8.",
+                ),
             ),
             pytest.param(
                 ("def foo(bar: Baz['x']):\n" "   pass"),
@@ -493,6 +501,10 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 ("def foo() -> \"Baz['x']\":\n" "   pass"),
                 {"Baz", "x"},
                 id="nested-string",
+                marks=pytest.mark.skipif(
+                    not PY38_PLUS,
+                    reason="Nested str annotations are only available in Python >=3.8.",
+                ),
             ),
             pytest.param(
                 ("def foo() -> Baz['x']:\n" "   pass"),
@@ -518,6 +530,10 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 ("async def foo() -> \"Baz['x']\":\n" "   pass"),
                 {"Baz", "x"},
                 id="nested-string",
+                marks=pytest.mark.skipif(
+                    not PY38_PLUS,
+                    reason="Nested str annotations are only available in Python >=3.8.",
+                ),
             ),
             pytest.param(
                 ("async def foo() -> Baz['x']:\n" "   pass"),
@@ -683,7 +699,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 id="const",
                 marks=pytest.mark.skipif(
                     not PY38_PLUS,
-                    reason="Nested str annotation is only available in Python >=3.8.",
+                    reason="Nested str annotations are only available in Python >=3.8",
                 ),
             ),
         ],
