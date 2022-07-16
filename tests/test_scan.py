@@ -412,57 +412,124 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
     @pytest.mark.parametrize(
-        "code, expec_names, expec_attrs",
+        "code, expec_names",
         [
             pytest.param(
-                ("from typing import List\n" "import foo\n" "baz = List['foo']\n"),
+                "baz = List['foo']",
                 {"List", "foo", "baz"},
-                set(),
-                id="str-name",
+                id="str",
             ),
             pytest.param(
-                ("from typing import List\n" "import foo.x\n" "baz = List['foo.x']\n"),
-                {"List", "foo", "baz"},
-                {"x"},
-                id="str-attr",
-            ),
-            pytest.param(
-                (
-                    "from typing import Union\n"
-                    "import foo, bar\n"
-                    "baz = Union['foo', 'bar']\n"
-                ),
+                "baz = Union['foo', 'bar']",
                 {"Union", "foo", "bar", "baz"},
-                set(),
-                id="tuple-name",
-            ),
-            pytest.param(
-                (
-                    "from typing import Union\n"
-                    "import foo.x, bar.y\n"
-                    "baz = Union['foo.x', 'bar.y']\n"
-                ),
-                {"Union", "foo", "bar", "baz"},
-                {"x", "y"},
-                id="tuple-attr",
-            ),
-            pytest.param(
-                (
-                    "from typing import Union\n"
-                    "import bar.y\n"
-                    "baz = Union['foo x', 'bar.y']\n"
-                ),
-                {"Union", "bar", "baz"},
-                {"y"},
-                id="literal with space (i41)",
+                id="tuple",
             ),
         ],
     )
-    def test_visit_Subscript(self, code, expec_names, expec_attrs):
+    def test_visit_Subscript(self, code, expec_names):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
-        self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
+
+    @pytest.mark.parametrize(
+        "code, expec_names",
+        [
+            pytest.param(
+                "foo: 'Bar[Baz]' = []",
+                {"foo", "Bar", "Baz"},
+                id="string",
+            ),
+            pytest.param(
+                "foo: \"Bar['Baz']\" = []",
+                {"foo", "Bar", "Baz"},
+                id="nested-string",
+            ),
+            pytest.param(
+                "foo: Bar['Baz'] = []",
+                {"foo", "Bar", "Baz"},
+                id="semi-string",
+            ),
+        ],
+    )
+    def test_visit_AnnAssign(self, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
+    @pytest.mark.parametrize(
+        "code, expec_names",
+        [
+            pytest.param(
+                ("def foo(bar: 'Baz[x]'):\n" "   pass"),
+                {"Baz", "x"},
+                id="string",
+            ),
+            pytest.param(
+                ("def foo(bar: \"Baz['x']\"):\n" "   pass"),
+                {"Baz", "x"},
+                id="nested-string",
+            ),
+            pytest.param(
+                ("def foo(bar: Baz['x']):\n" "   pass"),
+                {"Baz", "x"},
+                id="semi-string",
+            ),
+        ],
+    )
+    def test_visit_arg(self, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
+    @pytest.mark.parametrize(
+        "code, expec_names",
+        [
+            pytest.param(
+                ("def foo() -> 'Baz[x]':\n" "   pass"),
+                {"Baz", "x"},
+                id="string",
+            ),
+            pytest.param(
+                ("def foo() -> \"Baz['x']\":\n" "   pass"),
+                {"Baz", "x"},
+                id="nested-string",
+            ),
+            pytest.param(
+                ("def foo() -> Baz['x']:\n" "   pass"),
+                {"Baz", "x"},
+                id="semi-string",
+            ),
+        ],
+    )
+    def test_visit_FunctionDef(self, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
+    @pytest.mark.parametrize(
+        "code, expec_names",
+        [
+            pytest.param(
+                ("async def foo() -> 'Baz[x]':\n" "   pass"),
+                {"Baz", "x"},
+                id="string",
+            ),
+            pytest.param(
+                ("async def foo() -> \"Baz['x']\":\n" "   pass"),
+                {"Baz", "x"},
+                id="nested-string",
+            ),
+            pytest.param(
+                ("async def foo() -> Baz['x']:\n" "   pass"),
+                {"Baz", "x"},
+                id="semi-string",
+            ),
+        ],
+    )
+    def test_visit_AsyncFunctionDef(self, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
         "code, expec_names, expec_names_to_skip",
@@ -540,44 +607,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
-    @pytest.mark.parametrize(
-        "code, expec_names",
-        [
-            pytest.param("foo: 'List[str]' = []\n", {"List", "str"}, id="assign"),
-            pytest.param(
-                ("def foo(bar: 'List[str]'):\n" "    pass\n"),
-                {"List", "str"},
-                id="arg",
-            ),
-            pytest.param(
-                ("def foo() -> 'Tuple[int]':\n" "    pass\n"),
-                {"Tuple", "int"},
-                id="function",
-            ),
-            pytest.param(
-                ("async def foo() -> 'Tuple[int]':\n" "    pass\n"),
-                {"Tuple", "int"},
-                id="async-function",
-            ),
-            pytest.param(
-                "foo: \"List['str']\" = []\n",
-                {"List", "str"},
-                id="nested-string",
-                marks=pytest.mark.skipif(
-                    not PY38_PLUS,
-                    reason="Nested str annotation is only available in Python >=3.8.",
-                ),
-            ),
-            pytest.param("foobar: '' = 'x'\n", None, id="empty string annotation"),
-            pytest.param("foobar = 'x'\n", None, id="no string annotation"),
-        ],
-    )
-    @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
-    def test_visit_string_type_annotation(self, visit_Name, code, expec_names):
-        analyzer = self._get_analyzer(code)
-        source_stats, _ = analyzer.get_stats()
-        self.assert_set_equal_or_not(source_stats.name_, expec_names)
-
     @pytest.mark.skipif(
         not PY38_PLUS,
         reason="This feature is only available in Python >=3.8.",
@@ -619,6 +648,22 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     )
     @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
     def test_visit_type_comment(self, visit_Name, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
+    @pytest.mark.parametrize(
+        "code, expec_names",
+        [
+            pytest.param("foo: 'bar' = 'x'", {"bar"}, id="normal"),
+            pytest.param("foo: '' = 'x'", None, id="empty"),
+            pytest.param("foo: ' ' = 'x'", None, id="white-spaced [only]"),
+            pytest.param("foo: ' bar ' = 'x'", {"bar"}, id="white-spaced [valid]"),
+            pytest.param("foo: 'ba r' = 'x'", None, id="white-spaced [invalid]"),
+        ],
+    )
+    @mock.patch(MOCK % "SourceAnalyzer.visit_Name")
+    def test_parse_string(self, visit_Name, code, expec_names):
         analyzer = self._get_analyzer(code)
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
