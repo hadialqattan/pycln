@@ -630,9 +630,20 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @pytest.mark.parametrize(
         "code, expec_names",
         [
-            pytest.param("foo = []  # type: List[str]\n", {"List", "str"}, id="assign"),
+            pytest.param("foo = []  # type: List[str]", {"List", "str"}, id="assign"),
             pytest.param(
-                ("def foo(\n" "bar  # type: List[str]\n" "):\n" "    pass\n"),
+                "foo = []  # type: 'List[str]'", {"List", "str"}, id="assign-[str]"
+            ),
+            pytest.param(
+                "foo = []  # type: \"List['str']\"",
+                {"List", "str"},
+                id="assign-[nested-str]",
+            ),
+            pytest.param(
+                "foo = []  # type: List['str']", {"List", "str"}, id="assign-[semi-str]"
+            ),
+            pytest.param(
+                ("def foo(\n" "bar  # type: List[str]\n" "):\n" "    pass"),
                 {"List", "str"},
                 id="arg",
             ),
