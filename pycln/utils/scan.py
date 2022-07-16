@@ -226,12 +226,13 @@ class SourceAnalyzer(ast.NodeVisitor):
 
     @recursive
     def visit_Subscript(self, node: ast.Subscript) -> None:
-        #: Support semi string type hints.
-        #: >>> from ast import Import
-        #: >>> from typing import List
-        #: >>> def foo(bar: List["Import"]):
-        #: >>>     pass
-        #: Issue: https://github.com/hadialqattan/pycln/issues/32
+        #: Support semi string type assigment
+        #:
+        #: >>> from ast import Import, ImportFrom
+        #: >>> from typing import Union, List
+        #: >>>
+        #: >>> bar = List['Import']
+        #: >>> foo = Union['Import', 'ImportFrom']
         value = getattr(node, "value", "")
         if getattr(value, "id", "") in SUBSCRIPT_TYPE_VARIABLE or (
             hasattr(value, "value") and getattr(value.value, "id", "") == "typing"
@@ -241,57 +242,58 @@ class SourceAnalyzer(ast.NodeVisitor):
             else:
                 s_val = node.slice.value  # type: ignore
             for elt in getattr(s_val, "elts", ()) or (s_val,):
-                try:
-                    self._parse_string(elt)  # type: ignore
-                except UnparsableFile:
-                    #: Ignore errors when parsing Literal
-                    #: that are not valid identifiers.
-                    #:
-                    #: >>> from typing import Literal
-                    #: >>> L: Literal[" "] = " "
-                    #:
-                    #: Issue: https://github.com/hadialqattan/pycln/issues/41
-                    pass
+                self._parse_string(elt)  # type: ignore
 
     @recursive
     def visit_AnnAssign(self, node: ast.AnnAssign):
-        #: Support (nested)string type annotations.
-        #: >>> from ast import Import
-        #: >>> from typing import Tuple
-        #: >>>
-        #: >>> foo: "List[Import]" = []
-        #: >>>
-        #: >>> bar: "List['Import']" = []
+        #: Support all
+        #:
+        #: 1) string type annotations:
+        #:  >>> foo: "Bar[Baz]" = []
+        #:
+        #: 2) nested string type annotations:
+        #:  >>> bar: "Bar['Baz']" = []
+        #:
+        #: 3) semi string type annotations:
+        #:  >>> foo: Bar["Baz"] = []
         self._visit_string_type_annotation(node)
 
     @recursive
     def visit_arg(self, node: ast.arg):
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)
-        #: Support arg (nested)string type annotations.
-        #: >>> from ast import Import
-        #: >>> from typing import Tuple
-        #: >>>
-        #: >>> def foo(bar: "Tuple[Import]"):
-        #: ...     pass
-        #: >>>
-        #: >>> def bar(foo: "Tuple['Import']"):
-        #: ...     pass
+        #: Support all
+        #:
+        #: 1) string type annotations:
+        #:  >>> def foo(bar: "Baz[X]"):
+        #:  ...     pass
+        #:
+        #: 2) nested string type annotations:
+        #:  >>> def foo(bar: "Baz['X']"):
+        #:  ...     pass
+        #:
+        #: 3) semi string type annotations:
+        #:  >>> def foo(bar: Baz['X']):
+        #:  ...     pass
         self._visit_string_type_annotation(node)
 
     @recursive
     def visit_FunctionDef(self, node: FunctionDefT):
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)
-        #: Support (nested)string type annotations.
-        #: >>> from ast import Import
-        #: >>> from typing import List
-        #: >>>
-        #: >>> def foo() -> "List[Import]":
-        #: >>>     pass
-        #: >>>
-        #: >>> def bar() -> "List['Import']":
-        #: >>>     pass
+        #: Support all
+        #:
+        #: 1) string type annotations:
+        #:  >>> def foo() -> "Baz[X]":
+        #:  ...     pass
+        #:
+        #: 2) nested string type annotations:
+        #:  >>> def foo() -> "Baz['X']":
+        #:  ...     pass
+        #:
+        #: 3) semi string type annotations:
+        #:  >>> def foo() -> Baz['X']:
+        #:  ...     pass
         self._visit_string_type_annotation(node)
 
     # Support `ast.AsyncFunctionDef`.
@@ -384,6 +386,13 @@ class SourceAnalyzer(ast.NodeVisitor):
             annotation = node.annotation
         else:
             annotation = node.returns
+
+        if isinstance(annotation, ast.Subscript):
+            if isinstance(annotation.slice, ast.Constant):
+                annotation = annotation.slice
+            else:
+                annotation = annotation.slice.value  # type: ignore
+
         self._parse_string(annotation, True)  # type: ignore
 
     def _visit_type_comment(
@@ -417,12 +426,23 @@ class SourceAnalyzer(ast.NodeVisitor):
     def _parse_string(
         self, node: Union[ast.Constant, ast.Str], is_str_annotation: bool = False
     ) -> None:
-        # Parse string names/attrs.
-        if isinstance(node, (ast.Constant, ast.Str)):
-            val = getattr(node, "value", "") or getattr(node, "s", "")
-            if val and isinstance(val, str):
-                tree = parse_ast(val, mode="eval")
-                self._add_name_attr_const(tree, is_str_annotation)
+        try:
+            # Parse string names/attrs.
+            if isinstance(node, (ast.Constant, ast.Str)):
+                val = getattr(node, "value", "") or getattr(node, "s", "")
+                if val and isinstance(val, str):
+                    val = val.strip()
+                    tree = parse_ast(val, mode="eval")
+                    self._add_name_attr_const(tree, is_str_annotation)
+        except UnparsableFile:
+            #: Ignore errors when parsing Literals
+            #: that are not valid identifiers (e.g. contain white-spaces).
+            #:
+            #: >>> from typing import Literal
+            #: >>> L: Literal[" "] = " "
+            #:
+            #: Issue: https://github.com/hadialqattan/pycln/issues/41
+            pass
 
     def _add_concatenated_list_names(self, node: ast.BinOp) -> None:
         #: Safely add `["x", "y"] + ["i", "j"]`
