@@ -13,6 +13,7 @@ from ._exceptions import ReadPermissionError, UnexpandableImportStar, Unparsable
 
 # Constants.
 PY38_PLUS = sys.version_info >= (3, 8)
+PY39_PLUS = sys.version_info >= (3, 9)
 __ALL__ = "__all__"
 NAMES_TO_SKIP = frozenset(
     {
@@ -236,7 +237,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         if getattr(value, "id", "") in SUBSCRIPT_TYPE_VARIABLE or (
             hasattr(value, "value") and getattr(value.value, "id", "") == "typing"
         ):
-            if isinstance(node.slice, ast.Constant):
+            if PY39_PLUS:
                 s_val = node.slice  # type: ignore
             else:
                 s_val = node.slice.value  # type: ignore
