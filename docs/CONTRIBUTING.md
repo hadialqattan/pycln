@@ -116,7 +116,7 @@ $ ./scripts/tests_runner.sh -vv -k TestClassName
 
 After adding a new feature or fixing a bug please:
 
-- Report your changes to [CHANGELOG.md](CHANGELOG).
+- Report your changes to [CHANGELOG.md](CHANGELOG.md).
 - Write your name, GitHub username, and email on the [AUTHORS.md](AUTHORS) file.
 
 ## FAQ
