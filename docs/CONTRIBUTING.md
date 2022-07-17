@@ -1,7 +1,7 @@
 # Contributing to Pycln project
 
 A big welcome for considering contributing to make the project better! Have you read the
-entire user [documentation](README) yet?
+entire user [documentation](README.md) yet?
 
 ## Code of Conduct
 
@@ -44,7 +44,7 @@ improvement slated for the next release. In general, PRs should:
 - Only contain changes related to a certain issue/feature.
 - Add or edit our tests suite for fixed or changed functionality (if a test suite
   already exists).
-- Include documentation on our [README](README).
+- Include documentation on our [README](README.md).
 
 _In case the problem was very clear, you can create a PR directly without opening an
 issue._
@@ -117,7 +117,7 @@ $ ./scripts/tests_runner.sh -vv -k TestClassName
 After adding a new feature or fixing a bug please:
 
 - Report your changes to [CHANGELOG.md](CHANGELOG.md).
-- Write your name, GitHub username, and email on the [AUTHORS.md](AUTHORS) file.
+- Write your name, GitHub username, and email on the [AUTHORS.md](AUTHORS.md) file.
 
 ## FAQ
 
