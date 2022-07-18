@@ -103,6 +103,7 @@ The following notable open-source projects trust and use _Pycln_:
 - [Poetry](https://github.com/python-poetry/poetry)
 - [Pyodide](https://github.com/pyodide/pyodide)
 - [Rich](https://github.com/Textualize/rich)
+- [typeshed](https://github.com/python/typeshed)
 
 The following organizations use _Pycln_:
 
