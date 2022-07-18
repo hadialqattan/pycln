@@ -12,7 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- [Possible internal attr errors because of lack of some ast node type-checking (affects only Python3.9+) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/162)
+- [Possible internal attr errors due to lack of some ast node type-checking (affects only Python3.9+) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/162)
 
 ### Changed
 
