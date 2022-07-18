@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Possible internal attr errors due to lack of some ast node type-checking (affects only Python3.9+) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/162)
+
 ### Changed
 
 - [Bump typer from 0.5.0 to 0.6.1 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/160)

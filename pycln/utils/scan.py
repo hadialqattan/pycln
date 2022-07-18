@@ -387,10 +387,11 @@ class SourceAnalyzer(ast.NodeVisitor):
         else:
             annotation = node.returns
 
+        # Support generic type annotations.
         if isinstance(annotation, ast.Subscript):
             if isinstance(annotation.slice, ast.Constant):
                 annotation = annotation.slice
-            else:
+            elif isinstance(annotation.slice, ast.Index):
                 annotation = annotation.slice.value  # type: ignore
 
         self._parse_string(annotation, True)  # type: ignore
