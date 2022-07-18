@@ -434,6 +434,7 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @pytest.mark.parametrize(
         "code, expec_names",
         [
+            pytest.param("foo: Bar[Baz] = []", {"foo", "Bar", "Baz"}, id="normal"),
             pytest.param(
                 "foo: 'Bar[Baz]' = []",
                 {"foo", "Bar", "Baz"},
@@ -464,6 +465,11 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         "code, expec_names",
         [
             pytest.param(
+                ("def foo(bar: Baz[x]):\n" "   pass"),
+                {"Baz", "x"},
+                id="normal",
+            ),
+            pytest.param(
                 ("def foo(bar: 'Baz[x]'):\n" "   pass"),
                 {"Baz", "x"},
                 id="string",
@@ -493,6 +499,11 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         "code, expec_names",
         [
             pytest.param(
+                ("def foo() -> Baz[x]:\n" "   pass"),
+                {"Baz", "x"},
+                id="normal",
+            ),
+            pytest.param(
                 ("def foo() -> 'Baz[x]':\n" "   pass"),
                 {"Baz", "x"},
                 id="string",
@@ -521,6 +532,11 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     @pytest.mark.parametrize(
         "code, expec_names",
         [
+            pytest.param(
+                ("async def foo() -> Baz[x]:\n" "   pass"),
+                {"Baz", "x"},
+                id="normal",
+            ),
             pytest.param(
                 ("async def foo() -> 'Baz[x]':\n" "   pass"),
                 {"Baz", "x"},
