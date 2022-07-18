@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.0.4] - 2022-07-18 (a quick release solving v2.0.3 problem \[affects PY3.9+\])
+
 ### Fixed
 
 - [Possible internal attr errors due to lack of some ast node type-checking (affects only Python3.9+) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/162)
@@ -19,7 +21,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - [Bump typer from 0.5.0 to 0.6.1 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/160)
 - [Bump JRubics/poetry-publish from 1.11 to 1.12 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/159)
 
-## [2.0.3] - 2022-07-17
+## [2.0.3] - 2022-07-17 (a broken release \[affects PY3.9+\], goto v2.0.4)
 
 ### Fixed
 
