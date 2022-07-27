@@ -1,11 +1,12 @@
 """pycln `__init__.py`/`pyproject.toml` metadata tests."""
 # pylint: disable=R0201,W0613
 import sys
+import tokenize
 from os import getenv
 
 import pytest
 import requests
-import toml
+import tomlkit
 from semver import VersionInfo
 from typer import Exit
 
@@ -21,7 +22,9 @@ from pycln import (
 from .utils import sysu
 
 # Constants.
-PYCLN_METADATA = toml.load(PYPROJECT_PATH)["tool"]["poetry"]
+with tokenize.open(PYPROJECT_PATH) as toml_f:
+    PYCLN_METADATA = tomlkit.parse(toml_f.read())["tool"]["poetry"]
+
 PYCLN_PYPI_JSON_URL = f"https://pypi.org/pypi/{__name__}/json"
 PYCLN_PYPI_URL = f"https://pypi.org/project/{__name__}/"
 
