@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [Now Pycln uses `tomlkit` instead of `toml` library for parsing toml config files in order to support toml v1.0.0 by @hadialqattan](https://github.com/hadialqattan/pycln/pull/165)
+
 ## [2.0.4] - 2022-07-18 (a quick release solving v2.0.3 problem \[affects PY3.9+\])
 
 ### Fixed

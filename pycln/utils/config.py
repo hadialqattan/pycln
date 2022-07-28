@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Pattern, Set, Union
 
-import toml
+import tomlkit
 import typer
 import yaml
 
@@ -179,7 +179,8 @@ class ParseConfigFile:
 
     def _parse_toml(self) -> None:
         # Parse `.toml` file.
-        parsed_toml = toml.load(self._path)
+        with tokenize.open(self._path) as stream:
+            parsed_toml = tomlkit.parse(stream.read())
         tool, pycln = self._section.split(".")
         configs = parsed_toml.get(tool, {}).get(pycln, {})
         self._config_loader(configs)
