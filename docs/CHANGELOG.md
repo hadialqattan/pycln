@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [Bump JRubics/poetry-publish from 1.12 to 1.13 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/168)
+
 ## [2.1.1] - 2022-07-28
 
 ### Changed
