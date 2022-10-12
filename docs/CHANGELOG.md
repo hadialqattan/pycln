@@ -12,6 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- [Bump pytest-cov from 3.0.0 to 4.0.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/171)
 - [Bump JRubics/poetry-publish from 1.12 to 1.13 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/168)
 
 ## [2.1.1] - 2022-07-28
