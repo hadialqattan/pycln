@@ -30,10 +30,7 @@ dataclasses = {version = "^0.7", python = "3.6"}
 pyyaml = ">=5.3.1,<7.0.0"
 pathspec = "^0.9.0"
 tomlkit = "^0.11.1"
-libcst = [
-    {version = ">=0.3.10,<0.5.0", python = ">=3.7"},
-    {version = ">=0.3.10,<0.4.0", python = "<3.7"}
-]
+libcst = [{version = ">=0.3.10,<0.5.0", python = ">=3.7"}, {version = ">=0.3.10,<0.4.0", python = "<3.7"}]
 
 [tool.poetry.dev-dependencies]
 requests = "^2.24.0"
@@ -49,6 +46,7 @@ hypothesmith = "^0.2.0"
 all = true
 
 [mypy]
+show_error_codes = true
 ignore_missing_imports = true
 no_strict_optional = true
 

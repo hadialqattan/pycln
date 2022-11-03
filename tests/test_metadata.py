@@ -23,7 +23,7 @@ from .utils import sysu
 
 # Constants.
 with tokenize.open(PYPROJECT_PATH) as toml_f:
-    PYCLN_METADATA = tomlkit.parse(toml_f.read())["tool"]["poetry"]
+    PYCLN_METADATA = tomlkit.parse(toml_f.read())["tool"]["poetry"]  # type: ignore
 
 PYCLN_PYPI_JSON_URL = f"https://pypi.org/pypi/{__name__}/json"
 PYCLN_PYPI_URL = f"https://pypi.org/project/{__name__}/"

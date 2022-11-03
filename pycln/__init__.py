@@ -23,11 +23,11 @@ ISWIN = os.name == "nt"
 PYPROJECT_PATH = Path(__file__).parent.parent.joinpath("pyproject.toml")
 
 with tokenize.open(PYPROJECT_PATH) as toml_f:
-    pycln = tomlkit.parse(toml_f.read())["tool"]["poetry"]
+    pycln = tomlkit.parse(toml_f.read())["tool"]["poetry"]  # type: ignore[index]
 
-__name__ = pycln["name"]
-__version__ = pycln["version"]
-__doc__ = pycln["description"]
+__name__ = str(pycln["name"])  # type: ignore[index]
+__doc__ = str(pycln["description"])  # type: ignore[index]
+__version__ = pycln["version"]  # type: ignore[index]
 
 
 def version_callback(value: bool):
