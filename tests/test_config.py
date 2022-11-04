@@ -42,6 +42,7 @@ CONFIG_ATTR = frozenset(
         "silence",
         "expand_stars",
         "no_gitignore",
+        "disable_all_dunder_policy",
     }
 )
 DEFAULTS = {
@@ -59,6 +60,7 @@ DEFAULTS = {
     "silence": False,
     "expand_stars": True,
     "no_gitignore": False,
+    "disable_all_dunder_policy": False,
 }
 
 
