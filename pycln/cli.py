@@ -14,6 +14,12 @@ app = typer.Typer(name=__name__, add_completion=True)
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main(  # pylint: disable=R0913,R0914
     paths: List[Path] = typer.Argument(None, help="Directories or files paths."),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        show_default=False,
+        help="Read configuration from a file.",
+    ),
     skip_imports: List[str] = typer.Option(
         [],
         "--skip-imports",
@@ -28,12 +34,6 @@ def main(  # pylint: disable=R0913,R0914
             " or by passing a list via a config file"
             " such as `skip_imports: [os, time, pycln]` (recommended)."
         ),
-    ),
-    config: Optional[Path] = typer.Option(
-        None,
-        "--config",
-        show_default=False,
-        help="Read configuration from a file.",
     ),
     include: str = typer.Option(
         regexu.INCLUDE_REGEX,
@@ -136,6 +136,7 @@ def main(  # pylint: disable=R0913,R0914
         False,
         "--expand-stars",
         "-x",
+        show_default=True,
         help=(
             "Expand wildcard star imports."
             " It works if only if the module is importable."
@@ -146,6 +147,15 @@ def main(  # pylint: disable=R0913,R0914
         "--no-gitignore",
         show_default=True,
         help="Do not ignore `.gitignore` patterns. if present.",
+    ),
+    disable_all_dunder_policy: bool = typer.Option(
+        False,
+        "--disable-all-dunder-policy",
+        show_default=True,
+        help=(
+            "Stop enforcing the existence of the __all__ dunder in __init__.py files."
+            " Treating __init__.py files like regular .py files."
+        ),
     ),
     version: bool = typer.Option(  # pylint: disable=W0613
         None,
@@ -169,6 +179,7 @@ def main(  # pylint: disable=R0913,R0914
         silence=silence,
         expand_stars=expand_stars,
         no_gitignore=no_gitignore,
+        disable_all_dunder_policy=disable_all_dunder_policy,
     )
     reporter = report.Report(configs)
     session_maker = refactor.Refactor(configs, reporter)

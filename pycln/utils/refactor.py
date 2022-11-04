@@ -249,7 +249,11 @@ class Refactor:
             #: `__init__.py` file with no `__all__` dunder issue:
             #:
             #: PR/ISSUE/DOC Ref: https://github.com/hadialqattan/pycln/pull/97
-            if regexu.is_init_file(self._path) and not analyzer.has_all():
+            if (
+                not self.configs.disable_all_dunder_policy
+                and regexu.is_init_file(self._path)
+                and not analyzer.has_all()
+            ):
                 self._is_init_without_all = True
 
             return source_stats, import_stats
