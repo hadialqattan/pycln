@@ -187,47 +187,6 @@ so anything true for `.py` files is true for `.pyi` files as well.
 
 ## CLI Options
 
-### `--skip-imports` option
-
-> Skip module/package/library imports for all files (globally).
-
-#### Default
-
-> `[]`
-
-#### Behaviour
-
-- Takes a list of module/package/library names and skips any import belonging to them.
-
-#### Usage
-
-- Via CLI by providing:
-
-  - a list of names in a pythonic list format:
-    ```bash
-    $ pycln --skip-imports [x, y, z]
-    ```
-  - a list of names in a comma separated str format:
-    ```bash
-    $ pycln --skip-imports x,y,z
-    ```
-  - `--skip-imports` multiple times:
-    ```bash
-    $ pycln --skip-imports x --skip-imports y
-    ```
-
-- Via a [config file](?id=-config-path-option) (`.toml`, `.cfg`, `.yaml`, `.yml`,
-  `.json`) by providing:
-  - a list of names in a pythonic list format (`.toml` example):
-    ```.toml
-    skip_imports = [x, y, z]
-    ```
-  - a list of names in a comma separated str format (`.toml` example):
-    ```.toml
-    skip_imports = "x,y,z"
-    ```
-  - unlike CLI, you can't provide multiple `skip_imports` keys.
-
 ### `--config PATH` option
 
 > Read configuration from a file.
@@ -281,6 +240,7 @@ verbose = True
 diff = True
 all = True
 no_gitignore = False
+disable_all_dunder_policy = False
 ```
 
 </details>
@@ -298,6 +258,7 @@ verbose=true
 diff=true
 all=true
 no_gitignore=false
+disable_all_dunder_policy=false
 ```
 
 </details>
@@ -315,6 +276,7 @@ pycln:
   diff: true
   all: true
   no_gitignore: false
+  disable_all_dunder_policy: false
 ```
 
 </details>
@@ -332,12 +294,54 @@ pycln:
     "verbose": true,
     "diff": true,
     "all": true,
-    "no_gitignore": false
+    "no_gitignore": false,
+    "disable_all_dunder_policy": false
   }
 }
 ```
 
 </details>
+
+### `--skip-imports` option
+
+> Skip module/package/library imports for all files (globally).
+
+#### Default
+
+> `[]`
+
+#### Behaviour
+
+- Takes a list of module/package/library names and skips any import belonging to them.
+
+#### Usage
+
+- Via CLI by providing:
+
+  - a list of names in a pythonic list format:
+    ```bash
+    $ pycln --skip-imports [x, y, z]
+    ```
+  - a list of names in a comma separated str format:
+    ```bash
+    $ pycln --skip-imports x,y,z
+    ```
+  - `--skip-imports` multiple times:
+    ```bash
+    $ pycln --skip-imports x --skip-imports y
+    ```
+
+- Via a [config file](?id=-config-path-option) (`.toml`, `.cfg`, `.yaml`, `.yml`,
+  `.json`) by providing:
+  - a list of names in a pythonic list format (`.toml` example):
+    ```.toml
+    skip_imports = [x, y, z]
+    ```
+  - a list of names in a comma separated str format (`.toml` example):
+    ```.toml
+    skip_imports = "x,y,z"
+    ```
+  - unlike CLI, you can't provide multiple `skip_imports` keys.
 
 ### `-i, --include TEXT` option
 
@@ -648,6 +652,27 @@ All done! 💪 😎
 
 ```bash
 $ pycln /path/ --no-gitignore
+```
+
+### `--disable-all-dunder-policy` flag
+
+> Stop enforcing the existence of the `__all__` dunder in `__init__.py` files.
+> ([disabling this policy](#init-file-__init__py))
+
+#### Default
+
+> `False`
+
+#### Behaviour
+
+- Stop showing the missing `__all__` dunder in `__init__.py` files warning.
+- Treating `__init__.py` files like regular `.py` files (formatting them even without
+  the existence of the `__all__` dunder).
+
+#### Usage
+
+```bash
+$ pycln /path/ --disable-all-dunder-policy
 ```
 
 ### `--version` flag
@@ -985,6 +1010,9 @@ __all__ = ["os", "time"]
 > Pycln can not decide whether the unused imported names are useless or imported to be
 > used somewhere else (exported) in case of an `__init__.py` file with no `__all__`
 > dunder.
+
+> NOTE: this policy could be disabled using the
+> [--disable-all-dunder-policy](#-disable-all-dunder-policy-flag) flag.
 
 A detailed description of the problem:
 
