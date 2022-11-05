@@ -8,3 +8,4 @@ pycln:
   diff: true
   all: true
   no_gitignore: false
+  disable_all_dunder_policy: false

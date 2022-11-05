@@ -434,21 +434,45 @@ class TestRefactor:
 
     @pytest.mark.parametrize(
         (
-            "get_stats_raise, has_all_return, is_init_file_return,"
+            "disable_all_dunder_policy, get_stats_raise,"
+            "has_all_return, is_init_file_return,"
             "expec_is_init_without_all, expec_val"
         ),
         [
-            pytest.param(None, False, False, False, ("", ""), id="normal"),
-            pytest.param(Exception(""), False, False, False, None, id="error"),
+            pytest.param(False, None, False, False, False, ("", ""), id="normal"),
+            pytest.param(False, Exception(""), False, False, False, None, id="error"),
             pytest.param(
-                None, False, True, True, ("", ""), id="__init__.py - no __all__"
-            ),
-            pytest.param(None, True, True, False, ("", ""), id="__init__.py - __all__"),
-            pytest.param(
-                None, False, False, False, ("", ""), id="not __init__.py - no __all__"
+                False, None, False, True, True, ("", ""), id="__init__.py - no __all__"
             ),
             pytest.param(
-                None, True, False, False, ("", ""), id="not __init__.py - __all__"
+                False, None, True, True, False, ("", ""), id="__init__.py - __all__"
+            ),
+            pytest.param(
+                False,
+                None,
+                False,
+                False,
+                False,
+                ("", ""),
+                id="not __init__.py - no __all__",
+            ),
+            pytest.param(
+                False,
+                None,
+                True,
+                False,
+                False,
+                ("", ""),
+                id="not __init__.py - __all__",
+            ),
+            pytest.param(
+                True,
+                None,
+                False,
+                True,
+                False,
+                ("", ""),
+                id="__init__.py - no __all__ - policy disabled",
             ),
         ],
     )
@@ -460,6 +484,7 @@ class TestRefactor:
         get_stats,
         has_all,
         is_init_file,
+        disable_all_dunder_policy,
         get_stats_raise,
         has_all_return,
         is_init_file_return,
@@ -470,6 +495,8 @@ class TestRefactor:
         get_stats.side_effect = get_stats_raise
         has_all.return_value = has_all_return
         is_init_file.return_value = is_init_file_return
+
+        setattr(self.configs, "disable_all_dunder_policy", disable_all_dunder_policy)
 
         with sysu.std_redirect(sysu.STD.ERR):
             val = self.session_maker._analyze(ast.parse(""), [""])

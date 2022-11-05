@@ -52,6 +52,7 @@ class Config:
     silence: bool = False
     expand_stars: bool = False
     no_gitignore: bool = False
+    disable_all_dunder_policy: bool = False
 
     def _parse_skip_imports(self) -> None:
         #: Converts "x,y,z" syntax into {"x", "y", "z"} set.

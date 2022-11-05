@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- [Adding a CLI flag for disabling the enforcement of the `__all__` dunder in `__init__.py` policy @hadialqattan](https://github.com/hadialqattan/pycln/pull/175)
+
 ### Changed
 
 - [Bump pytest-cov from 3.0.0 to 4.0.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/171)
