@@ -300,6 +300,29 @@ class SourceAnalyzer(ast.NodeVisitor):
     visit_AsyncFunctionDef = visit_FunctionDef
 
     @recursive
+    def visit_ClassDef(self, node: ast.ClassDef):
+        #: Support imports used in generics and wrapped in string:
+        #:
+        #: >>> from typing import Generic
+        #: >>> from foo import Bar
+        #: >>>
+        #: >>> class SuperClass(Generic[SomeType]):
+        #: >>>     ...
+        #: >>>
+        #: >>> class SubClass(SuperClass["Bar"])  # <~ detecting Bar.
+        #: >>>     ...
+        #:
+        #: Issue: https://github.com/hadialqattan/pycln/issues/169
+        for base in node.bases:
+            if isinstance(base, ast.Subscript):
+                if PY39_PLUS:
+                    s_val = base.slice  # type: ignore
+                else:
+                    s_val = base.slice.value  # type: ignore
+                for elt in getattr(s_val, "elts", ()) or (s_val,):
+                    self._parse_string(elt)  # type: ignore
+
+    @recursive
     def visit_Assign(self, node: ast.Assign):
         # Support Python ^3.8 type comments.
         self._visit_type_comment(node)

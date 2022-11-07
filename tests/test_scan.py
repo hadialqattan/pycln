@@ -564,6 +564,31 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
     @pytest.mark.parametrize(
+        "code, expec_names",
+        [
+            pytest.param(
+                ("class Foo(Bar):\n" "    pass"),
+                {"Bar"},
+                id="no generics",
+            ),
+            pytest.param(
+                ("class Foo(Bar['Baz']):\n" "    pass"),
+                {"Bar", "Baz"},
+                id="one generic",
+            ),
+            pytest.param(
+                ("class Foo(Bar['Baz'], Bax['Tax']):\n" "    pass"),
+                {"Bar", "Baz", "Bax", "Tax"},
+                id="many generics",
+            ),
+        ],
+    )
+    def test_visit_ClassDef(self, code, expec_names):
+        analyzer = self._get_analyzer(code)
+        source_stats, _ = analyzer.get_stats()
+        self.assert_set_equal_or_not(source_stats.name_, expec_names)
+
+    @pytest.mark.parametrize(
         "code, expec_names, expec_names_to_skip",
         [
             pytest.param(

@@ -12,6 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- [Imports used in generics and wrapped in string get removed by @hadialqattan](https://github.com/hadialqattan/pycln/pull/178)
 - [Setting an artificial lock to LibCST version `+0.4.0` for Python `3.6.x`; a bug introduced in LibCST `+0.4.0` that affects `PY3.6` by @hadialqattan](https://github.com/hadialqattan/pycln/pull/174)
 
 ### Added
