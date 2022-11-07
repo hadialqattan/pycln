@@ -15,10 +15,10 @@ optional = false
 python-versions = ">=3.5"
 
 [package.extras]
-dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
-docs = ["furo", "sphinx", "zope.interface", "sphinx-notfound-page"]
-tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
-tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "cloudpickle"]
+dev = ["cloudpickle", "coverage[toml] (>=5.0.2)", "furo", "hypothesis", "mypy (>=0.900,!=0.940)", "pre-commit", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "sphinx", "sphinx-notfound-page", "zope.interface"]
+docs = ["furo", "sphinx", "sphinx-notfound-page", "zope.interface"]
+tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "zope.interface"]
+tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
 
 [[package]]
 name = "certifi"
@@ -37,7 +37,7 @@ optional = false
 python-versions = ">=3.5.0"
 
 [package.extras]
-unicode_backport = ["unicodedata2"]
+unicode-backport = ["unicodedata2"]
 
 [[package]]
 name = "click"
@@ -94,8 +94,8 @@ attrs = ">=19.2.0"
 sortedcontainers = ">=2.1.0,<3.0.0"
 
 [package.extras]
-all = ["black (>=19.10b0)", "click (>=7.0)", "django (>=2.2)", "dpcontracts (>=0.4)", "lark-parser (>=0.6.5)", "libcst (>=0.3.16)", "numpy (>=1.9.0)", "pandas (>=0.25)", "pytest (>=4.6)", "python-dateutil (>=1.4)", "pytz (>=2014.1)", "redis (>=3.0.0)", "rich (>=9.0.0)", "importlib-resources (>=3.3.0)", "importlib-metadata (>=3.6)", "backports.zoneinfo (>=0.2.1)", "tzdata (>=2021.5)"]
-cli = ["click (>=7.0)", "black (>=19.10b0)", "rich (>=9.0.0)"]
+all = ["backports.zoneinfo (>=0.2.1)", "black (>=19.10b0)", "click (>=7.0)", "django (>=2.2)", "dpcontracts (>=0.4)", "importlib-metadata (>=3.6)", "importlib-resources (>=3.3.0)", "lark-parser (>=0.6.5)", "libcst (>=0.3.16)", "numpy (>=1.9.0)", "pandas (>=0.25)", "pytest (>=4.6)", "python-dateutil (>=1.4)", "pytz (>=2014.1)", "redis (>=3.0.0)", "rich (>=9.0.0)", "tzdata (>=2021.5)"]
+cli = ["black (>=19.10b0)", "click (>=7.0)", "rich (>=9.0.0)"]
 codemods = ["libcst (>=0.3.16)"]
 dateutil = ["python-dateutil (>=1.4)"]
 django = ["django (>=2.2)"]
@@ -107,7 +107,7 @@ pandas = ["pandas (>=0.25)"]
 pytest = ["pytest (>=4.6)"]
 pytz = ["pytz (>=2014.1)"]
 redis = ["redis (>=3.0.0)"]
-zoneinfo = ["importlib-resources (>=3.3.0)", "backports.zoneinfo (>=0.2.1)", "tzdata (>=2021.5)"]
+zoneinfo = ["backports.zoneinfo (>=0.2.1)", "importlib-resources (>=3.3.0)", "tzdata (>=2021.5)"]
 
 [[package]]
 name = "hypothesmith"
@@ -143,9 +143,9 @@ typing-extensions = {version = ">=3.6.4", markers = "python_version < \"3.8\""}
 zipp = ">=0.5"
 
 [package.extras]
-docs = ["sphinx", "jaraco.packaging (>=8.2)", "rst.linker (>=1.9)"]
+docs = ["jaraco.packaging (>=8.2)", "rst.linker (>=1.9)", "sphinx"]
 perf = ["ipython"]
-testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.0.1)", "packaging", "pep517", "pyfakefs", "flufl.flake8", "pytest-perf (>=0.9.2)", "pytest-black (>=0.3.7)", "pytest-mypy", "importlib-resources (>=1.3)"]
+testing = ["flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pep517", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.0.1)", "pytest-flake8", "pytest-mypy", "pytest-perf (>=0.9.2)"]
 
 [[package]]
 name = "iniconfig"
@@ -164,13 +164,13 @@ optional = false
 python-versions = "*"
 
 [package.extras]
-atomic_cache = ["atomicwrites"]
+atomic-cache = ["atomicwrites"]
 nearley = ["js2py"]
 regex = ["regex"]
 
 [[package]]
 name = "libcst"
-version = "0.3.23"
+version = "0.4.1"
 description = "A concrete syntax tree with AST-like properties for Python 3.5, 3.6, 3.7 and 3.8 programs."
 category = "main"
 optional = false
@@ -183,23 +183,7 @@ typing-extensions = ">=3.7.4.2"
 typing-inspect = ">=0.4.0"
 
 [package.extras]
-dev = ["black (==21.10b0)", "coverage (>=4.5.4)", "fixit (==0.1.1)", "flake8 (>=3.7.8)", "hypothesis (>=4.36.0)", "hypothesmith (>=0.0.4)", "jupyter (>=1.0.0)", "nbsphinx (>=0.4.2)", "prompt-toolkit (>=2.0.9)", "pyre-check (==0.9.3)", "setuptools-scm (>=6.0.1)", "sphinx-rtd-theme (>=0.4.3)", "tox (>=3.18.1)", "ufmt (==1.2)", "usort (==0.6.3)"]
-
-[[package]]
-name = "libcst"
-version = "0.4.7"
-description = "A concrete syntax tree with AST-like properties for Python 3.5, 3.6, 3.7, 3.8, 3.9, and 3.10 programs."
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-pyyaml = ">=5.2"
-typing-extensions = ">=3.7.4.2"
-typing-inspect = ">=0.4.0"
-
-[package.extras]
-dev = ["black (==22.3.0)", "coverage (>=4.5.4)", "fixit (==0.1.1)", "flake8 (>=3.7.8)", "hypothesis (>=4.36.0)", "hypothesmith (>=0.0.4)", "jupyter (>=1.0.0)", "maturin (>=0.8.3,<0.9)", "nbsphinx (>=0.4.2)", "prompt-toolkit (>=2.0.9)", "setuptools-scm (>=6.0.1)", "sphinx-rtd-theme (>=0.4.3)", "ufmt (==1.3)", "usort (==1.0.0rc1)", "setuptools-rust (>=0.12.1)", "slotscheck (>=0.7.1)", "jinja2 (==3.0.3)", "pyre-check (==0.9.9)"]
+dev = ["black (==21.10b0)", "coverage (>=4.5.4)", "fixit (==0.1.1)", "flake8 (>=3.7.8)", "hypothesis (>=4.36.0)", "hypothesmith (>=0.0.4)", "jupyter (>=1.0.0)", "maturin (>=0.8.3,<0.9)", "nbsphinx (>=0.4.2)", "prompt-toolkit (>=2.0.9)", "pyre-check (==0.9.9)", "setuptools-rust (>=0.12.1)", "setuptools-scm (>=6.0.1)", "slotscheck (>=0.7.1)", "sphinx-rtd-theme (>=0.4.3)", "ufmt (==1.3)", "usort (==1.0.0rc1)"]
 
 [[package]]
 name = "mypy-extensions"
@@ -308,7 +292,7 @@ coverage = {version = ">=5.2.1", extras = ["toml"]}
 pytest = ">=4.6"
 
 [package.extras]
-testing = ["fields", "hunter", "process-tests", "six", "pytest-xdist", "virtualenv"]
+testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
 name = "pytest-randomly"
@@ -354,7 +338,7 @@ urllib3 = ">=1.21.1,<1.27"
 
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
-use_chardet_on_py3 = ["chardet (>=3.0.2,<5)"]
+use-chardet-on-py3 = ["chardet (>=3.0.2,<5)"]
 
 [[package]]
 name = "semver"
@@ -400,10 +384,10 @@ python-versions = ">=3.6"
 click = ">=7.1.1,<9.0.0"
 
 [package.extras]
-test = ["rich (>=10.11.0,<13.0.0)", "isort (>=5.0.6,<6.0.0)", "black (>=22.3.0,<23.0.0)", "mypy (==0.910)", "pytest-sugar (>=0.9.4,<0.10.0)", "pytest-xdist (>=1.32.0,<2.0.0)", "coverage (>=5.2,<6.0)", "pytest-cov (>=2.10.0,<3.0.0)", "pytest (>=4.4.0,<5.4.0)", "shellingham (>=1.3.0,<2.0.0)"]
-doc = ["mdx-include (>=1.4.1,<2.0.0)", "mkdocs-material (>=8.1.4,<9.0.0)", "mkdocs (>=1.1.2,<2.0.0)"]
-dev = ["pre-commit (>=2.17.0,<3.0.0)", "flake8 (>=3.8.3,<4.0.0)", "autoflake (>=1.3.1,<2.0.0)"]
-all = ["rich (>=10.11.0,<13.0.0)", "shellingham (>=1.3.0,<2.0.0)", "colorama (>=0.4.3,<0.5.0)"]
+all = ["colorama (>=0.4.3,<0.5.0)", "rich (>=10.11.0,<13.0.0)", "shellingham (>=1.3.0,<2.0.0)"]
+dev = ["autoflake (>=1.3.1,<2.0.0)", "flake8 (>=3.8.3,<4.0.0)", "pre-commit (>=2.17.0,<3.0.0)"]
+doc = ["mdx-include (>=1.4.1,<2.0.0)", "mkdocs (>=1.1.2,<2.0.0)", "mkdocs-material (>=8.1.4,<9.0.0)"]
+test = ["black (>=22.3.0,<23.0.0)", "coverage (>=5.2,<6.0)", "isort (>=5.0.6,<6.0.0)", "mypy (==0.910)", "pytest (>=4.4.0,<5.4.0)", "pytest-cov (>=2.10.0,<3.0.0)", "pytest-sugar (>=0.9.4,<0.10.0)", "pytest-xdist (>=1.32.0,<2.0.0)", "rich (>=10.11.0,<13.0.0)", "shellingham (>=1.3.0,<2.0.0)"]
 
 [[package]]
 name = "typing-extensions"
@@ -412,14 +396,6 @@ description = "Backported and Experimental Type Hints for Python 3.6+"
 category = "main"
 optional = false
 python-versions = ">=3.6"
-
-[[package]]
-name = "typing-extensions"
-version = "4.4.0"
-description = "Backported and Experimental Type Hints for Python 3.7+"
-category = "main"
-optional = false
-python-versions = ">=3.7"
 
 [[package]]
 name = "typing-inspect"
@@ -442,8 +418,8 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, <4"
 
 [package.extras]
-brotli = ["brotlicffi (>=0.8.0)", "brotli (>=1.0.9)", "brotlipy (>=0.6.0)"]
-secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "certifi", "urllib3-secure-extra", "ipaddress"]
+brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)", "brotlipy (>=0.6.0)"]
+secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "ipaddress", "pyOpenSSL (>=0.14)", "urllib3-secure-extra"]
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
@@ -455,8 +431,8 @@ optional = false
 python-versions = ">=3.6"
 
 [package.extras]
-docs = ["sphinx", "jaraco.packaging (>=8.2)", "rst.linker (>=1.9)"]
-testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.0.1)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
+docs = ["jaraco.packaging (>=8.2)", "rst.linker (>=1.9)", "sphinx"]
+testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.0.1)", "pytest-flake8", "pytest-mypy"]
 
 [metadata]
 lock-version = "1.1"
@@ -565,32 +541,35 @@ lark-parser = [
     {file = "lark_parser-0.12.0-py2.py3-none-any.whl", hash = "sha256:0eaf30cb5ba787fe404d73a7d6e61df97b21d5a63ac26c5008c78a494373c675"},
 ]
 libcst = [
-    {file = "libcst-0.3.23-py3-none-any.whl", hash = "sha256:2e1f77fbaaff93b889376c92f588b718edbdc21f956abbe27d10dfd1ff2d76c3"},
-    {file = "libcst-0.3.23.tar.gz", hash = "sha256:330f9082a309bad808e283e80845a843200303bb256690185b98ca458a62c4f8"},
-    {file = "libcst-0.4.7-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:dc6f8965b6ca68d47e11321772887d81fa6fd8ea86e6ef87434ca2147de10747"},
-    {file = "libcst-0.4.7-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:a8f47d809df59fcd83058b777b86a300154ee3a1f1b0523a398a67b5f8affd4c"},
-    {file = "libcst-0.4.7-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c0d19de56aa733b4ef024527e3ce4896d4b0e9806889797f409ec24caa651a44"},
-    {file = "libcst-0.4.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:31da97bc986dc3f7a97f7d431fa911932aaf716d2f8bcda947fc964afd3b57cd"},
-    {file = "libcst-0.4.7-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:71b2e2c5e33e53669c20de0853cecfac1ffb8657ee727ab8527140f39049b820"},
-    {file = "libcst-0.4.7-cp310-cp310-win_amd64.whl", hash = "sha256:76fae68bd6b7ce069e267b3322c806b4305341cea78d161ae40e0ed641c8c660"},
-    {file = "libcst-0.4.7-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:bac76d69980bb3254f503f52128c256ef4d1bcbaabe4a17c3a9ebcd1fc0472c0"},
-    {file = "libcst-0.4.7-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:26f86535271eaefe84a99736875566a038449f92e1a2a61ea0b588d8359fbefd"},
-    {file = "libcst-0.4.7-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:617f7fa2610a8c86cf22d8d03416f25391383d05bd0ad1ca8ef68023ddd6b4f6"},
-    {file = "libcst-0.4.7-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c3637fffe476c5b4ee2225c6474b83382518f2c1b2fe4771039e06bdd7835a4a"},
-    {file = "libcst-0.4.7-cp37-cp37m-win_amd64.whl", hash = "sha256:f56565124c2541adee0634e411b2126b3f335306d19e91ed2bfe52efa698b219"},
-    {file = "libcst-0.4.7-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:0ca2771ff3cfdf1f148349f89fcae64afa365213ed5c2703a69a89319325d0c8"},
-    {file = "libcst-0.4.7-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:aa438131b7befc7e5a3cbadb5a7b1506305de5d62262ea0556add0152f40925e"},
-    {file = "libcst-0.4.7-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8c6bd66a8be2ffad7b968d90dae86c62fd4739c0e011d71f3e76544a891ae743"},
-    {file = "libcst-0.4.7-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:214a9c4f4f90cd5b4bfa18e17877da4dd9a896821d9af9be86fa3effdc289b9b"},
-    {file = "libcst-0.4.7-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:27a37f2b459a8b51a41e260bd89c24ae41ab1d658f610c91650c79b1bbf27138"},
-    {file = "libcst-0.4.7-cp38-cp38-win_amd64.whl", hash = "sha256:2f6766391d90472f036b88a95251c87d498ab068c377724f212ab0cc20509a68"},
-    {file = "libcst-0.4.7-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:234293aa8681a3d47fef1716c5622797a81cbe85a9381fe023815468cfe20eed"},
-    {file = "libcst-0.4.7-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:fa618dc359663a0a097c633452b104c1ca93365da7a811e655c6944f6b323239"},
-    {file = "libcst-0.4.7-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3569d9901c18940632414fb7a0943bffd326db9f726a9c041664926820857815"},
-    {file = "libcst-0.4.7-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:beb5347e46b419f782589da060e9300957e71d561aa5574309883b71f93c1dfe"},
-    {file = "libcst-0.4.7-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1e541ccfeebda1ae5f005fc120a5bf3e8ac9ccfda405ec3efd3df54fc4688ac3"},
-    {file = "libcst-0.4.7-cp39-cp39-win_amd64.whl", hash = "sha256:3a2b7253cd2e3f0f8a3e23b5c2acb492811d865ef36e0816091c925f32b713d2"},
-    {file = "libcst-0.4.7.tar.gz", hash = "sha256:95c52c2130531f6e726a3b077442cfd486975435fecf3db8224d43fba7b85099"},
+    {file = "libcst-0.4.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:46bc765dccd9741951b3716ce8ead0d7014fe5fe04927a5920188aedf786133e"},
+    {file = "libcst-0.4.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:af9526ecc53a515cb5a1761536d6cc6dce7b2ccd958a01d1f185fa580d844afa"},
+    {file = "libcst-0.4.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2473609db1218ee3a3d69d39f97e97b65f6fdb90b2bfce0af7680448578ed6eb"},
+    {file = "libcst-0.4.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:640256354d7183bc801a78a5b05238ccdc46b3646c7a7bee288f8cc046ed0b25"},
+    {file = "libcst-0.4.1-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:f8f75ed9981ec9a96835f78809360847661cc9c8033d404dcc65c346ce480f4d"},
+    {file = "libcst-0.4.1-cp310-cp310-win_amd64.whl", hash = "sha256:ce228e20216bce09ddb4eceed9a669f7fb52568ff300edf99a8850a4d6ab9e86"},
+    {file = "libcst-0.4.1-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:7aacd83126cf932c38cd58be3f8dd9b9aaa88feaf8aa42418156873a5f5ded70"},
+    {file = "libcst-0.4.1-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b4a6bc639bf9f7991e6850329264657448c6516a3d07fe2e0df692ae0bfdac83"},
+    {file = "libcst-0.4.1-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ac37e00960d1ebffbad1b8723d11eaa69371ba49cbcb5680c4da3d50c0536dc3"},
+    {file = "libcst-0.4.1-cp36-cp36m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c6bdb278244d35cc5a14275ac1c0c11de79c6df46031f537c7b707b5841dd518"},
+    {file = "libcst-0.4.1-cp36-cp36m-win_amd64.whl", hash = "sha256:427c88ca77d0c7beb71a0c7f0ea9dccaafad5fc86bb384f381cd8c56412bd0db"},
+    {file = "libcst-0.4.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:e02d3141ce6960f8df5b3c2615ea112a7a5065a60e81e56ca65a498c2c7f2490"},
+    {file = "libcst-0.4.1-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2f2a2d70f14628eaa2870b94f2c8094048af980754433ac1195af14be3f06e27"},
+    {file = "libcst-0.4.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ef99c15d0ea671bc1ba914d9f11634748479b1476fd389de9647c918c729d042"},
+    {file = "libcst-0.4.1-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:407e419f8f69663509e37c9ebad88ca6ea4904d09a2293f47bbfc7597f82e7db"},
+    {file = "libcst-0.4.1-cp37-cp37m-win_amd64.whl", hash = "sha256:05f97c0f56da7bf8a348d63603a04cdf8f9cc18b9880be62540788e968e4b6fa"},
+    {file = "libcst-0.4.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:35194a24918b7386310b3ce02456dc8259a2fdb8ef5c6620132047fb014b4e8e"},
+    {file = "libcst-0.4.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:3f61d3be41946d4ed921afb5914e40027d639130771e89d6846c0cc5bee967ec"},
+    {file = "libcst-0.4.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9eab2755d4796ac0b89e705133547677eaaacb3a913f6b7761f4dc964cca2886"},
+    {file = "libcst-0.4.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c5076d07d4f556d82a04654b72ac80c1b38eea4590189c40880202de40ac4237"},
+    {file = "libcst-0.4.1-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:fe162be926af39bf307dd69b1ceb89af5ccdbfe21e1d92ba24ef7faa9d62be7b"},
+    {file = "libcst-0.4.1-cp38-cp38-win_amd64.whl", hash = "sha256:43f698ee4eeb0fde410a369a4c51c7a5e61974307039ab8ef5c2da83f21b061d"},
+    {file = "libcst-0.4.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:9880a360d9a07283825844d415dc89aee00f13977a571e68f7c168b39a5b7f59"},
+    {file = "libcst-0.4.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:2bd72ce428ac4123c075cbbacb66ae62ed0c166e248cc81b504779c27e263bb7"},
+    {file = "libcst-0.4.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:753ada0471c666befb33ccb73258161bd6493ba3bbb5931abce9d02e71cc673f"},
+    {file = "libcst-0.4.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7b2a6be4d8eace4670af9e596b8dd364d74072235e5a17cc7cff1509483a97c8"},
+    {file = "libcst-0.4.1-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:06de1bc753d789f928f19f5bba5bc83b1b4b304a1b95f537b87c8d5d5cb4b9ce"},
+    {file = "libcst-0.4.1-cp39-cp39-win_amd64.whl", hash = "sha256:ab268eae8a1fdbc23d510f598d0d5b1efe98d7e4f79045fd565c305adebe3a2d"},
+    {file = "libcst-0.4.1.tar.gz", hash = "sha256:961ab38c0ef318c384a287f1e4f877bb61ce93945f352b14b5dbbe7a317882b1"},
 ]
 mypy-extensions = [
     {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
@@ -624,7 +603,10 @@ pytest = [
     {file = "pytest-7.0.1-py3-none-any.whl", hash = "sha256:9ce3ff477af913ecf6321fe337b93a2c0dcf2a0a1439c43f5452112c1e4280db"},
     {file = "pytest-7.0.1.tar.gz", hash = "sha256:e30905a0c131d3d94b89624a1cc5afec3e0ba2fbdb151867d8e0ebd49850f171"},
 ]
-pytest-cov = []
+pytest-cov = [
+    {file = "pytest-cov-4.0.0.tar.gz", hash = "sha256:996b79efde6433cdbd0088872dbc5fb3ed7fe1578b68cdbba634f14bb8dd0470"},
+    {file = "pytest_cov-4.0.0-py3-none-any.whl", hash = "sha256:2feb1b751d66a8bd934e5edfa2e961d11309dc37b73b0eabe73b5945fee20f6b"},
+]
 pytest-randomly = [
     {file = "pytest-randomly-3.10.3.tar.gz", hash = "sha256:22154cdcff7ba44e0599596490e6b75278ca973a33812ea6a54bf14d0b042ef1"},
     {file = "pytest_randomly-3.10.3-py3-none-any.whl", hash = "sha256:b05a7a45f54cae2b5095752c6a10cb559df84448421b0420ae492dd2fb1727ef"},
@@ -653,6 +635,13 @@ pyyaml = [
     {file = "PyYAML-6.0-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:f84fbc98b019fef2ee9a1cb3ce93e3187a6df0b2538a651bfb890254ba9f90b5"},
     {file = "PyYAML-6.0-cp310-cp310-win32.whl", hash = "sha256:2cd5df3de48857ed0544b34e2d40e9fac445930039f3cfe4bcc592a1f836d513"},
     {file = "PyYAML-6.0-cp310-cp310-win_amd64.whl", hash = "sha256:daf496c58a8c52083df09b80c860005194014c3698698d1a57cbcfa182142a3a"},
+    {file = "PyYAML-6.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:d4b0ba9512519522b118090257be113b9468d804b19d63c71dbcf4a48fa32358"},
+    {file = "PyYAML-6.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:81957921f441d50af23654aa6c5e5eaf9b06aba7f0a19c18a538dc7ef291c5a1"},
+    {file = "PyYAML-6.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:afa17f5bc4d1b10afd4466fd3a44dc0e245382deca5b3c353d8b757f9e3ecb8d"},
+    {file = "PyYAML-6.0-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:dbad0e9d368bb989f4515da330b88a057617d16b6a8245084f1b05400f24609f"},
+    {file = "PyYAML-6.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:432557aa2c09802be39460360ddffd48156e30721f5e8d917f01d31694216782"},
+    {file = "PyYAML-6.0-cp311-cp311-win32.whl", hash = "sha256:bfaef573a63ba8923503d27530362590ff4f576c626d86a9fed95822a8255fd7"},
+    {file = "PyYAML-6.0-cp311-cp311-win_amd64.whl", hash = "sha256:01b45c0191e6d66c470b6cf1b9531a771a83c1c4208272ead47a3ae4f2f603bf"},
     {file = "PyYAML-6.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:897b80890765f037df3403d22bab41627ca8811ae55e9a722fd0392850ec4d86"},
     {file = "PyYAML-6.0-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:50602afada6d6cbfad699b0c7bb50d5ccffa7e46a3d738092afddc1f9758427f"},
     {file = "PyYAML-6.0-cp36-cp36m-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:48c346915c114f5fdb3ead70312bd042a953a8ce5c7106d5bfb1a5254e47da92"},
@@ -707,8 +696,6 @@ typer = [
 typing-extensions = [
     {file = "typing_extensions-4.1.1-py3-none-any.whl", hash = "sha256:21c85e0fe4b9a155d0799430b0ad741cdce7e359660ccbd8b530613e8df88ce2"},
     {file = "typing_extensions-4.1.1.tar.gz", hash = "sha256:1a9462dcc3347a79b1f1c0271fbe79e844580bb598bafa1ed208b94da3cdcd42"},
-    {file = "typing_extensions-4.4.0-py3-none-any.whl", hash = "sha256:16fa4864408f655d35ec496218b85f79b3437c829e93320c7c9215ccfd92489e"},
-    {file = "typing_extensions-4.4.0.tar.gz", hash = "sha256:1511434bb92bf8dd198c12b1cc812e800d4181cfcb867674e0f8279cc93087aa"},
 ]
 typing-inspect = [
     {file = "typing_inspect-0.8.0-py3-none-any.whl", hash = "sha256:5fbf9c1e65d4fa01e701fe12a5bca6c6e08a4ffd5bc60bfac028253a447c5188"},
