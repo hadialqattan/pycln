@@ -1005,6 +1005,23 @@ __all__ = ["os", "time"]
 > Not supported, also not on the
 > [roadmap](https://github.com/hadialqattan/pycln/projects/3).
 
+### Generics wrapping strings
+
+> Pycln can understand imports used in generics and wrapped in string.
+
+```python
+from typing import Generic, TypeVar
+from xxx import Baz  # marked as used.
+
+CustomType = TypeVar("CustomType")
+
+class Foo(Generic[CustomType]):
+    ...
+
+class Bar(Foo["Baz"]):  # <~
+    ...
+```
+
 ### Init file (`__init__.py`)
 
 > Pycln can not decide whether the unused imported names are useless or imported to be
