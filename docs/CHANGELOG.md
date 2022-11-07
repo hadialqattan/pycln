@@ -10,12 +10,17 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Setting an artificial lock to LibCST version `+0.4.0` for Python `3.6.x`; a bug introduced in LibCST `+0.4.0` that affects `PY3.6` by @hadialqattan](https://github.com/hadialqattan/pycln/pull/174)
+
 ### Added
 
-- [Adding a CLI flag for disabling the enforcement of the `__all__` dunder in `__init__.py` policy @hadialqattan](https://github.com/hadialqattan/pycln/pull/175)
+- [Adding a CLI flag for disabling the enforcement of the `__all__` dunder in `__init__.py` policy by @hadialqattan](https://github.com/hadialqattan/pycln/pull/175)
 
 ### Changed
 
+- [Bump typer from 0.6.1 to 0.7.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/176)
 - [Bump pytest-cov from 3.0.0 to 4.0.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/171)
 - [Bump JRubics/poetry-publish from 1.12 to 1.13 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/168)
 
