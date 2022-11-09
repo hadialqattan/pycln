@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.1.2] - 2022-11-09
+
 ### Fixed
 
 - [Imports used in generics and wrapped in string get removed by @hadialqattan](https://github.com/hadialqattan/pycln/pull/178)
