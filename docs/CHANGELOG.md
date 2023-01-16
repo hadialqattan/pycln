@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.1.3] - 2023-01-16
+
 ### Fixed
 
 - [Support `typing.TypeAlias` and `typing_extensions.TypeAlias` annotation by @hadialqattan](https://github.com/hadialqattan/pycln/pull/190)
