@@ -258,6 +258,16 @@ class SourceAnalyzer(ast.NodeVisitor):
         #:  >>> foo: Bar["Baz"] = []
         self._visit_string_type_annotation(node)
 
+        #: Support (typing/typing_extensions) TypeAlias
+        #:
+        #: >>> Foo: TypeAlias = "BarClass"
+        annotation: ast.expr = node.annotation
+        if getattr(annotation, "id", "") == "TypeAlias" or (
+            getattr(annotation, "attr", "") == "TypeAlias"
+            and annotation.value.id in ("typing", "typing_extensions")  # type: ignore
+        ):
+            self._parse_string(node.value)  # type: ignore
+
     @recursive
     def visit_arg(self, node: ast.arg):
         # Support Python ^3.8 type comments.
