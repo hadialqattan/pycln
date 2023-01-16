@@ -188,11 +188,13 @@ def rebuild_import(
     :raises UnsupportedCase: in some rare cases.
     """
 
-    if ";" in import_stmnt:
+    pure_import_stmnt: str = import_stmnt.split("#")[0]
+
+    if ";" in pure_import_stmnt:
         msg = "import statements separated with ';'."
         raise UnsupportedCase(path, location, msg)
 
-    if ":" in import_stmnt:
+    if ":" in pure_import_stmnt:
         msg = "an import statement inlined with ':'."
         raise UnsupportedCase(path, location, msg)
 
