@@ -12,7 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- [Support `typing.TypeAlias` & `typing_extensions.TypeAlias` annotation by @hadialqattan](https://github.com/hadialqattan/pycln/pull/190)
+- [Support `typing.TypeAlias` and `typing_extensions.TypeAlias` annotation by @hadialqattan](https://github.com/hadialqattan/pycln/pull/190)
 - [Pycln classifies imports with comments that have a colon or semicolon as unsupported cases (false positive) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/189)
 
 ### Changed
