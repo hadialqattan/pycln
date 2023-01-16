@@ -454,6 +454,26 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 {"foo", "Bar", "Baz"},
                 id="semi-string",
             ),
+            pytest.param(
+                "foo: NonTypeAlias = 'Bar[Baz]'",
+                {"foo", "NonTypeAlias"},
+                id="NonTypeAlias - false positive check",
+            ),
+            pytest.param(
+                "foo: TypeAlias = 'Bar[Baz]'",
+                {"foo", "TypeAlias", "Bar", "Baz"},
+                id="TypeAlias",
+            ),
+            pytest.param(
+                "foo: typing.TypeAlias = 'Bar[Baz]'",
+                {"foo", "typing", "Bar", "Baz"},
+                id="typing.TypeAlias",
+            ),
+            pytest.param(
+                "foo: typing_extensions.TypeAlias = 'Bar[Baz]'",
+                {"foo", "typing_extensions", "Bar", "Baz"},
+                id="typing_extensions.TypeAlias",
+            ),
         ],
     )
     def test_visit_AnnAssign(self, code, expec_names):

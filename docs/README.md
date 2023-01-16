@@ -940,6 +940,39 @@ T1 = TypeVar("T1", "Foo", "Bar")  # unbounded
 T2 = TypeVar("T2", bound="Baz")  # bounded
 ```
 
+#### TypeAlias
+
+> Pycln can understand `typing.TypeAlias` and `typing_extensions.TypeAlias` annotation.
+
+All the imports below are considered as used:
+
+- `TypeAlias`:
+
+  ```python
+  from foo import BarClass
+  from typing import TypeAlias  # OR: from typing_extensions import TypeAlias
+
+  Baz: TypeAlias = "BarClass[str]"
+  ```
+
+- `typing.TypeAlias`:
+
+  ```python
+  from foo import BarClass
+  import typing
+
+  Baz: typing.TypeAlias = "BarClass[str]"
+  ```
+
+- `typing_extensions.TypeAlias`:
+
+  ```python
+  from foo import BarClass
+  import typing_extensions
+
+  Baz: typing_extensions.TypeAlias = "BarClass[str]"
+  ```
+
 ### All (`__all__`)
 
 > Pycln looks at the items in the `__all__` list, if it match the imports, marks it as
