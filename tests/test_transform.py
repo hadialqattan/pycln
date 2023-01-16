@@ -525,6 +525,24 @@ class TestTransformFunctions:
                 UnsupportedCase,
                 id="not supported case, ':'",
             ),
+            pytest.param(
+                "import x  # comment: with colon",
+                0,
+                False,
+                "",
+                [""],
+                sysu.Pass,
+                id="comment-colon, UnsupportedCase(false positive)",
+            ),
+            pytest.param(
+                "import x  # comment; with semicolon",
+                0,
+                False,
+                "",
+                [""],
+                sysu.Pass,
+                id="comment-semicolon, UnsupportedCase(false positive)",
+            ),
         ],
     )
     @mock.patch(MOCK % "ImportTransformer.__init__")

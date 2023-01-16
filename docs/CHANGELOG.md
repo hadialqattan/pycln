@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Pycln classifies imports with comments that have a colon or semicolon as unsupported cases (false positive) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/189)
+
 ### Changed
 
 - [Bump JRubics/poetry-publish from 1.13 to 1.15 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/181)
