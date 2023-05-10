@@ -96,6 +96,6 @@ def safe_write(path: Path, fixed_lines: List[str], encoding: str, newline: str) 
     """
     if not os.access(path, os.W_OK):
         raise WritePermissionError(13, "Permission denied [WRITE]", path)
-    with open(path, mode="w", encoding=encoding) as destination:
+    with open(path, mode="w", encoding=encoding, newline=newline) as destination:
         for line in fixed_lines:
-            destination.write(line.replace(os.linesep, newline))
+            destination.write(line)
