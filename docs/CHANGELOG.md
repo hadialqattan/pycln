@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [Bump codecov/codecov-action from 3.1.1 to 3.1.4 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/198)
+
 ## [2.1.3] - 2023-01-16
 
 ### Fixed
