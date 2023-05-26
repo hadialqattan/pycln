@@ -14,6 +14,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - [Remove `pathspec` version artificial lock by @hadialqattan](https://github.com/hadialqattan/pycln/pull/199)
 - [Bump codecov/codecov-action from 3.1.1 to 3.1.4 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/198)
+- [Bump typer from 0.7.0 to 0.9.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/195)
 
 ## [2.1.3] - 2023-01-16
 
