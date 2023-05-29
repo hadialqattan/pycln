@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+[Preserve the original line break format by @maxbachmann & @hadialqattan](https://github.com/hadialqattan/pycln/pull/197)
+
 ### Changed
 
 - [Bump JRubics/poetry-publish from 1.16 to 1.17 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/201)
