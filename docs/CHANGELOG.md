@@ -12,6 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- [Bump JRubics/poetry-publish from 1.16 to 1.17 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/201)
 - [Remove `pathspec` version artificial lock by @hadialqattan](https://github.com/hadialqattan/pycln/pull/199)
 - [Bump codecov/codecov-action from 3.1.1 to 3.1.4 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/198)
 - [Bump typer from 0.7.0 to 0.9.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/195)
