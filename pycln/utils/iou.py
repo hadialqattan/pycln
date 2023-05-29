@@ -101,6 +101,6 @@ def safe_write(path: Path, fixed_lines: List[str], encoding: str, newline: str) 
     if fixed_lines:
         fixed_lines_newline = CRLF if CRLF == fixed_lines[0][-2:] else LF
 
-    with open(path, mode="w", encoding=encoding) as destination:
+    with open(path, mode="w", encoding=encoding, newline="") as destination:
         for line in fixed_lines:
             destination.write(line.replace(fixed_lines_newline, newline))
