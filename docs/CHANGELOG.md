@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Detect third-party libs installed in editable mode by @hadialqattan](https://github.com/hadialqattan/pycln/pull/200)
+
 ### Changed
 
 - [Bump JRubics/poetry-publish from 1.16 to 1.17 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/201)

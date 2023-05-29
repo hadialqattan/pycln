@@ -42,6 +42,12 @@ BIN_IMPORTS = {  # In case they are built into CPython.
     "multiprocessing",
 }
 IMPORTS_WITH_SIDE_EFFECTS = {"this", "antigravity", "rlcompleter"}
+PYTHON_STDLIB_PATHS = frozenset(
+    {
+        sysconfig.get_python_lib(standard_lib=True, plat_specific=True),
+        sysconfig.get_python_lib(standard_lib=True, plat_specific=False),
+    }
+)
 
 
 def yield_sources(
@@ -131,12 +137,7 @@ def get_standard_lib_paths() -> Set[Path]:
     """
     paths: Set[Path] = set()
 
-    for is_plat_specific in [True, False]:
-
-        # Get lib modules paths.
-        lib_path = sysconfig.get_python_lib(
-            standard_lib=True, plat_specific=is_plat_specific
-        )
+    for lib_path in PYTHON_STDLIB_PATHS:
 
         for path in os.listdir(lib_path):
             paths.add(Path(os.path.join(lib_path, path)))
@@ -186,11 +187,14 @@ def get_third_party_lib_paths() -> Tuple[Set[Path], Set[Path]]:
     paths: Set[Path] = set()
     pth_paths: Set[Path] = set()
 
-    packages_paths: Set[str] = {
-        path
-        for path in sys.path
-        if path and Path(path).parts[-1] in [DIST_PACKAGES, SITE_PACKAGES]
-    }
+    packages_paths: Set[str] = set()
+
+    for path in sys.path:
+        ppath = Path(path)
+        if ppath.parts[-1] in (DIST_PACKAGES, SITE_PACKAGES) or (
+            ppath.is_dir() and path not in PYTHON_STDLIB_PATHS
+        ):
+            packages_paths.add(path)
 
     for path in packages_paths:
 
