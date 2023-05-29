@@ -13,6 +13,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - [Detect third-party libs installed in editable mode by @hadialqattan](https://github.com/hadialqattan/pycln/pull/200)
+- [Preserve the original line break format by @maxbachmann & @hadialqattan](https://github.com/hadialqattan/pycln/pull/197)
 
 ### Changed
 

@@ -90,12 +90,17 @@ def safe_write(path: Path, fixed_lines: List[str], encoding: str, newline: str) 
     :param path: `.py` file path.
     :param encoding: file encoding.
     :param fixed_lines: fixed source code lines.
-    :param newline: original file's newline (CRFL | FL).
+    :param newline: output file's newline (CRFL | FL).
     :raises WritePermissionError: when `os.W_OK` in permissions
         and the source does not have write permission.
     """
     if not os.access(path, os.W_OK):
         raise WritePermissionError(13, "Permission denied [WRITE]", path)
-    with open(path, mode="w", encoding=encoding, newline=newline) as destination:
+
+    fixed_lines_newline = newline
+    if fixed_lines:
+        fixed_lines_newline = CRLF if CRLF == fixed_lines[0][-2:] else LF
+
+    with open(path, mode="w", encoding=encoding) as destination:
         for line in fixed_lines:
-            destination.write(line)
+            destination.write(line.replace(fixed_lines_newline, newline))
