@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.1.4] - 2023-05-31
+
 ### Fixed
 
 - [Detect third-party libs installed in editable mode by @hadialqattan](https://github.com/hadialqattan/pycln/pull/200)
