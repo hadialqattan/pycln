@@ -165,8 +165,8 @@ class TestIOU:
         "fixed_lines, expec_code, expec_newline, expec_err, chmod",
         [
             pytest.param(
-                ["import time\n", "time.time()\n"],
-                "import time\ntime.time()\n",
+                ["import time\n", "\ttime.time()\n"],
+                "import time\n\ttime.time()\n",
                 iou.LF,
                 sysu.Pass,
                 0o0644,
@@ -183,13 +183,14 @@ class TestIOU:
                     ISWIN, reason="os.access doesn't support Windows."
                 ),
             ),
+            pytest.param([], "", os.linesep, sysu.Pass, 0o0644, id="empty file"),
             pytest.param(
                 ["import time\n", "time.time()\n"],
-                "import time\ntime.time()\n",
+                "import time\r\ntime.time()\r\n",
                 iou.CRLF,
                 sysu.Pass,
                 0o0644,
-                id="newline - CRLF",
+                id="LF ~> CRLF",
             ),
             pytest.param(
                 ["import time\r\n", "time.time()\r\n"],
@@ -197,7 +198,7 @@ class TestIOU:
                 iou.LF,
                 sysu.Pass,
                 0o0644,
-                id="newline - LF",
+                id="CRLF ~> LF",
             ),
         ],
     )
@@ -213,8 +214,6 @@ class TestIOU:
             with sysu.reopenable_temp_file("".join(fixed_lines)) as tmp_path:
                 set_mode(str(tmp_path), chmod)
                 iou.safe_write(tmp_path, fixed_lines, "utf-8", expec_newline)
-                with open(tmp_path) as tmp0:
-                    assert tmp0.read() == expec_code
-                with open(tmp_path, "rb") as tmp1:
-                    assert expec_newline.encode() in tmp1.readline()
+                with open(tmp_path, "rb") as tmp:
+                    assert tmp.read() == expec_code.encode()
             raise sysu.Pass()
