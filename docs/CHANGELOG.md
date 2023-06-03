@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.1.5] - 2023-06-03
+
 ### Changed
 
 - [Widen `pathspec` version artificial lock by @hadialqattan](https://github.com/hadialqattan/pycln/pull/203)
