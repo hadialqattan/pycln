@@ -425,10 +425,11 @@ class Refactor:
         :returns: whather the alias name partially used or not.
         """
         if not alias.asname and "." in alias.name:
-            names = alias.name.split(".")[1:]
-            for name in reversed(names):
-                alias.name = alias.name.rstrip("." + name)
-                if self._has_used(alias.name, is_star):
+            names = alias.name.split(".")
+            possible_used_name = ""
+            for name in names:
+                possible_used_name += ("." if possible_used_name else "") + name
+                if self._has_used(possible_used_name, is_star):
                     return True
         return False
 
