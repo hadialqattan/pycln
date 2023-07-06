@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Implicit imports get missparesed (considered unused) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/207)
+
 ## [2.1.5] - 2023-06-03
 
 ### Changed
