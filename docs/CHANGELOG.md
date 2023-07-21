@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [Widen `libcst` version pin by @AlexWaygood](https://github.com/hadialqattan/pycln/pull/209)
+
 ## [2.1.6] - 2023-07-19
 
 ### Fixed
