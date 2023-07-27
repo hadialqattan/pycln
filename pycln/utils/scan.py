@@ -233,16 +233,22 @@ class SourceAnalyzer(ast.NodeVisitor):
         #: >>>
         #: >>> bar = List['Import']
         #: >>> foo = Union['Import', 'ImportFrom']
-        value = getattr(node, "value", "")
-        if getattr(value, "id", "") in SUBSCRIPT_TYPE_VARIABLE or (
-            hasattr(value, "value") and getattr(value.value, "id", "") == "typing"
-        ):
+        v = getattr(node, "value", "")
+        _id = (
+            getattr(v.value, "id", "") if hasattr(v, "value") else getattr(v, "id", "")
+        )
+        if _id in SUBSCRIPT_TYPE_VARIABLE or _id == "typing":
             if PY39_PLUS:
                 s_val = node.slice  # type: ignore
             else:
                 s_val = node.slice.value  # type: ignore
             for elt in getattr(s_val, "elts", ()) or (s_val,):
-                self._parse_string(elt)  # type: ignore
+                if _id == "Callable" and isinstance(elt, ast.List):
+                    # See issue: https://github.com/hadialqattan/pycln/issues/208
+                    for sub_elt in getattr(elt, "elts", ()):
+                        self._parse_string(sub_elt)  # type: ignore
+                else:
+                    self._parse_string(elt)  # type: ignore
 
     @recursive
     def visit_AnnAssign(self, node: ast.AnnAssign):

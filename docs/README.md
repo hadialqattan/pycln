@@ -973,6 +973,31 @@ All the imports below are considered as used:
   Baz: typing_extensions.TypeAlias = "BarClass[str]"
   ```
 
+#### Callable
+
+> Pycln can understand `typing.Callable` and `collections.abc.Callable` function
+> parameters types.
+
+All the imports below are considered as used:
+
+- `typing.Callable`:
+
+  ```python
+  from foo import BarClass
+  from typing import Callable
+
+  Baz: Callable[["BarClass"], None]
+  ```
+
+- `collections.abc.Callable`:
+
+  ```python
+  from foo import BarClass
+  from collections.abc import Callable
+
+  Baz: Callable[["BarClass"], None]
+  ```
+
 ### All (`__all__`)
 
 > Pycln looks at the items in the `__all__` list, if it match the imports, marks it as

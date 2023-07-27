@@ -424,6 +424,11 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 {"Union", "foo", "bar", "baz"},
                 id="tuple",
             ),
+            pytest.param(
+                "baz = Callable[['foo_type', 'bar_type'], 'baz']",
+                {"Callable", "foo_type", "bar_type", "baz"},
+                id="Callable (exception)",
+            ),
         ],
     )
     def test_visit_Subscript(self, code, expec_names):
