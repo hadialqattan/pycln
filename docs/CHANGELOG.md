@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [`typing/collections.abc.Callable` function parameters types (`Callable[['param1_type'], ...]`) were not considered/analysed by Pycln by @hadialqattan](https://github.com/hadialqattan/pycln/pull/211)
+
 ### Changed
 
 - [Widen `libcst` version pin by @AlexWaygood](https://github.com/hadialqattan/pycln/pull/209)
