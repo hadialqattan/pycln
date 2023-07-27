@@ -16,6 +16,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- [Bump certifi from 2023.5.7 to 2023.7.22 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/210)
 - [Widen `libcst` version pin by @AlexWaygood](https://github.com/hadialqattan/pycln/pull/209)
 
 ## [2.1.6] - 2023-07-19
