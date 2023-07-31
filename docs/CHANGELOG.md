@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [Pycln is no longer tightly pinning its dependencies by @hadialqattan](https://github.com/hadialqattan/pycln/pull/213)
+
 ## [2.1.7] - 2023-07-27
 
 ### Fixed
