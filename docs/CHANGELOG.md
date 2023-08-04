@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Running Pycln in a virtual env against a folder (that has no `__init__.py` file) contains sub-packages causes ReadPermissionError by @hadialqattan](https://github.com/hadialqattan/pycln/pull/215)
+
 ## [2.2.0] - 2023-07-31
 
 ### Changed

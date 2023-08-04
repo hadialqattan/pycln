@@ -6,7 +6,12 @@ import tokenize
 from pathlib import Path
 from typing import List, Tuple
 
-from ._exceptions import ReadPermissionError, UnparsableFile, WritePermissionError
+from ._exceptions import (
+    InitFileDoesNotExistError,
+    ReadPermissionError,
+    UnparsableFile,
+    WritePermissionError,
+)
 
 # Constants.
 STDIN_FILE = Path("STDIN")
@@ -14,6 +19,7 @@ STDIN_NOTATION = Path("-")
 FORM_FEED_CHAR = "\x0c"
 CRLF = "\r\n"
 LF = "\n"
+__INIT__ = "__init__.py"
 
 # Types
 FileContent = str
@@ -61,7 +67,13 @@ def safe_read(
         and the source does not have write permission.
     :raises UnparsableFile: If both a BOM and a cookie are present, but disagree.
         or some rare characters presented.
+    :raises InitFileDoesNotExistError: when `path` is a path to a non-existing
+        `__init__.py` file.
     """
+    # Check for a non-existing `__init__.py` file case.
+    if str(path).endswith(__INIT__) and not path.exists():
+        raise InitFileDoesNotExistError(2, "`__init__.py` file does not exist", path)
+
     # Check these permissions before openinig the file.
     for permission in permissions:
         if not os.access(path, permission):
