@@ -8,6 +8,7 @@ from typing import Iterable, List, Optional, Set, Tuple, Union, cast
 from .. import ISWIN
 from . import iou, pathu, regexu, scan
 from ._exceptions import (
+    InitFileDoesNotExistError,
     ReadPermissionError,
     UnexpandableImportStar,
     UnparsableFile,
@@ -175,6 +176,8 @@ class Refactor:
             UnparsableFile,
         ) as err:
             self.reporter.failure(str(err))
+        except InitFileDoesNotExistError:
+            pass
         finally:
             self._reset()
 

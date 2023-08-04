@@ -24,6 +24,12 @@ class WritePermissionError(BaseOSError):
     """Raises when the file does not have write permission."""
 
 
+class InitFileDoesNotExistError(BaseOSError):
+
+    """Raises when an `__init__.py` file path encountered of a non-existing
+    path."""
+
+
 class UnexpandableImportStar(Exception):
 
     """Raises when the import `*` statement unexpandable."""
