@@ -98,6 +98,7 @@ The following notable open-source projects trust and use _Pycln_:
 - [cibuildwheel](https://github.com/pypa/cibuildwheel)
 - [Open Event Server](https://github.com/fossasia/open-event-server)
 - [pybind11](https://github.com/pybind/pybind11)
+- [pywin32](https://github.com/mhammond/pywin32)
 - [Poetry](https://github.com/python-poetry/poetry)
 - [Pyodide](https://github.com/pyodide/pyodide)
 - [Rich](https://github.com/Textualize/rich)
