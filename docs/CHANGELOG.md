@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.2] - 2023-08-10
+
 ### Changed
 
 - [Bump PyYaml from 6.0 to 6.0.1 by @hadialqattan](https://github.com/hadialqattan/pycln/pull/216)
