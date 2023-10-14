@@ -1,7 +1,7 @@
 """Pycln path finding utility."""
 import os
 import sys
-from distutils import sysconfig
+import sysconfig
 from functools import lru_cache
 from pathlib import Path
 from typing import Generator, Optional, Pattern, Set, Tuple
@@ -43,10 +43,7 @@ BIN_IMPORTS = {  # In case they are built into CPython.
 }
 IMPORTS_WITH_SIDE_EFFECTS = {"this", "antigravity", "rlcompleter"}
 PYTHON_STDLIB_PATHS = frozenset(
-    {
-        sysconfig.get_python_lib(standard_lib=True, plat_specific=True),
-        sysconfig.get_python_lib(standard_lib=True, plat_specific=False),
-    }
+    {sysconfig.get_path("platstdlib"), sysconfig.get_path("stdlib")}
 )
 
 

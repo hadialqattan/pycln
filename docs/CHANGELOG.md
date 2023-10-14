@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- [Drop distutils lib by @hadialqattan](https://github.com/hadialqattan/pycln/pull/220)
+
 ## [2.2.2] - 2023-08-10
 
 ### Changed
