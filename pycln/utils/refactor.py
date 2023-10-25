@@ -1,8 +1,8 @@
 """Pycln code refactoring utility."""
 import ast
 import os
+import sys
 from importlib import import_module
-from pathlib import Path, _posix_flavour, _windows_flavour  # type: ignore
 from typing import Iterable, List, Optional, Set, Tuple, Union, cast
 
 from .. import ISWIN
@@ -20,6 +20,13 @@ from ._nodes import Import, ImportFrom, NodeLocation
 from .config import Config
 from .report import Report
 
+if sys.version_info >= (3, 12):
+    from pathlib import Path
+    _flavour = os.path
+else:
+    from pathlib import Path, _posix_flavour, _windows_flavour  # type: ignore
+    _flavour = _windows_flavour if ISWIN else _posix_flavour
+
 # Constants.
 NOPYCLN = "nopycln"
 CHANGE_MARK = "\n_CHANGED_"
@@ -28,13 +35,13 @@ PYCLN_UTILS = "pycln.utils"
 
 
 class PyPath(Path):
-
     """Path subclass that has `is_stub` property."""
-
-    _flavour = _windows_flavour if ISWIN else _posix_flavour
-
+    _flavour = _flavour
     def __init__(self, *args) -> None:  # pylint: disable=unused-argument
-        super().__init__()  # Path.__init__ does not take any args.
+        if sys.version_info >= (3, 12):
+            super().__init__(*args)
+        else:
+            super().__init__()  # Path.__init__ does not take any args.
         self._is_stub = regexu.is_stub_file(self)
 
     @property
@@ -50,7 +57,6 @@ class LazyLibCSTLoader:
     THIS CLASS DOES NOT INCLUDED ON THE TESTS SUITE. SO DON'T MODIFY IT
     FOR ANY REASON!
     """
-
     def __init__(self):
         self._module = None
 
