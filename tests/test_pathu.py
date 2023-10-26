@@ -387,8 +387,8 @@ class TestPathu:
                 id="import file : local",
             ),
             pytest.param(
-                "distutils",
-                Path("distutils/__init__.py"),
+                "asyncio",
+                Path("asyncio/__init__.py"),
                 id="import module : standard",
             ),
             pytest.param(
@@ -453,9 +453,9 @@ class TestPathu:
             ),
             pytest.param(
                 "*",
-                "distutils",
+                "asyncio",
                 0,
-                Path("distutils/__init__.py"),
+                Path("asyncio/__init__.py"),
                 id="from package import * : standard",
             ),
             pytest.param(
