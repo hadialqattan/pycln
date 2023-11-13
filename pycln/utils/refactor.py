@@ -20,14 +20,14 @@ from ._nodes import Import, ImportFrom, NodeLocation
 from .config import Config
 from .report import Report
 
-if sys.version_info >= (3, 12):
-    from pathlib import Path
-
-    _flavour = os.path
-else:
+if sys.version_info < (3, 12):
     from pathlib import Path, _posix_flavour, _windows_flavour  # type: ignore
 
     _flavour = _windows_flavour if ISWIN else _posix_flavour
+else:
+    from pathlib import Path
+
+    _flavour = os.path
 
 # Constants.
 NOPYCLN = "nopycln"
@@ -42,10 +42,10 @@ class PyPath(Path):
     _flavour = _flavour
 
     def __init__(self, *args) -> None:  # pylint: disable=unused-argument
-        if sys.version_info >= (3, 12):
-            super().__init__(*args)
-        else:
+        if sys.version_info < (3, 12):
             super().__init__()  # Path.__init__ does not take any args.
+        else:
+            super().__init__(*args)
         self._is_stub = regexu.is_stub_file(self)
 
     @property
