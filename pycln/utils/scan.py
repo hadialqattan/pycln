@@ -751,7 +751,6 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     def _compute_not_importables(self, node: Union[FunctionDefT, ast.ClassDef]):
         # Compute class/function not-importables.
         for node_ in ast.iter_child_nodes(node):
-
             if isinstance(node_, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 self._not_importables.add(cast(str, node_.name))
 
@@ -857,7 +856,6 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
     def _check_names(names: List[ast.alias]) -> HasSideEffects:
         # Check if imported names has side effects or not.
         for alias in names:
-
             # All standard lib modules doesn't has side effects
             # except `pathu.IMPORTS_WITH_SIDE_EFFECTS`.
             if alias.name in pathu.get_standard_lib_names():

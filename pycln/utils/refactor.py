@@ -22,9 +22,11 @@ from .report import Report
 
 if sys.version_info >= (3, 12):
     from pathlib import Path
+
     _flavour = os.path
 else:
     from pathlib import Path, _posix_flavour, _windows_flavour  # type: ignore
+
     _flavour = _windows_flavour if ISWIN else _posix_flavour
 
 # Constants.
@@ -36,7 +38,9 @@ PYCLN_UTILS = "pycln.utils"
 
 class PyPath(Path):
     """Path subclass that has `is_stub` property."""
+
     _flavour = _flavour
+
     def __init__(self, *args) -> None:  # pylint: disable=unused-argument
         if sys.version_info >= (3, 12):
             super().__init__(*args)
@@ -57,6 +61,7 @@ class LazyLibCSTLoader:
     THIS CLASS DOES NOT INCLUDED ON THE TESTS SUITE. SO DON'T MODIFY IT
     FOR ANY REASON!
     """
+
     def __init__(self):
         self._module = None
 
@@ -134,7 +139,6 @@ class Refactor:
 
         tree = ast.parse("".join(source_lines))
         for parent in ast.walk(tree):
-
             body = getattr(parent, "body", None)
             if body and hasattr(body, "__len__"):
                 body_len = len(body)
@@ -278,9 +282,7 @@ class Refactor:
         """
         fixed_lines = original_lines.copy()
         for type_ in self._import_stats:
-
             for node in type_:
-
                 # Skip any import that has `# noqa` or `# nopycln: import` comment.
                 s_lineno = node.location.start.line - 1
                 e_lineno = node.location.end.line - 1
@@ -405,7 +407,6 @@ class Refactor:
         try:
             is_star = False
             if node.names[0].name == "*":
-
                 #: [for `.pyi` files] PEP 484 - Star Imports rule:
                 #:
                 #: >>> from X import *  # exported (should be treated as used)
