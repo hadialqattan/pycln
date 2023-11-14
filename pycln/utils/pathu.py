@@ -135,7 +135,6 @@ def get_standard_lib_paths() -> Set[Path]:
     paths: Set[Path] = set()
 
     for lib_path in PYTHON_STDLIB_PATHS:
-
         for path in os.listdir(lib_path):
             paths.add(Path(os.path.join(lib_path, path)))
 
@@ -143,7 +142,6 @@ def get_standard_lib_paths() -> Set[Path]:
         lib_dynload_path = os.path.join(lib_path, LIB_DYNLOAD)
 
         if os.path.isdir(lib_dynload_path):
-
             for path in os.listdir(lib_dynload_path):
                 paths.add(Path(os.path.join(lib_dynload_path, path)))
 
@@ -160,7 +158,6 @@ def get_standard_lib_names() -> Set[str]:
     paths: Set[Path] = get_standard_lib_paths()
 
     for path in paths:
-
         name = str(path.parts[-1])
 
         if name.startswith("_") or "-" in name:
@@ -194,7 +191,6 @@ def get_third_party_lib_paths() -> Tuple[Set[Path], Set[Path]]:
             packages_paths.add(path)
 
     for path in packages_paths:
-
         for name in os.listdir(path):
             if name.endswith(PTH_EXTENSION):
                 for pth_path in _site.addpackage(path, name):
@@ -220,7 +216,6 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
 
     # Test different levels.
     for i in [None] + list(range(-10, -0)):  # type: ignore
-
         # If it's a file.
         fpath = os.path.join(*dirnames[:i], *names[:-1], f"{names[-1]}{PY_EXTENSION}")
         if os.path.isfile(fpath):

@@ -1,8 +1,8 @@
 """Pycln code refactoring utility."""
 import ast
 import os
+import sys
 from importlib import import_module
-from pathlib import Path, _posix_flavour, _windows_flavour  # type: ignore
 from typing import Iterable, List, Optional, Set, Tuple, Union, cast
 
 from .. import ISWIN
@@ -20,6 +20,15 @@ from ._nodes import Import, ImportFrom, NodeLocation
 from .config import Config
 from .report import Report
 
+if sys.version_info < (3, 12):
+    from pathlib import Path, _posix_flavour, _windows_flavour  # type: ignore
+
+    _flavour = _windows_flavour if ISWIN else _posix_flavour
+else:
+    from pathlib import Path
+
+    _flavour = os.path
+
 # Constants.
 NOPYCLN = "nopycln"
 CHANGE_MARK = "\n_CHANGED_"
@@ -28,13 +37,15 @@ PYCLN_UTILS = "pycln.utils"
 
 
 class PyPath(Path):
-
     """Path subclass that has `is_stub` property."""
 
-    _flavour = _windows_flavour if ISWIN else _posix_flavour
+    _flavour = _flavour
 
     def __init__(self, *args) -> None:  # pylint: disable=unused-argument
-        super().__init__()  # Path.__init__ does not take any args.
+        if sys.version_info < (3, 12):
+            super().__init__()  # Path.__init__ does not take any args.
+        else:
+            super().__init__(*args)
         self._is_stub = regexu.is_stub_file(self)
 
     @property
@@ -128,7 +139,6 @@ class Refactor:
 
         tree = ast.parse("".join(source_lines))
         for parent in ast.walk(tree):
-
             body = getattr(parent, "body", None)
             if body and hasattr(body, "__len__"):
                 body_len = len(body)
@@ -272,9 +282,7 @@ class Refactor:
         """
         fixed_lines = original_lines.copy()
         for type_ in self._import_stats:
-
             for node in type_:
-
                 # Skip any import that has `# noqa` or `# nopycln: import` comment.
                 s_lineno = node.location.start.line - 1
                 e_lineno = node.location.end.line - 1
@@ -399,7 +407,6 @@ class Refactor:
         try:
             is_star = False
             if node.names[0].name == "*":
-
                 #: [for `.pyi` files] PEP 484 - Star Imports rule:
                 #:
                 #: >>> from X import *  # exported (should be treated as used)
