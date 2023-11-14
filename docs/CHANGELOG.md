@@ -10,6 +10,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## Added
+
+- [Add support for Python 3.12 by @perfa](https://github.com/hadialqattan/pycln/pull/224)
+
+## Changed
+
 - [Drop Python3.6 by @hadialqattan](https://github.com/hadialqattan/pycln/pull/225)
 
 ## [2.3.0] - 2023-10-14
