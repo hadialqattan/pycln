@@ -63,3 +63,4 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: ${{ matrix.os }}, ${{ matrix.python-version }}
+          version: v0.7.3
