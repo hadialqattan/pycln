@@ -36,7 +36,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-latest, macos-latest]
+        os: [ubuntu-20.04, windows-latest, macos-13]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.12"]
 
     steps:
@@ -63,3 +63,4 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: ${{ matrix.os }}, ${{ matrix.python-version }}
+          version: v0.7.3
