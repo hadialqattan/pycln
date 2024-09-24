@@ -32,7 +32,7 @@ pathspec = ">=0.9.0"
 tomlkit = ">=0.11.1"
 libcst = ">=0.3.10"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 requests = "^2.24.0"
 semver = "^2.10.2"
 pytest = "^7.0"
@@ -40,27 +40,8 @@ pytest-cov = "^4.0.0"
 pytest-randomly = "^3.4.1"
 oschmod = "^0.3.9"
 hypothesmith = "^0.2.0"
-
-# Pre-commit hooks related config.
-[tool.pycln]
-all = true
-
-[mypy]
-show_error_codes = true
-ignore_missing_imports = true
-no_strict_optional = true
-
-[tool.isort]
-line_length = 88
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-
-[tool.black]
-line-length = 88
+pre-commit = {version = "^3.0.0", python = ">=3.8"}
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
