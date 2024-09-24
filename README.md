@@ -6,9 +6,9 @@
 
 <p align="center">
     <a href="https://hadialqattan.github.io/pycln"><img src="https://img.shields.io/badge/more%20info-Pycln%20Docs-B5FFB3.svg?style=flat-square" alt="Pycln Docs"></a>
-    <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://img.shields.io/github/workflow/status/hadialqattan/pycln/CI/master?label=CI&logo=github&style=flat-square" alt="CI"></a>
-    <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACD"><img src="https://img.shields.io/github/workflow/status/hadialqattan/pycln/CD?label=CD&logo=github&style=flat-square" alt="CD"></a>
-    <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3AFUZZ"><img src="https://img.shields.io/github/workflow/status/hadialqattan/pycln/FUZZ?label=FUZZ&logo=github&style=flat-square" alt="FUZZ"></a>
+    <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://img.shields.io/github/actions/workflow/status/hadialqattan/pycln/ci.yml?branch=master&label=CI&logo=github&style=flat-square" alt="CI"></a>
+    <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACD"><img src="https://img.shields.io/github/actions/workflow/status/hadialqattan/pycln/cd.yml?label=CD&logo=github&style=flat-square" alt="CD"></a>
+    <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3AFUZZ"><img src="https://img.shields.io/github/actions/workflow/status/hadialqattan/pycln/fuzz.yml?label=FUZZ&logo=github&style=flat-square" alt="FUZZ"></a>
     <a href="https://www.codacy.com/manual/hadialqattan/pycln/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hadialqattan/pycln&amp;utm_campaign=Badge_Grade"><img src="https://img.shields.io/codacy/grade/e7c6c290c3c149e484634ac1905800d6/master?style=flat-square" alt="Codacy Badge"></a>
     <a href="https://codecov.io/gh/hadialqattan/pycln"><img src="https://img.shields.io/codecov/c/gh/hadialqattan/pycln/master?token=VVYBDCZPHR&style=flat-square" alt="Codecov"></a>
     <a href="https://codeclimate.com/github/hadialqattan/pycln/maintainability"><img src="https://img.shields.io/codeclimate/maintainability/hadialqattan/pycln?style=flat-square" alt="Maintainability"></a>
@@ -19,7 +19,6 @@
     <a href="https://pypi.org/project/pycln/"><img src="https://img.shields.io/pypi/v/pycln?style=flat-square" alt="PYPI - Pycln Version"></a>
     <a href="https://pepy.tech/project/pycln/"><img src="https://static.pepy.tech/personalized-badge/pycln?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=total downloads" alt="Total Downloads"></a>
     <a href="https://pypi.org/project/pycln/"><img src="https://img.shields.io/pypi/dm/pycln?color=dark-green&style=flat-square" alt="Downloads"></a>
-    <a href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fhadialqattan%2Fpycln&count_bg=%2344CC10&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true"/></a>
 </p>
 
 <p align="center">
@@ -101,6 +100,7 @@ The following notable open-source projects trust and use _Pycln_:
 - [cibuildwheel](https://github.com/pypa/cibuildwheel)
 - [Open Event Server](https://github.com/fossasia/open-event-server)
 - [pybind11](https://github.com/pybind/pybind11)
+- [pywin32](https://github.com/mhammond/pywin32)
 - [Poetry](https://github.com/python-poetry/poetry)
 - [Pyodide](https://github.com/pyodide/pyodide)
 - [Rich](https://github.com/Textualize/rich)

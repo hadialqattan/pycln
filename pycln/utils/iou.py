@@ -6,7 +6,12 @@ import tokenize
 from pathlib import Path
 from typing import List, Tuple
 
-from ._exceptions import ReadPermissionError, UnparsableFile, WritePermissionError
+from ._exceptions import (
+    InitFileDoesNotExistError,
+    ReadPermissionError,
+    UnparsableFile,
+    WritePermissionError,
+)
 
 # Constants.
 STDIN_FILE = Path("STDIN")
@@ -14,6 +19,7 @@ STDIN_NOTATION = Path("-")
 FORM_FEED_CHAR = "\x0c"
 CRLF = "\r\n"
 LF = "\n"
+__INIT__ = "__init__.py"
 
 # Types
 FileContent = str
@@ -61,7 +67,13 @@ def safe_read(
         and the source does not have write permission.
     :raises UnparsableFile: If both a BOM and a cookie are present, but disagree.
         or some rare characters presented.
+    :raises InitFileDoesNotExistError: when `path` is a path to a non-existing
+        `__init__.py` file.
     """
+    # Check for a non-existing `__init__.py` file case.
+    if str(path).endswith(__INIT__) and not path.exists():
+        raise InitFileDoesNotExistError(2, "`__init__.py` file does not exist", path)
+
     # Check these permissions before openinig the file.
     for permission in permissions:
         if not os.access(path, permission):
@@ -90,12 +102,17 @@ def safe_write(path: Path, fixed_lines: List[str], encoding: str, newline: str) 
     :param path: `.py` file path.
     :param encoding: file encoding.
     :param fixed_lines: fixed source code lines.
-    :param newline: original file's newline (CRFL | FL).
+    :param newline: output file's newline (CRFL | FL).
     :raises WritePermissionError: when `os.W_OK` in permissions
         and the source does not have write permission.
     """
     if not os.access(path, os.W_OK):
         raise WritePermissionError(13, "Permission denied [WRITE]", path)
-    with open(path, mode="w", encoding=encoding) as destination:
+
+    fixed_lines_newline = newline
+    if fixed_lines:
+        fixed_lines_newline = CRLF if CRLF == fixed_lines[0][-2:] else LF
+
+    with open(path, mode="w", encoding=encoding, newline="") as destination:
         for line in fixed_lines:
-            destination.write(line.replace(os.linesep, newline))
+            destination.write(line.replace(fixed_lines_newline, newline))

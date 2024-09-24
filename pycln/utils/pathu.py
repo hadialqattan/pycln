@@ -1,7 +1,7 @@
 """Pycln path finding utility."""
 import os
 import sys
-from distutils import sysconfig
+import sysconfig
 from functools import lru_cache
 from pathlib import Path
 from typing import Generator, Optional, Pattern, Set, Tuple
@@ -42,6 +42,9 @@ BIN_IMPORTS = {  # In case they are built into CPython.
     "multiprocessing",
 }
 IMPORTS_WITH_SIDE_EFFECTS = {"this", "antigravity", "rlcompleter"}
+PYTHON_STDLIB_PATHS = frozenset(
+    {sysconfig.get_path("platstdlib"), sysconfig.get_path("stdlib")}
+)
 
 
 def yield_sources(
@@ -131,13 +134,7 @@ def get_standard_lib_paths() -> Set[Path]:
     """
     paths: Set[Path] = set()
 
-    for is_plat_specific in [True, False]:
-
-        # Get lib modules paths.
-        lib_path = sysconfig.get_python_lib(
-            standard_lib=True, plat_specific=is_plat_specific
-        )
-
+    for lib_path in PYTHON_STDLIB_PATHS:
         for path in os.listdir(lib_path):
             paths.add(Path(os.path.join(lib_path, path)))
 
@@ -145,7 +142,6 @@ def get_standard_lib_paths() -> Set[Path]:
         lib_dynload_path = os.path.join(lib_path, LIB_DYNLOAD)
 
         if os.path.isdir(lib_dynload_path):
-
             for path in os.listdir(lib_dynload_path):
                 paths.add(Path(os.path.join(lib_dynload_path, path)))
 
@@ -162,7 +158,6 @@ def get_standard_lib_names() -> Set[str]:
     paths: Set[Path] = get_standard_lib_paths()
 
     for path in paths:
-
         name = str(path.parts[-1])
 
         if name.startswith("_") or "-" in name:
@@ -186,14 +181,16 @@ def get_third_party_lib_paths() -> Tuple[Set[Path], Set[Path]]:
     paths: Set[Path] = set()
     pth_paths: Set[Path] = set()
 
-    packages_paths: Set[str] = {
-        path
-        for path in sys.path
-        if path and Path(path).parts[-1] in [DIST_PACKAGES, SITE_PACKAGES]
-    }
+    packages_paths: Set[str] = set()
+
+    for path in sys.path:
+        ppath = Path(path)
+        if ppath.parts[-1] in (DIST_PACKAGES, SITE_PACKAGES) or (
+            ppath.is_dir() and path not in PYTHON_STDLIB_PATHS
+        ):
+            packages_paths.add(path)
 
     for path in packages_paths:
-
         for name in os.listdir(path):
             if name.endswith(PTH_EXTENSION):
                 for pth_path in _site.addpackage(path, name):
@@ -219,7 +216,6 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
 
     # Test different levels.
     for i in [None] + list(range(-10, -0)):  # type: ignore
-
         # If it's a file.
         fpath = os.path.join(*dirnames[:i], *names[:-1], f"{names[-1]}{PY_EXTENSION}")
         if os.path.isfile(fpath):

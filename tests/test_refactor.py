@@ -9,6 +9,7 @@ from libcst import ParserSyntaxError
 
 from pycln.utils import config, iou, refactor, report
 from pycln.utils._exceptions import (
+    InitFileDoesNotExistError,
     ReadPermissionError,
     UnexpandableImportStar,
     UnparsableFile,
@@ -301,6 +302,13 @@ class TestRefactor:
                 None,
                 UnparsableFile(Path(""), SyntaxError("")),
                 id="UnparsableFile[code-session]",
+            ),
+            pytest.param(
+                Path("DoesNotExistInitFile/__init__.py"),
+                None,
+                InitFileDoesNotExistError(2, "", Path("")),
+                None,
+                id="InitFileDoesNotExistError[file]",
             ),
         ],
     )

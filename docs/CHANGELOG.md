@@ -10,6 +10,89 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.4.0] - 2023-11-14
+
+## Added
+
+- [Add support for Python 3.12 by @perfa](https://github.com/hadialqattan/pycln/pull/224)
+
+## Changed
+
+- [Drop Python3.6 by @hadialqattan](https://github.com/hadialqattan/pycln/pull/225)
+
+## [2.3.0] - 2023-10-14
+
+### Changed
+
+- [Drop distutils lib by @hadialqattan](https://github.com/hadialqattan/pycln/pull/220)
+
+## [2.2.2] - 2023-08-10
+
+### Changed
+
+- [Bump PyYaml from 6.0 to 6.0.1 by @hadialqattan](https://github.com/hadialqattan/pycln/pull/216)
+
+## [2.2.1] - 2023-08-04
+
+### Fixed
+
+- [Running Pycln in a virtual env against a folder (that has no `__init__.py` file) contains sub-packages causes ReadPermissionError by @hadialqattan](https://github.com/hadialqattan/pycln/pull/215)
+
+## [2.2.0] - 2023-07-31
+
+### Changed
+
+- [Pycln is no longer tightly pinning its dependencies by @hadialqattan](https://github.com/hadialqattan/pycln/pull/213)
+
+## [2.1.7] - 2023-07-27
+
+### Fixed
+
+- [`typing/collections.abc.Callable` function parameters types (`Callable[['param1_type'], ...]`) were not considered/analysed by Pycln by @hadialqattan](https://github.com/hadialqattan/pycln/pull/211)
+
+### Changed
+
+- [Bump certifi from 2023.5.7 to 2023.7.22 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/210)
+- [Widen `libcst` version pin by @AlexWaygood](https://github.com/hadialqattan/pycln/pull/209)
+
+## [2.1.6] - 2023-07-19
+
+### Fixed
+
+- [Implicit imports get missparesed (considered unused) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/207)
+
+## [2.1.5] - 2023-06-03
+
+### Changed
+
+- [Widen `pathspec` version artificial lock by @hadialqattan](https://github.com/hadialqattan/pycln/pull/203)
+
+## [2.1.4] - 2023-05-31
+
+### Fixed
+
+- [Detect third-party libs installed in editable mode by @hadialqattan](https://github.com/hadialqattan/pycln/pull/200)
+- [Preserve the original line break format by @maxbachmann & @hadialqattan](https://github.com/hadialqattan/pycln/pull/197)
+
+### Changed
+
+- [Bump JRubics/poetry-publish from 1.16 to 1.17 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/201)
+- [Remove `pathspec` version artificial lock by @hadialqattan](https://github.com/hadialqattan/pycln/pull/199)
+- [Bump codecov/codecov-action from 3.1.1 to 3.1.4 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/198)
+- [Bump typer from 0.7.0 to 0.9.0 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/195)
+
+## [2.1.3] - 2023-01-16
+
+### Fixed
+
+- [Support `typing.TypeAlias` and `typing_extensions.TypeAlias` annotation by @hadialqattan](https://github.com/hadialqattan/pycln/pull/190)
+- [Pycln classifies imports with comments that have a colon or semicolon as unsupported cases (false positive) by @hadialqattan](https://github.com/hadialqattan/pycln/pull/189)
+
+### Changed
+
+- [Bump JRubics/poetry-publish from 1.15 to 1.16 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/188)
+- [Bump JRubics/poetry-publish from 1.13 to 1.15 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/181)
+
 ## [2.1.2] - 2022-11-09
 
 ### Fixed

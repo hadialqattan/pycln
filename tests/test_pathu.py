@@ -189,10 +189,11 @@ class TestPathu:
         #: `DATA_DIR/site-packages/custom/path/1` custom path.
         data_site: Path = DATA_DIR / "site-packages"
         sys.path.append(str(data_site))
+
         third_paths, pth_paths = pathu.get_third_party_lib_paths()
-        dirs = {path.parts[-2] for path in third_paths}
-        for dir_ in dirs:
-            assert dir_ in {"site-packages", "dist-packages"}
+
+        third_dir_paths = [path.parent for path in third_paths]
+        assert data_site in third_dir_paths
 
         assert data_site / "custom/path/1" in pth_paths
         assert data_site / "custom/path/2" not in pth_paths, "A commented path"
@@ -386,8 +387,8 @@ class TestPathu:
                 id="import file : local",
             ),
             pytest.param(
-                "distutils",
-                Path("distutils/__init__.py"),
+                "asyncio",
+                Path("asyncio/__init__.py"),
                 id="import module : standard",
             ),
             pytest.param(
@@ -452,9 +453,9 @@ class TestPathu:
             ),
             pytest.param(
                 "*",
-                "distutils",
+                "asyncio",
                 0,
-                Path("distutils/__init__.py"),
+                Path("asyncio/__init__.py"),
                 id="from package import * : standard",
             ),
             pytest.param(

@@ -2,7 +2,7 @@ exclude: "vendor/"
 
 repos:
   - repo: https://github.com/hadialqattan/pycln
-    rev: v2.1.1 # Possible releases: https://github.com/hadialqattan/pycln/releases
+    rev: v2.3.0 # Possible releases: https://github.com/hadialqattan/pycln/releases
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
@@ -35,10 +35,10 @@ repos:
     rev: v2.31.1
     hooks:
       - id: pyupgrade
-        args: [--py36-plus]
+        args: [--py37-plus]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+    rev: 5.11.5
     hooks:
       - id: isort
         files: "\\.(py)$"
@@ -56,7 +56,7 @@ repos:
       - id: black
         args: [--config=pyproject.toml]
 
-  - repo: https://gitlab.com/pycqa/flake8
+  - repo: https://github.com/pycqa/flake8
     rev: "3.9.2"
     hooks:
       - id: flake8

@@ -424,6 +424,11 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 {"Union", "foo", "bar", "baz"},
                 id="tuple",
             ),
+            pytest.param(
+                "baz = Callable[['foo_type', 'bar_type'], 'baz']",
+                {"Callable", "foo_type", "bar_type", "baz"},
+                id="Callable (exception)",
+            ),
         ],
     )
     def test_visit_Subscript(self, code, expec_names):
@@ -453,6 +458,26 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 "foo: Bar['Baz'] = []",
                 {"foo", "Bar", "Baz"},
                 id="semi-string",
+            ),
+            pytest.param(
+                "foo: NonTypeAlias = 'Bar[Baz]'",
+                {"foo", "NonTypeAlias"},
+                id="NonTypeAlias - false positive check",
+            ),
+            pytest.param(
+                "foo: TypeAlias = 'Bar[Baz]'",
+                {"foo", "TypeAlias", "Bar", "Baz"},
+                id="TypeAlias",
+            ),
+            pytest.param(
+                "foo: typing.TypeAlias = 'Bar[Baz]'",
+                {"foo", "typing", "Bar", "Baz"},
+                id="typing.TypeAlias",
+            ),
+            pytest.param(
+                "foo: typing_extensions.TypeAlias = 'Bar[Baz]'",
+                {"foo", "typing_extensions", "Bar", "Baz"},
+                id="typing_extensions.TypeAlias",
             ),
         ],
     )

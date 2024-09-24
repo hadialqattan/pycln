@@ -45,7 +45,6 @@ class ImportTransformer(cst.CSTTransformer):
         is_multiline = len(self._used_names) > 3
         used_aliases: List[cst.ImportAlias] = []
         for name in self._used_names:
-
             # Skip any dotted name in order
             # to avoid names collision.
             if "." in name:
@@ -161,6 +160,7 @@ class ImportTransformer(cst.CSTTransformer):
         # (Preserving `node` style).
 
         # Set the trailing comma determined by `_set_trailing_comma`.
+        used_aliases = list(used_aliases)
         used_aliases[-1] = used_aliases[-1].with_changes(comma=self._trailing_comma)
         node = cast(ImportT, node.with_changes(names=used_aliases))
         # Preserving multiline nodes style.
@@ -188,11 +188,13 @@ def rebuild_import(
     :raises UnsupportedCase: in some rare cases.
     """
 
-    if ";" in import_stmnt:
+    pure_import_stmnt: str = import_stmnt.split("#")[0]
+
+    if ";" in pure_import_stmnt:
         msg = "import statements separated with ';'."
         raise UnsupportedCase(path, location, msg)
 
-    if ":" in import_stmnt:
+    if ":" in pure_import_stmnt:
         msg = "an import statement inlined with ':'."
         raise UnsupportedCase(path, location, msg)
 

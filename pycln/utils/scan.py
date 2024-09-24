@@ -233,16 +233,22 @@ class SourceAnalyzer(ast.NodeVisitor):
         #: >>>
         #: >>> bar = List['Import']
         #: >>> foo = Union['Import', 'ImportFrom']
-        value = getattr(node, "value", "")
-        if getattr(value, "id", "") in SUBSCRIPT_TYPE_VARIABLE or (
-            hasattr(value, "value") and getattr(value.value, "id", "") == "typing"
-        ):
+        v = getattr(node, "value", "")
+        _id = (
+            getattr(v.value, "id", "") if hasattr(v, "value") else getattr(v, "id", "")
+        )
+        if _id in SUBSCRIPT_TYPE_VARIABLE or _id == "typing":
             if PY39_PLUS:
                 s_val = node.slice  # type: ignore
             else:
                 s_val = node.slice.value  # type: ignore
             for elt in getattr(s_val, "elts", ()) or (s_val,):
-                self._parse_string(elt)  # type: ignore
+                if _id == "Callable" and isinstance(elt, ast.List):
+                    # See issue: https://github.com/hadialqattan/pycln/issues/208
+                    for sub_elt in getattr(elt, "elts", ()):
+                        self._parse_string(sub_elt)  # type: ignore
+                else:
+                    self._parse_string(elt)  # type: ignore
 
     @recursive
     def visit_AnnAssign(self, node: ast.AnnAssign):
@@ -257,6 +263,16 @@ class SourceAnalyzer(ast.NodeVisitor):
         #: 3) semi string type annotations:
         #:  >>> foo: Bar["Baz"] = []
         self._visit_string_type_annotation(node)
+
+        #: Support (typing/typing_extensions) TypeAlias
+        #:
+        #: >>> Foo: TypeAlias = "BarClass"
+        annotation: ast.expr = node.annotation
+        if getattr(annotation, "id", "") == "TypeAlias" or (
+            getattr(annotation, "attr", "") == "TypeAlias"
+            and annotation.value.id in ("typing", "typing_extensions")  # type: ignore
+        ):
+            self._parse_string(node.value)  # type: ignore
 
     @recursive
     def visit_arg(self, node: ast.arg):
@@ -735,7 +751,6 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     def _compute_not_importables(self, node: Union[FunctionDefT, ast.ClassDef]):
         # Compute class/function not-importables.
         for node_ in ast.iter_child_nodes(node):
-
             if isinstance(node_, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 self._not_importables.add(cast(str, node_.name))
 
@@ -841,7 +856,6 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
     def _check_names(names: List[ast.alias]) -> HasSideEffects:
         # Check if imported names has side effects or not.
         for alias in names:
-
             # All standard lib modules doesn't has side effects
             # except `pathu.IMPORTS_WITH_SIDE_EFFECTS`.
             if alias.name in pathu.get_standard_lib_names():
