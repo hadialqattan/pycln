@@ -331,18 +331,18 @@ zoneinfo = ["backports.zoneinfo (>=0.2.1)", "tzdata (>=2024.2)"]
 
 [[package]]
 name = "hypothesmith"
-version = "0.2.3"
+version = "0.3.3"
 description = "Hypothesis strategies for generating Python programs, something like CSmith"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "hypothesmith-0.2.3-py3-none-any.whl", hash = "sha256:e84890e044dfa3e8e14d3368ca7463d33dcfc75737544b2b0aeac8de4a24a3c7"},
-    {file = "hypothesmith-0.2.3.tar.gz", hash = "sha256:bdce845ec984e6e3fed21e65d2e82b8ebc6de5ca5eb93649dfd76034c5906a46"},
+    {file = "hypothesmith-0.3.3-py3-none-any.whl", hash = "sha256:fdb0172f9de97d09450da40da7da083fdd118bcd2f88b1a2289413d2d496b1b1"},
+    {file = "hypothesmith-0.3.3.tar.gz", hash = "sha256:96c14802d6c8e85d8975264176878db54b28d2ed921fdbfedc2e6b8ce3c81716"},
 ]
 
 [package.dependencies]
-hypothesis = {version = ">=6.58.1", extras = ["lark"]}
-libcst = ">=0.4.0"
+hypothesis = {version = ">=6.93.0", extras = ["lark"]}
+libcst = ">=1.0.1"
 
 [[package]]
 name = "identify"
@@ -998,4 +998,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4"
-content-hash = "699b1453646be727dc197ff1048384bc415b0ff9dfbf17c82cd80cd9e8411223"
+content-hash = "b372902652026ceeaa88bf16de2f9cf573e6bc1d33427a37ba7775cf07e5da7e"

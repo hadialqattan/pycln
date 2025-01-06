@@ -37,7 +37,7 @@ pytest = "^7.0"
 pytest-cov = "^4.0.0"
 pytest-randomly = "^3.4.1"
 oschmod = "^0.3.9"
-hypothesmith = "^0.2.0"
+hypothesmith = "^0.3.3"
 pre-commit = {version = "^3.0.0", python = ">=3.8"}
 
 [build-system]

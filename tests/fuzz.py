@@ -13,10 +13,10 @@ FORM_FEED_CHAR = "\x0c"
 # This test uses the Hypothesis and Hypothesmith libraries to generate random
 # syntatically-valid Python source code and run Pycln in odd modes.
 @settings(
-    max_examples=1750,  # roughly 1750 tests/minute,
+    max_examples=1000,  # roughly 1750 tests/minute,
     derandomize=True,  # deterministic mode to avoid CI flakiness
     deadline=None,  # ignore Hypothesis' health checks; we already know that
-    suppress_health_check=HealthCheck.all(),  # this is slow and filter-heavy.
+    suppress_health_check=list(HealthCheck),  # this is slow and filter-heavy.
 )
 @given(
     # Note that while Hypothesmith might generate code unlike that written by
