@@ -17,7 +17,6 @@ classifiers = [
     "Topic :: Utilities"]
 license = "MIT"
 readme = "README.md"
-include = ["pyproject.toml"]
 packages = [{ include = "pycln" }, { include = "vendor" }]
 
 [tool.poetry.scripts]

@@ -1,10 +1,9 @@
 import io
 import os
 import sys
-import tokenize
+from importlib.metadata import metadata
 from pathlib import Path
 
-import tomlkit
 import typer
 
 #: Add vendor directory to module search path
@@ -20,14 +19,11 @@ if "pytest" not in sys.modules:
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding=UTF8)  # pragma: nocover
 
 ISWIN = os.name == "nt"
-PYPROJECT_PATH = Path(__file__).parent.parent.joinpath("pyproject.toml")
 
-with tokenize.open(PYPROJECT_PATH) as toml_f:
-    pycln = tomlkit.parse(toml_f.read())["tool"]["poetry"]
-
-__name__ = str(pycln["name"])
-__doc__ = str(pycln["description"])
-__version__ = pycln["version"]
+pycln = metadata("pycln")
+__name__ = str(pycln["Name"])
+__doc__ = str(pycln["Summary"])
+__version__ = str(pycln["Version"])
 
 
 def version_callback(value: bool):
