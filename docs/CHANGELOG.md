@@ -10,6 +10,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.5.0] - 2025-01-06
+
 ### Fixed
 
 - [Reading `pyproject.toml` causes missing `pyproject.toml` error by @or150](https://github.com/hadialqattan/pycln/pull/250)
