@@ -4,6 +4,7 @@
 import sys
 import tokenize
 from os import getenv
+from pathlib import Path
 
 import pytest
 import requests
@@ -11,20 +12,14 @@ import tomlkit
 from semver import VersionInfo
 from typer import Exit
 
-from pycln import (
-    PYPROJECT_PATH,
-    VENDOR_PATH,
-    __doc__,
-    __name__,
-    __version__,
-    version_callback,
-)
+from pycln import VENDOR_PATH, __doc__, __name__, __version__, version_callback
 
 from .utils import sysu
 
 # Constants.
+PYPROJECT_PATH = Path(__file__).parent.parent.joinpath("pyproject.toml")
 with tokenize.open(PYPROJECT_PATH) as toml_f:
-    PYCLN_METADATA = tomlkit.parse(toml_f.read())["tool"]["poetry"]
+    PYCLN_METADATA = tomlkit.parse(toml_f.read())["tool"]["poetry"]  # type: ignore
 
 PYCLN_PYPI_JSON_URL = f"https://pypi.org/pypi/{__name__}/json"
 PYCLN_PYPI_URL = f"https://pypi.org/project/{__name__}/"

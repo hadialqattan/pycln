@@ -19,7 +19,6 @@ if "pytest" not in sys.modules:
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding=UTF8)  # pragma: nocover
 
 ISWIN = os.name == "nt"
-PYPROJECT_PATH = Path(__file__).parent.parent.joinpath("pyproject.toml")
 
 pycln = metadata("pycln")
 __name__ = str(pycln["Name"])
