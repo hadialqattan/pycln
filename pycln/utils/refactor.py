@@ -246,7 +246,7 @@ class Refactor:
 
     def _analyze(
         self, tree: ast.AST, original_lines: List[str]
-    ) -> Tuple[scan.SourceStats, scan.ImportStats] | None:
+    ) -> Tuple[scan.SourceStats, scan.ImportStats]:
         """Analyze the given `tree`.
 
         :param tree: a parsed `ast.AST`.
