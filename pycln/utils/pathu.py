@@ -127,7 +127,7 @@ def yield_sources(
         )
 
 
-@lru_cache()
+@lru_cache
 def get_standard_lib_paths() -> Set[Path]:
     """Get paths to Python standard library modules.
 
@@ -149,7 +149,7 @@ def get_standard_lib_paths() -> Set[Path]:
     return paths
 
 
-@lru_cache()
+@lru_cache
 def get_standard_lib_names() -> Set[str]:
     """Returns a set of Python standard library modules names.
 
@@ -172,7 +172,7 @@ def get_standard_lib_names() -> Set[str]:
     return (names - IMPORTS_WITH_SIDE_EFFECTS) | BIN_IMPORTS
 
 
-@lru_cache()
+@lru_cache
 def get_third_party_lib_paths() -> Tuple[Set[Path], Set[Path]]:
     """Get paths to third party library modules.
 
@@ -202,7 +202,7 @@ def get_third_party_lib_paths() -> Tuple[Set[Path], Set[Path]]:
     return paths, pth_paths
 
 
-@lru_cache()
+@lru_cache
 def get_local_import_path(path: Path, module: str) -> Optional[Path]:
     """Find the given local module file.py/__init_.py path.
 
@@ -248,7 +248,7 @@ def get_local_import_pth_path(pth_paths: Set[Path], module: str) -> Optional[Pat
     return None
 
 
-@lru_cache()
+@lru_cache
 def get_local_import_from_path(
     path: Path, module: str, package: str, level: int
 ) -> Optional[Path]:
@@ -365,7 +365,7 @@ def get_module_path(
     return None
 
 
-@lru_cache()
+@lru_cache
 def get_import_path(path: Path, module: str) -> Optional[Path]:
     """Find the given module file.py/__init__.py path.
 
@@ -390,7 +390,7 @@ def get_import_path(path: Path, module: str) -> Optional[Path]:
         return get_module_path(paths, module)
 
 
-@lru_cache()
+@lru_cache
 def get_import_from_path(
     path: Path, module: str, package: str, level: int
 ) -> Optional[Path]:
