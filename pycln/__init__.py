@@ -6,7 +6,6 @@ from pathlib import Path
 
 import typer
 
-
 #: Add vendor directory to module search path
 VENDOR_PATH = Path(__file__).parent.parent.joinpath("vendor")
 sys.path.append(str(VENDOR_PATH))
