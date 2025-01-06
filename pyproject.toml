@@ -9,7 +9,6 @@ keywords = ["formatter", "linter", "quality-assurance", "tools", "cli"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -25,7 +24,7 @@ packages = [{ include = "pycln" }, { include = "vendor" }]
 pycln = "pycln.cli:app"
 
 [tool.poetry.dependencies]
-python = ">=3.7.0, <4"
+python = ">=3.8, <4"
 typer = ">=0.4.1"
 pyyaml = ">=5.3.1"
 pathspec = ">=0.9.0"
@@ -50,10 +49,9 @@ build-backend = "poetry.core.masonry.api"
 [tool.pycln]
 all = true
 
-[mypy]
+[tool.mypy]
 show_error_codes = true
 ignore_missing_imports = true
-no_strict_optional = true
 
 [tool.isort]
 line_length = 88
