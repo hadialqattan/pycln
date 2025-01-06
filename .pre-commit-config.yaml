@@ -1,11 +1,11 @@
 exclude: "vendor/"
 
 repos:
-  # - repo: https://github.com/hadialqattan/pycln
-  #   rev: v2.4.0 # Possible releases: https://github.com/hadialqattan/pycln/releases
-  #   hooks:
-  #     - id: pycln
-  #       args: [--config=pyproject.toml]
+  - repo: https://github.com/hadialqattan/pycln
+    rev: v2.5.0 # Possible releases: https://github.com/hadialqattan/pycln/releases
+    hooks:
+      - id: pycln
+        args: [--config=pyproject.toml]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
