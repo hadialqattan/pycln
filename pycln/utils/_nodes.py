@@ -1,4 +1,5 @@
 """Pycln import statements nodes utility."""
+
 import ast
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
@@ -6,7 +7,6 @@ from typing import List, Optional, Tuple
 
 @dataclass(frozen=True)
 class NodePosition:
-
     """Node position class."""
 
     #: Line numbers are 1-indexed.
@@ -23,7 +23,6 @@ class NodePosition:
 
 @dataclass
 class NodeLocation:
-
     """Node location class.
 
     :param start: tuple of start line and col_offset.
@@ -43,7 +42,6 @@ class NodeLocation:
 
 @dataclass
 class BaseImport:
-
     """Custom `ast.AST` node."""
 
     #: Location contains:
@@ -60,7 +58,6 @@ class BaseImport:
 
 @dataclass
 class Import(BaseImport):
-
     """Custom `ast.Import` node."""
 
     def __hash__(self):
@@ -69,7 +66,6 @@ class Import(BaseImport):
 
 @dataclass
 class ImportFrom(BaseImport):
-
     """Custom `ast.ImportFrom` node."""
 
     #: `ast.ImportFrom.module`.

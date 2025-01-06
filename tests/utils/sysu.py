@@ -1,4 +1,5 @@
 """System hacks utility."""
+
 import os
 import sys
 from contextlib import contextmanager
@@ -13,8 +14,8 @@ from typing import Generator
 class STD(Enum):
     """STD TYPES."""
 
-    OUT: int = 0
-    ERR: int = 1
+    OUT = 0
+    ERR = 1
 
 
 @contextmanager

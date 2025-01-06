@@ -1,4 +1,5 @@
 """Pycln source code AST analysis utility."""
+
 import ast
 import os
 import sys
@@ -108,7 +109,6 @@ def recursive(func: FunctionT) -> FunctionT:
 
 @dataclass
 class ImportStats:
-
     """Import statements statistics."""
 
     import_: Set[_nodes.Import]
@@ -120,7 +120,6 @@ class ImportStats:
 
 @dataclass
 class SourceStats:
-
     """Source code (`ast.Name`, `ast.Attribute`) statistics."""
 
     #: Included on `__iter__`.
@@ -135,7 +134,6 @@ class SourceStats:
 
 
 class SourceAnalyzer(ast.NodeVisitor):
-
     """AST source code analyzer.
 
     >>> import ast
@@ -184,10 +182,11 @@ class SourceAnalyzer(ast.NodeVisitor):
         self._source_stats.attr_.add(node.attr)
 
     @recursive
-    def visit_MatchAs(self, node: "ast.MatchAs"):  # type: ignore
+    def visit_MatchAs(self, node: "ast.MatchAs"):
         #: Support Match statement (PYTHON >= 3.10).
         #: PEP0634: https://www.python.org/dev/peps/pep-0634/
-        self._source_stats.name_.add(node.name)
+        if node.name is not None:
+            self._source_stats.name_.add(node.name)
 
     @recursive
     def visit_Call(self, node: ast.Call):
@@ -200,9 +199,9 @@ class SourceAnalyzer(ast.NodeVisitor):
         #: Issue: https://github.com/hadialqattan/pycln/issues/26
         if getattr(func, "id", "") == "cast" or (
             getattr(func, "attr", "") == "cast"
-            and getattr(func.value, "id", "") == "typing"  # type: ignore
+            and getattr(func.value, "id", "") == "typing"
         ):
-            self._parse_string(node.args[0])  # type: ignore
+            self._parse_string(node.args[0])
 
         #: Support TypeVar cases (when types passed as str).
         #: >>> from typing import TypeVar
@@ -211,7 +210,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         #: >>> YBoundedType = TypeVar("YBoundedType", bound="Y")
         if getattr(func, "id", "") == "TypeVar" or (
             getattr(func, "attr", "") == "TypeVar"
-            and getattr(func.value, "id", "") == "typing"  # type: ignore
+            and getattr(func.value, "id", "") == "typing"
         ):
             args = getattr(node, "args", [])[1:]  # Skip the TypeVar's name.
             for arg in args:
@@ -239,16 +238,16 @@ class SourceAnalyzer(ast.NodeVisitor):
         )
         if _id in SUBSCRIPT_TYPE_VARIABLE or _id == "typing":
             if PY39_PLUS:
-                s_val = node.slice  # type: ignore
+                s_val = node.slice
             else:
-                s_val = node.slice.value  # type: ignore
+                s_val = node.slice.value
             for elt in getattr(s_val, "elts", ()) or (s_val,):
                 if _id == "Callable" and isinstance(elt, ast.List):
                     # See issue: https://github.com/hadialqattan/pycln/issues/208
                     for sub_elt in getattr(elt, "elts", ()):
-                        self._parse_string(sub_elt)  # type: ignore
+                        self._parse_string(sub_elt)
                 else:
-                    self._parse_string(elt)  # type: ignore
+                    self._parse_string(elt)
 
     @recursive
     def visit_AnnAssign(self, node: ast.AnnAssign):
@@ -270,9 +269,9 @@ class SourceAnalyzer(ast.NodeVisitor):
         annotation: ast.expr = node.annotation
         if getattr(annotation, "id", "") == "TypeAlias" or (
             getattr(annotation, "attr", "") == "TypeAlias"
-            and annotation.value.id in ("typing", "typing_extensions")  # type: ignore
+            and annotation.value.id in ("typing", "typing_extensions")
         ):
-            self._parse_string(node.value)  # type: ignore
+            self._parse_string(node.value)
 
     @recursive
     def visit_arg(self, node: ast.arg):
@@ -332,11 +331,11 @@ class SourceAnalyzer(ast.NodeVisitor):
         for base in node.bases:
             if isinstance(base, ast.Subscript):
                 if PY39_PLUS:
-                    s_val = base.slice  # type: ignore
+                    s_val = base.slice
                 else:
-                    s_val = base.slice.value  # type: ignore
+                    s_val = base.slice.value
                 for elt in getattr(s_val, "elts", ()) or (s_val,):
-                    self._parse_string(elt)  # type: ignore
+                    self._parse_string(elt)
 
     @recursive
     def visit_Assign(self, node: ast.Assign):
@@ -431,9 +430,9 @@ class SourceAnalyzer(ast.NodeVisitor):
             if isinstance(annotation.slice, ast.Constant):
                 annotation = annotation.slice
             elif isinstance(annotation.slice, ast.Index):
-                annotation = annotation.slice.value  # type: ignore
+                annotation = annotation.slice.value
 
-        self._parse_string(annotation, True)  # type: ignore
+        self._parse_string(annotation, True)
 
     def _visit_type_comment(
         self, node: Union[ast.Assign, ast.arg, FunctionDefT]
@@ -589,7 +588,6 @@ class SourceAnalyzer(ast.NodeVisitor):
 
 
 class ImportablesAnalyzer(ast.NodeVisitor):
-
     """Get set of all importable names from given `ast.Module`.
 
     >>> import ast
@@ -797,7 +795,6 @@ class HasSideEffects(Enum):
 
 
 class SideEffectsAnalyzer(ast.NodeVisitor):
-
     """Check if the given `ast.Module` has side effects or not.
 
     >>> import ast
@@ -930,11 +927,9 @@ def expand_import_star(
             msg = str(err)  # pragma: nocover
 
         if hasattr(node, "location"):
-            location = node.location  # type: ignore # pragma: nocover.
+            location = node.location  # pragma: nocover.
         else:
-            location = _nodes.NodeLocation(
-                (node.lineno, node.col_offset), 0  # type: ignore
-            )
+            location = _nodes.NodeLocation((node.lineno, node.col_offset), 0)
 
         raise UnexpandableImportStar(path, location, msg) from err
 

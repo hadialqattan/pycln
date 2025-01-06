@@ -1,4 +1,5 @@
 """pycln/utils/config.py tests."""
+
 # pylint: disable=R0201,W0613
 import re
 from pathlib import Path
@@ -65,7 +66,6 @@ DEFAULTS = {
 
 
 class TestConfig:
-
     """`config.Config` class tests."""
 
     @pytest.mark.parametrize(
@@ -180,7 +180,6 @@ class TestConfig:
 
 
 class TestParseConfigFile:
-
     """`config.ParseConfigFile` class tests."""
 
     @mock.patch(MOCK % "ParseConfigFile.__init__")

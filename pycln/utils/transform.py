@@ -1,4 +1,5 @@
 """Pycln CST transforming utility."""
+
 from pathlib import Path
 from typing import List, Optional, Set, TypeVar, Union, cast
 
@@ -16,7 +17,6 @@ TrailingCommaA = Union[cst.MaybeSentinel, cst.Comma]
 
 
 class ImportTransformer(cst.CSTTransformer):
-
     """Import statements transformer.
 
     :param used_names: set of all used names to keep.
@@ -29,7 +29,7 @@ class ImportTransformer(cst.CSTTransformer):
             raise ValueError("'used_names' parameter can't be empty set.")
         self._used_names = used_names
         self._location = location
-        self._indentation = " " * location.start.col
+        self._indentation = " " * (location.start.col or 0)
 
         # Style preservation.
         self._lpar: cst.LeftParen = self._multiline_lpar()
@@ -72,7 +72,7 @@ class ImportTransformer(cst.CSTTransformer):
         :returns: refactored node.
         """
         used_aliases: List[cst.ImportAlias] = []
-        for alias in updated_node.names:  # type: ignore
+        for alias in updated_node.names:
             if self._get_alias_name(alias.name) in self._used_names:
                 used_aliases.append(alias)
         return self._stylize(updated_node, used_aliases)
@@ -104,7 +104,7 @@ class ImportTransformer(cst.CSTTransformer):
 
     def _set_trailing_comma(self, node: ImportT):
         # Set `self._trailing_comma` base on the original node.
-        self._trailing_comma = node.names[-1].comma  # type: ignore
+        self._trailing_comma = node.names[-1].comma
 
     def _get_alias_name(
         self, node: Optional[Union[cst.Name, cst.Attribute]], name=""
@@ -113,7 +113,7 @@ class ImportTransformer(cst.CSTTransformer):
         if isinstance(node, cst.Name):
             name += node.value
             return name
-        return self._get_alias_name(node.value) + "." + node.attr.value  # type: ignore
+        return self._get_alias_name(node.value) + "." + node.attr.value
 
     @staticmethod
     def _multiline_parenthesized_whitespace(indent: str) -> cst.ParenthesizedWhitespace:
@@ -200,7 +200,7 @@ def rebuild_import(
 
     # Remove `import_stmnt` indentation/last-"\n".
     stripped_stmnt = import_stmnt.lstrip(" ").rstrip("\n")
-    indentation = " " * location.start.col
+    indentation = " " * (location.start.col or 0)
 
     # Remove unused aliases.
     fixed_lines: List[str] = []

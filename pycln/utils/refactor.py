@@ -1,4 +1,5 @@
 """Pycln code refactoring utility."""
+
 import ast
 import os
 import sys
@@ -21,7 +22,7 @@ from .config import Config
 from .report import Report
 
 if sys.version_info < (3, 12):
-    from pathlib import Path, _posix_flavour, _windows_flavour  # type: ignore
+    from pathlib import Path, _posix_flavour, _windows_flavour
 
     _flavour = _windows_flavour if ISWIN else _posix_flavour
 else:
@@ -54,7 +55,6 @@ class PyPath(Path):
 
 
 class LazyLibCSTLoader:
-
     """`transform.py` takes about '0.3s' to be loaded because of LibCST,
     therefore I've created this class to load it only if necessary.
 
@@ -75,7 +75,6 @@ transform = LazyLibCSTLoader()
 
 
 class Refactor:
-
     """Refactor the given source.
 
     >>> refactor = Refactor(
@@ -247,7 +246,7 @@ class Refactor:
 
     def _analyze(
         self, tree: ast.AST, original_lines: List[str]
-    ) -> Tuple[scan.SourceStats, scan.ImportStats]:
+    ) -> Tuple[scan.SourceStats, scan.ImportStats] | None:
         """Analyze the given `tree`.
 
         :param tree: a parsed `ast.AST`.
@@ -491,7 +490,7 @@ class Refactor:
         :param is_star: is it a '*' import.
         :returns: True if the name has used else False.
         """
-        name = name.split(".") if "." in name else name  # type: ignore
+        name = name.split(".") if "." in name else name
         if isinstance(name, str):
             if is_star and name in self._source_stats.names_to_skip:
                 return False

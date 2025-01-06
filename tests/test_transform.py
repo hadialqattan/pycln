@@ -1,4 +1,5 @@
 """pycln/utils/transform.py tests."""
+
 # pylint: disable=R0201,W0613
 from pathlib import Path
 from typing import Union
@@ -18,7 +19,6 @@ MOCK = "pycln.utils.transform.%s"
 
 
 class TestImportTransformer:
-
     """`ImportTransformer` methods test case."""
 
     def _assert_import_equal(
@@ -390,7 +390,7 @@ class TestImportTransformer:
             names = name.split(".")
             value = get_name_node(".".join(names[:-1]))
             attr = get_name_node(names[-1])
-            return cst.Attribute(value=value, attr=attr)  # type: ignore
+            return cst.Attribute(value=value, attr=attr)
 
         node = get_name_node(name)
         transformer = transform.ImportTransformer(None, None)
@@ -471,7 +471,6 @@ class TestImportTransformer:
 
 
 class TestTransformFunctions:
-
     """`transform.py` functions test case."""
 
     @pytest.mark.parametrize(

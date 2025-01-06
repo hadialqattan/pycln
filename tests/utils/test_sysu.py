@@ -1,4 +1,5 @@
 """Test `tests/utils/sysu.py`."""
+
 # pylint: disable=R0201,W0613
 import sys
 
@@ -8,7 +9,6 @@ from . import sysu
 
 
 class TestSTD:
-
     """`sysu.py` functions test case."""
 
     @pytest.mark.parametrize(

@@ -1,4 +1,5 @@
 """Pycln regex utility."""
+
 import os
 import re
 import tokenize
@@ -38,7 +39,7 @@ def safe_compile(pattern: str, type_: str) -> Pattern[str]:
         if isinstance(pattern, str):
             compiled: Pattern[str] = re.compile(pattern, re.IGNORECASE)
             return compiled
-        return pattern  # type: ignore
+        return pattern
     except re.error as err:
         typer.secho(
             f"Invalid regular expression for {type_} given: {pattern!r} ⛔",

@@ -1,4 +1,5 @@
 """Pycln path finding utility."""
+
 import os
 import sys
 import sysconfig
@@ -73,9 +74,9 @@ def yield_sources(
     is_included, is_excluded = regexu.is_included, regexu.is_excluded
 
     if path.is_dir():
-        root_dir = os.scandir(path)  # type: ignore
+        root_dir = os.scandir(path)
     else:
-        root_dir = {path}  # type: ignore
+        root_dir = {path}
         path = path.parent
 
     for entry in root_dir:
@@ -215,7 +216,7 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
     names = module.split(".")
 
     # Test different levels.
-    for i in [None] + list(range(-10, -0)):  # type: ignore
+    for i in [None] + list(range(-10, -0)):
         # If it's a file.
         fpath = os.path.join(*dirnames[:i], *names[:-1], f"{names[-1]}{PY_EXTENSION}")
         if os.path.isfile(fpath):
@@ -267,7 +268,7 @@ def get_local_import_from_path(
     packages = package.split(".") if package else []
 
     # Test different levels.
-    for i in [None] + list(range(-10, -0)):  # type: ignore
+    for i in [None] + list(range(-10, -0)):
         # If it's a file.
         if modules:
             fpath = os.path.join(

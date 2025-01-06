@@ -1,4 +1,5 @@
 """pycln/utils/scan.py tests."""
+
 # pylint: disable=R0201,W0613
 import ast
 import sys
@@ -21,7 +22,6 @@ PY310_PLUS = sys.version_info >= (3, 10)
 
 
 class TestDataclasses:
-
     """`scan.py` dataclasses test case."""
 
     def test_import_stats_iter(self):
@@ -34,7 +34,6 @@ class TestDataclasses:
 
 
 class AnalyzerTestCase:
-
     """`scan.*Analyzer` test case."""
 
     def assert_set_equal_or_not(self, set_: set, expec_set: set):
@@ -49,7 +48,6 @@ class AnalyzerTestCase:
 
 
 class TestSourceAnalyzer(AnalyzerTestCase):
-
     """`SourceAnalyzer` class tests."""
 
     def _get_analyzer(self, source_code: str):
@@ -920,7 +918,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
 
 
 class TestImportablesAnalyzer(AnalyzerTestCase):
-
     """`ImportablesAnalyzer` class tests."""
 
     def _assert_not_importables(self, not_importables: set, expec_not_importables: set):
@@ -1114,7 +1111,6 @@ class TestImportablesAnalyzer(AnalyzerTestCase):
 
 
 class TestSideEffectsAnalyzer:
-
     """`SideEffectsAnalyzer` class tests."""
 
     def _assert_not_side_effects(
@@ -1291,7 +1287,6 @@ class TestSideEffectsAnalyzer:
 
 
 class TestScanFunctions(AnalyzerTestCase):
-
     """`scan.py` functions test case."""
 
     @pytest.mark.parametrize(
@@ -1343,7 +1338,7 @@ class TestScanFunctions(AnalyzerTestCase):
             ast_tree = scan.parse_ast(code, mode=mode)
             assert ast_tree
             if type_comment:
-                tc = ast_tree.body[0].type_comment  # type: ignore
+                tc = ast_tree.body[0].type_comment
                 assert tc == type_comment
             raise sysu.Pass()
 

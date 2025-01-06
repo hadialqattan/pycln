@@ -1,4 +1,5 @@
 """pycln/utils/_nodes.py tests."""
+
 # pylint: disable=R0201,W0613
 import pytest
 
@@ -6,7 +7,6 @@ from pycln.utils import _nodes
 
 
 class TestNodePosition:
-
     """`NodePosition` dataclass test case."""
 
     @pytest.mark.parametrize("line, col", [(1, 0), (1, None)])
@@ -28,7 +28,6 @@ class TestNodePosition:
 
 
 class TestNodeLocation:
-
     """`NodeLocation` dataclass test case."""
 
     @pytest.mark.parametrize("start, end", [((1, 0), 1)])
@@ -56,7 +55,6 @@ class TestNodeLocation:
 
 
 class TestImport:
-
     """`Import` dataclass test case."""
 
     @pytest.mark.parametrize(
@@ -75,7 +73,6 @@ class TestImport:
 
 
 class TestImportFrom:
-
     """`ImportFrom` dataclass test case."""
 
     @pytest.mark.parametrize(

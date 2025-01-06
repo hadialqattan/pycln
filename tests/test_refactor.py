@@ -1,4 +1,5 @@
 """pycln/utils/refactor.py tests."""
+
 # pylint: disable=R0201,W0613
 import ast
 from pathlib import Path
@@ -26,7 +27,6 @@ MOCK = "pycln.utils.refactor.%s"
 
 
 class TestPyPath:
-
     """`PyPath` class test case."""
 
     def test_is_subclass_of_pathlib_path(self):
@@ -42,7 +42,6 @@ class TestPyPath:
 
 
 class TestRefactor:
-
     """`Refactor` methods test case."""
 
     def setup_method(self, method):

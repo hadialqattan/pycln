@@ -1,4 +1,5 @@
 """Pycln CLI implementation."""
+
 from pathlib import Path
 from typing import Generator, List, Optional
 
@@ -168,9 +169,9 @@ def main(  # pylint: disable=R0913,R0914
         paths=paths,
         skip_imports=set(skip_imports),
         config=config,
-        include=include,  # type: ignore
-        exclude=exclude,  # type: ignore
-        extend_exclude=extend_exclude,  # type: ignore
+        include=include,
+        exclude=exclude,
+        extend_exclude=extend_exclude,
         all_=all_,
         check=check,
         diff=diff,
@@ -190,7 +191,7 @@ def main(  # pylint: disable=R0913,R0914
             gitignore = regexu.get_gitignore(
                 path if path.is_dir() else path.parent, configs.no_gitignore
             )
-            sources: Generator = pathu.yield_sources(  # type: ignore
+            sources: Generator = pathu.yield_sources(
                 path,
                 configs.include,
                 configs.exclude,

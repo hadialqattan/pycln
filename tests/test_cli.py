@@ -1,4 +1,5 @@
 """pycln/utils/cli.py tests."""
+
 # pylint: disable=R0201,W0613
 import pytest
 from typer.testing import CliRunner
@@ -14,7 +15,6 @@ CONFIG_FILE = CONFIG_DIR.joinpath("cli.cfg")
 
 
 class TestCli:
-
     """some `cli.py` tests."""
 
     def _assert_code_in(self, expec_out, *args, stdin=b"", expec_exit_code=0):

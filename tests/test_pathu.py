@@ -1,4 +1,5 @@
 """pycln/utils/pathu.py tests."""
+
 # pylint: disable=R0201,W0613
 import re
 import sys
@@ -38,7 +39,6 @@ LRU_CACHED_FUNCS = frozenset(
 
 
 class TestPathu:
-
     """`pathu.py` functions test case."""
 
     @pytest.fixture(autouse=True)

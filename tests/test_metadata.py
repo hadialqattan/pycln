@@ -1,4 +1,5 @@
 """pycln `__init__.py`/`pyproject.toml` metadata tests."""
+
 # pylint: disable=R0201,W0613
 import sys
 import tokenize
@@ -23,14 +24,13 @@ from .utils import sysu
 
 # Constants.
 with tokenize.open(PYPROJECT_PATH) as toml_f:
-    PYCLN_METADATA = tomlkit.parse(toml_f.read())["tool"]["poetry"]  # type: ignore
+    PYCLN_METADATA = tomlkit.parse(toml_f.read())["tool"]["poetry"]
 
 PYCLN_PYPI_JSON_URL = f"https://pypi.org/pypi/{__name__}/json"
 PYCLN_PYPI_URL = f"https://pypi.org/project/{__name__}/"
 
 
 class TestMetadata:
-
     """`__init__.py`/`pyproject.toml` test case."""
 
     def test_vendor_path(self):

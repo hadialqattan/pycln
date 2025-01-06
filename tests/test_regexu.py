@@ -1,4 +1,5 @@
 """pycln/utils/regexu.py tests."""
+
 # pylint: disable=R0201,W0613
 import re
 from pathlib import Path
@@ -20,7 +21,6 @@ COMPILED_EXCLUDE_REGEX = re.compile(EXCLUDE_REGEX, re.IGNORECASE)
 
 
 class TestRegexU:
-
     """`regexu.py` functions test case."""
 
     @pytest.mark.parametrize(

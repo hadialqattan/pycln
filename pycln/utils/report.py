@@ -1,4 +1,5 @@
 """Pycln report utility."""
+
 import ast
 from dataclasses import dataclass
 from difflib import unified_diff
@@ -12,7 +13,6 @@ from . import _nodes, config
 
 @dataclass
 class Report:
-
     """Provide a Pycln report counters.
 
     Can be rendered with `str(report)`.

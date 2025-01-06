@@ -1,4 +1,5 @@
 """Pycln configuration management utility."""
+
 import configparser
 import json
 import tokenize
@@ -24,7 +25,6 @@ CONFIG_SECTIONS = {
 
 @dataclass
 class Config:
-
     """Pycln configs dataclass."""
 
     def __post_init__(self):
@@ -41,9 +41,9 @@ class Config:
     paths: List[Path]
     skip_imports: Set[str]
     config: Optional[Path] = None
-    include: Pattern[str] = regexu.INCLUDE_REGEX  # type: ignore
-    exclude: Pattern[str] = regexu.EXCLUDE_REGEX  # type: ignore
-    extend_exclude: Pattern[str] = regexu.EMPTY_REGEX  # type: ignore
+    include: Pattern[str] = regexu.INCLUDE_REGEX
+    exclude: Pattern[str] = regexu.EXCLUDE_REGEX
+    extend_exclude: Pattern[str] = regexu.EMPTY_REGEX
     all_: bool = False
     check: bool = False
     diff: bool = False
@@ -112,7 +112,6 @@ class Config:
 
 
 class ParseConfigFile:
-
     """Conifg file parser.
 
     :param file_path: config file path.
@@ -154,7 +153,7 @@ class ParseConfigFile:
         # Parse `.cfg` file.
         parser = configparser.ConfigParser(allow_no_value=True)
         parser.read(self._path)
-        cfg_data = parser._sections.get(self._section, {})  # type: ignore
+        cfg_data = parser._sections.get(self._section, {})
 
         def cast_bool(v: str) -> Union[str, bool]:
             if v.lower() == "true":
@@ -171,9 +170,7 @@ class ParseConfigFile:
             #: skip_imports = [x, y]
             #: skip_imports = x,y
             skip_imports = configs["skip_imports"]
-            skip_imports = set(
-                skip_imports.strip('[]"').replace(" ", "").split(",")  # type: ignore
-            )
+            skip_imports = set(skip_imports.strip('[]"').replace(" ", "").split(","))
             configs["skip_imports"] = skip_imports
 
         self._config_loader(configs)

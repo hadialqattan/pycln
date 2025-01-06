@@ -1,4 +1,5 @@
 """Pycln unit tests module."""
+
 from pathlib import Path
 
 # Constatns.

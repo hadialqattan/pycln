@@ -1,4 +1,5 @@
 """pycln/utils/report.py tests."""
+
 # pylint: disable=R0201,W0613
 import ast
 from contextlib import contextmanager
@@ -15,7 +16,6 @@ from .utils import sysu
 
 
 class TestReport:
-
     """`Report` methods test case."""
 
     def setup_method(self, method):

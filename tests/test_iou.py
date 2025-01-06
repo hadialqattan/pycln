@@ -1,4 +1,5 @@
 """pycln/utils/iou.py tests."""
+
 # pylint: disable=R0201,W0613
 import os
 from pathlib import Path
@@ -24,7 +25,6 @@ MOCK = "pycln.utils.iou.%s"
 
 
 class TestIOU:
-
     """`iou.py` functions test case."""
 
     @pytest.mark.parametrize(
