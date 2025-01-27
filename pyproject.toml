@@ -32,7 +32,7 @@ libcst = ">=0.3.10"
 
 [tool.poetry.group.dev.dependencies]
 requests = "^2.24.0"
-semver = "^2.10.2"
+semver = ">=2.10.2,<4.0.0"
 pytest = "^7.0"
 pytest-cov = "^4.0.0"
 pytest-randomly = "^3.4.1"
