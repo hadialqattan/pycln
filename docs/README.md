@@ -1299,4 +1299,6 @@ finally:
   all = true
   ```
 
+- You must have [Rust installed](https://www.rust-lang.org/tools/install) for the pycln hook to install in the pre-commit environment.
+
 - Then run `pre-commit install` and you’re ready to go.
