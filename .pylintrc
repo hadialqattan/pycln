@@ -32,20 +32,11 @@ disable=all
 # either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once). See also the "--disable" option for examples.
-enable=c-extension-no-member
-    deprecated-method,
-    deprecated-module,
-    deprecated-operator-function,
-    deprecated-str-translate-call,
-    deprecated-string-function,
-    deprecated-sys-function,
-    deprecated-types-field,
-    consider-using-dict-comprehension,
+enable=consider-using-dict-comprehension,
     consider-using-in,
     consider-using-join,
     consider-using-set-comprehension,
     no-self-argument,
-    no-self-use,
     unnecessary-semicolon,
     unused-argument,
     abstract-class-instantiated,
@@ -118,7 +109,6 @@ enable=c-extension-no-member
     raise-missing-from,
     raising-bad-type,
     raising-non-exception,
-    redefine-in-handler,
     redundant-keyword-arg,
     reimported,
     repeated-keyword,
