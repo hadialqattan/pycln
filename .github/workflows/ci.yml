@@ -36,8 +36,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-13 is an intel runner, macos-latest is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
@@ -48,12 +47,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-
-      # see: https://github.com/pypa/cibuildwheel/issues/2324
-      - name: Set MACOSX_DEPLOYMENT_TARGET for Intel MacOS
-        if: matrix.os == 'macos-13'
-        run: |
-          echo MACOSX_DEPLOYMENT_TARGET=10.12 >> $GITHUB_ENV
 
       - name: Install  Dependencies
         run: |
