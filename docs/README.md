@@ -178,7 +178,6 @@ so anything true for `.py` files is true for `.pyi` files as well.
   ```
 
   Notes about reading from `STDIN`:
-
   - For the time being, both the final report and the formatted code will be sent to
     `STDOUT`, therefore, it's necessary to use [`-s/--silence`](?id=-s-silence-flag)
     flag in order to receive only the formatted code via `STDOUT`.
@@ -317,7 +316,6 @@ pycln:
 #### Usage
 
 - Via CLI by providing:
-
   - a list of names in a pythonic list format:
     ```bash
     $ pycln --skip-imports [x, y, z]

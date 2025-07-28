@@ -1,11 +1,9 @@
 - User's guide
-
   - [README](README)
   - [CHANGELOG](CHANGELOG)
   - [AUTHORS](AUTHORS)
 
 - Developer's guide
-
   - [ISSUES TRACKER](https://github.com/hadialqattan/pycln/issues)
   - [PROJECTS](https://github.com/hadialqattan/pycln/projects)
   - [CONTRIBUTING](CONTRIBUTING)
