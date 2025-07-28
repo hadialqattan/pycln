@@ -9,15 +9,13 @@
     <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACI"><img src="https://img.shields.io/github/actions/workflow/status/hadialqattan/pycln/ci.yml?branch=master&label=CI&logo=github&style=flat-square" alt="CI"></a>
     <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3ACD"><img src="https://img.shields.io/github/actions/workflow/status/hadialqattan/pycln/cd.yml?label=CD&logo=github&style=flat-square" alt="CD"></a>
     <a href="https://github.com/hadialqattan/pycln/actions?query=workflow%3AFUZZ"><img src="https://img.shields.io/github/actions/workflow/status/hadialqattan/pycln/fuzz.yml?label=FUZZ&logo=github&style=flat-square" alt="FUZZ"></a>
-    <a href="https://www.codacy.com/manual/hadialqattan/pycln/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hadialqattan/pycln&amp;utm_campaign=Badge_Grade"><img src="https://img.shields.io/codacy/grade/e7c6c290c3c149e484634ac1905800d6/master?style=flat-square" alt="Codacy Badge"></a>
     <a href="https://codecov.io/gh/hadialqattan/pycln"><img src="https://img.shields.io/codecov/c/gh/hadialqattan/pycln/master?token=VVYBDCZPHR&style=flat-square" alt="Codecov"></a>
-    <a href="https://codeclimate.com/github/hadialqattan/pycln/maintainability"><img src="https://img.shields.io/codeclimate/maintainability/hadialqattan/pycln?style=flat-square" alt="Maintainability"></a>
 </p>
 
 <p align="center">
     <img src="https://img.shields.io/pypi/pyversions/pycln?style=flat-square" alt="PYPI - Python Version">
     <a href="https://pypi.org/project/pycln/"><img src="https://img.shields.io/pypi/v/pycln?style=flat-square" alt="PYPI - Pycln Version"></a>
-    <a href="https://pepy.tech/project/pycln/"><img src="https://static.pepy.tech/personalized-badge/pycln?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=total downloads" alt="Total Downloads"></a>
+    <a href="https://pepy.tech/projects/pycln"><img src="https://static.pepy.tech/badge/pycln" alt="PyPI Downloads"></a>
     <a href="https://pypi.org/project/pycln/"><img src="https://img.shields.io/pypi/dm/pycln?color=dark-green&style=flat-square" alt="Downloads"></a>
 </p>
 
@@ -31,12 +29,6 @@
     <a href="https://github.com/hadialqattan/pycln/blob/master/LICENSE"><img src="https://img.shields.io/github/license/hadialqattan/pycln.svg?color=A31F34&style=flat-square" alt="License"></a>
 </p>
 
-<p align="center">
-    <a href="https://docutils.sourceforge.io/rst.html"><img src="https://img.shields.io/badge/docstrings-reStructuredText-gree.svg?style=flat-square" alt="Docstrings: reStructuredText"></a>
-    <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square" alt="Code style: black"></a>
-    <a href="https://github.com/prettier/prettier"><img src="https://img.shields.io/badge/code%20style-prettier-ff69b4.svg?style=flat-square" alt="Code style: prettier"></a>
-</p>
-
 ---
 
 **[Read the documentation on Github pages!](https://hadialqattan.github.io/pycln)**
@@ -47,7 +39,7 @@
 
 ### Installation
 
-Pycln requires Python 3.6+ and can be easily installed using the most common Python
+Pycln requires Python 3.8+ and can be easily installed using the most common Python
 packaging tools. We recommend installing the latest stable release from PyPI with
 [`pipx`](https://pipx.pypa.io/)
 
