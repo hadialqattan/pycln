@@ -463,12 +463,12 @@ class SourceAnalyzer(ast.NodeVisitor):
                 pass
 
     def _parse_string(
-        self, node: Union[ast.Constant, ast.Str], is_str_annotation: bool = False
+        self, node: ast.Constant, is_str_annotation: bool = False
     ) -> None:
         try:
             # Parse string names/attrs.
-            if isinstance(node, (ast.Constant, ast.Str)):
-                val = getattr(node, "value", "") or getattr(node, "s", "")
+            if isinstance(node, ast.Constant):
+                val = getattr(node, "value", "")
                 if val and isinstance(val, str):
                     val = val.strip()
                     tree = parse_ast(val, mode="eval")
@@ -496,9 +496,8 @@ class SourceAnalyzer(ast.NodeVisitor):
     def _add_list_names(self, node: List[ast.expr]) -> None:
         # Safely add list `const/str` names to `self._source_stats.name_`.
         for item in node:
-            if isinstance(item, (ast.Constant, ast.Str)):
-                key = "s" if hasattr(item, "s") else "value"
-                value = getattr(item, key, "")
+            if isinstance(item, ast.Constant):
+                value = getattr(item, "value", "")
                 if value and isinstance(value, str):
                     self._source_stats.name_.add(value)
 
@@ -740,9 +739,8 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     def _add_list_names(self, node: List[ast.expr]) -> None:
         # Safely add list `const/str` names to `self._importables`.
         for item in node:
-            if isinstance(item, (ast.Constant, ast.Str)):
-                key = "s" if hasattr(item, "s") else "value"
-                value = getattr(item, key, "")
+            if isinstance(item, ast.Constant):
+                value = getattr(item, "value", "")
                 if value and isinstance(value, str):
                     self._importables.add(value)
 
