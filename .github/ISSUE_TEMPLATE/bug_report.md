@@ -55,7 +55,7 @@ assignees: ""
 
 **Environment (please complete the following informations):**
 
-- Python Version: [e.g. Python 3.8]
+- Python Version: [e.g. Python 3.9]
 - Pycln Version: [e.g. v0.0.1]
 - OS Type: [e.g. Linux]
 

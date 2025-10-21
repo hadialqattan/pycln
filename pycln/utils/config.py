@@ -5,7 +5,8 @@ import json
 import tokenize
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Pattern, Set, Union
+from re import Pattern
+from typing import Optional, Union
 
 import tomlkit
 import typer
@@ -38,8 +39,8 @@ class Config:
             self._parse_skip_imports()
             self._check_skip_imports()
 
-    paths: List[Path]
-    skip_imports: Set[str]
+    paths: list[Path]
+    skip_imports: set[str]
     config: Optional[Path] = None
     include: Pattern[str] = regexu.INCLUDE_REGEX
     exclude: Pattern[str] = regexu.EXCLUDE_REGEX
@@ -59,7 +60,7 @@ class Config:
         #:
         #: Given {"x,y,z", "m", "n"}, `self.skip_imports`
         #: turns into {"x", "y", "z", "m", "n"}.
-        names: Set[str] = set({})
+        names: set[str] = set({})
         for name in self.skip_imports:
             if "," in name:
                 names.update(name.strip(",").split(","))
@@ -126,7 +127,7 @@ class ParseConfigFile:
         self._config.__post_init__()
 
     @staticmethod
-    def _cast_paths(paths: List[str]) -> List[Path]:
+    def _cast_paths(paths: list[str]) -> list[Path]:
         """`paths` List[str] ~> List[Path]."""
         return [Path(p) for p in paths]
 

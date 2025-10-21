@@ -506,7 +506,7 @@ class TestRefactor:
         setattr(self.configs, "disable_all_dunder_policy", disable_all_dunder_policy)
 
         with sysu.std_redirect(sysu.STD.ERR):
-            val = self.session_maker._analyze(ast.parse(""), [""])
+            val = self.session_maker._analyze(ast.parse(""))
             assert val == expec_val
 
         assert self.session_maker._is_init_without_all == expec_is_init_without_all

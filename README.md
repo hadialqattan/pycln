@@ -39,7 +39,7 @@
 
 ### Installation
 
-Pycln requires Python 3.8+ and can be easily installed using the most common Python
+Pycln requires Python 3.9+ and can be easily installed using the most common Python
 packaging tools. We recommend installing the latest stable release from PyPI with
 [`pipx`](https://pipx.pypa.io/)
 

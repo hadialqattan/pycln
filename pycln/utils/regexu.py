@@ -4,7 +4,7 @@ import os
 import re
 import tokenize
 from pathlib import Path
-from typing import List, Pattern
+from re import Pattern
 
 import typer
 from pathspec import PathSpec
@@ -109,7 +109,7 @@ def get_gitignore(root: Path, no_gitignore: bool = False) -> PathSpec:
     :param no_gitignore: `config.no_gitignore` value (default=False).
     :returns: PathSpec matching gitignore content, if present.
     """
-    lines: List[str] = []
+    lines: list[str] = []
     if not no_gitignore:
         path = os.path.join(root, GITIGNORE)
         if os.path.isfile(path):

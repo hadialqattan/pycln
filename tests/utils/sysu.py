@@ -2,12 +2,12 @@
 
 import os
 import sys
+from collections.abc import Generator
 from contextlib import contextmanager
 from enum import Enum, unique
 from io import StringIO
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Generator
 
 
 @unique

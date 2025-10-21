@@ -17,7 +17,6 @@ from .utils import sysu
 
 # Constants.
 MOCK = "pycln.utils.scan.%s"
-PY38_PLUS = sys.version_info >= (3, 8)
 PY310_PLUS = sys.version_info >= (3, 10)
 
 
@@ -51,11 +50,8 @@ class TestSourceAnalyzer(AnalyzerTestCase):
     """`SourceAnalyzer` class tests."""
 
     def _get_analyzer(self, source_code: str):
-        analyzer = scan.SourceAnalyzer(source_code.splitlines(True))
-        if PY38_PLUS:
-            ast_tree = ast.parse(source_code, type_comments=True)
-        else:
-            ast_tree = ast.parse(source_code)
+        analyzer = scan.SourceAnalyzer()
+        ast_tree = ast.parse(source_code, type_comments=True)
         analyzer.visit(ast_tree)
         return analyzer
 
@@ -76,55 +72,27 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         location = _nodes.NodeLocation(start, end_lineno)
         return ast_impt, location
 
-    def _assert_import_equal_py38(
+    def _assert_import_equal(
         self,
         analyzer: scan.SourceAnalyzer,
         import_stmnt: str,
         expec_end_lineno: Optional[int] = None,
     ):
         ast_impt, location = self._get_import(import_stmnt, expec_end_lineno)
-        py38_node = analyzer._get_py38_import_node(ast_impt)
-        assert py38_node == _nodes.Import(location, ast_impt.names)
+        import_node = analyzer._get_import_node(ast_impt)
+        assert import_node == _nodes.Import(location, ast_impt.names)
 
-    def _assert_import_from_equal_py38(
+    def _assert_import_from_equal(
         self,
         analyzer: scan.SourceAnalyzer,
         import_stmnt: str,
         expec_end_lineno: Optional[int] = None,
     ):
         ast_impt, location = self._get_import(import_stmnt, expec_end_lineno)
-        py38_node = analyzer._get_py38_import_from_node(ast_impt)
-        assert py38_node == _nodes.ImportFrom(
+        import_from_node = analyzer._get_import_from_node(ast_impt)
+        assert import_from_node == _nodes.ImportFrom(
             location, ast_impt.names, ast_impt.module, ast_impt.level
         )
-
-    @pytest.mark.skipif(not PY38_PLUS, reason="Python >=3.8 class usage.")
-    @pytest.mark.parametrize(
-        "source_lines, expec_error",
-        [
-            pytest.param([], sysu.Pass, id="with source lines"),
-            pytest.param(None, sysu.Pass, id="without source lines"),
-        ],
-    )
-    def test_init_py38_plus(self, source_lines, expec_error):
-        # Test `__init__` dunder method for Python >=3.8.
-        with pytest.raises(expec_error):
-            scan.SourceAnalyzer(source_lines)
-            raise sysu.Pass()
-
-    @pytest.mark.skipif(PY38_PLUS, reason="Python <3.8 class usage.")
-    @pytest.mark.parametrize(
-        "source_lines, expec_error",
-        [
-            pytest.param([], sysu.Pass, id="with source lines"),
-            pytest.param(None, ValueError, id="without source lines"),
-        ],
-    )
-    def test_init_py37_minus(self, source_lines, expec_error):
-        # Test `__init__` dunder method for Python <3.8.
-        with pytest.raises(expec_error):
-            scan.SourceAnalyzer(source_lines)
-            raise sysu.Pass()
 
     @pytest.mark.parametrize(
         "code, expec_name",
@@ -447,10 +415,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 "foo: \"Bar['Baz']\" = []",
                 {"foo", "Bar", "Baz"},
                 id="nested-string",
-                marks=pytest.mark.skipif(
-                    not PY38_PLUS,
-                    reason="Nested str annotations are only available in Python >=3.8.",
-                ),
             ),
             pytest.param(
                 "foo: Bar['Baz'] = []",
@@ -501,10 +465,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 ("def foo(bar: \"Baz['x']\"):\n" "   pass"),
                 {"Baz", "x"},
                 id="nested-string",
-                marks=pytest.mark.skipif(
-                    not PY38_PLUS,
-                    reason="Nested str annotations are only available in Python >=3.8.",
-                ),
             ),
             pytest.param(
                 ("def foo(bar: Baz['x']):\n" "   pass"),
@@ -535,10 +495,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 ("def foo() -> \"Baz['x']\":\n" "   pass"),
                 {"Baz", "x"},
                 id="nested-string",
-                marks=pytest.mark.skipif(
-                    not PY38_PLUS,
-                    reason="Nested str annotations are only available in Python >=3.8.",
-                ),
             ),
             pytest.param(
                 ("def foo() -> Baz['x']:\n" "   pass"),
@@ -569,10 +525,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
                 ("async def foo() -> \"Baz['x']\":\n" "   pass"),
                 {"Baz", "x"},
                 id="nested-string",
-                marks=pytest.mark.skipif(
-                    not PY38_PLUS,
-                    reason="Nested str annotations are only available in Python >=3.8.",
-                ),
             ),
             pytest.param(
                 ("async def foo() -> Baz['x']:\n" "   pass"),
@@ -687,10 +639,6 @@ class TestSourceAnalyzer(AnalyzerTestCase):
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
 
-    @pytest.mark.skipif(
-        not PY38_PLUS,
-        reason="This feature is only available in Python >=3.8.",
-    )
     @pytest.mark.parametrize(
         "code, expec_names",
         [
@@ -766,29 +714,18 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             pytest.param("x.i, y.j", False, {"x", "y"}, {"i", "j"}, id="names, attrs"),
             pytest.param("", False, None, None, id="no-names, no-attrs"),
             pytest.param("'y'", False, None, None, id="not const"),
-            pytest.param(
-                "'y'",
-                True,
-                {"y"},
-                None,
-                id="const",
-                marks=pytest.mark.skipif(
-                    not PY38_PLUS,
-                    reason="Nested str annotations are only available in Python >=3.8",
-                ),
-            ),
+            pytest.param("'y'", True, {"y"}, None, id="const"),
         ],
     )
     def test_add_name_attr_const(
         self, code, is_str_annotation, expec_names, expec_attrs
     ):
-        analyzer = scan.SourceAnalyzer([])
+        analyzer = scan.SourceAnalyzer()
         analyzer._add_name_attr_const(ast.parse(code), is_str_annotation)
         source_stats, _ = analyzer.get_stats()
         self.assert_set_equal_or_not(source_stats.name_, expec_names)
         self.assert_set_equal_or_not(source_stats.attr_, expec_attrs)
 
-    @pytest.mark.skipif(not PY38_PLUS, reason="Test Python >=3.8 ast nodes.")
     @pytest.mark.parametrize(
         "code",
         [
@@ -796,23 +733,10 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             pytest.param(("import \\\n" "    x\n"), id="multi line"),
         ],
     )
-    def test_get_py38_import_node_py38_plus(self, code):
+    def test_get_import_node(self, code):
         analyzer = scan.SourceAnalyzer()
-        self._assert_import_equal_py38(analyzer, code)
+        self._assert_import_equal(analyzer, code)
 
-    @pytest.mark.skipif(PY38_PLUS, reason="Test Python <3.8 ast nodes.")
-    @pytest.mark.parametrize(
-        "code, expec_end_lineno",
-        [
-            pytest.param("import x\n", 1, id="single line"),
-            pytest.param(("import \\\n" "    x\n"), 2, id="multi line"),
-        ],
-    )
-    def test_get_py38_import_node_py37_minus(self, code, expec_end_lineno):
-        analyzer = scan.SourceAnalyzer(code.splitlines(True))
-        self._assert_import_equal_py38(analyzer, code, expec_end_lineno)
-
-    @pytest.mark.skipif(not PY38_PLUS, reason="Test Python >=3.8 ast nodes.")
     @pytest.mark.parametrize(
         "code",
         [
@@ -826,71 +750,9 @@ class TestSourceAnalyzer(AnalyzerTestCase):
             ),
         ],
     )
-    def test_get_py38_import_from_node_py38_plus(self, code):
+    def test_get_import_from_node(self, code):
         analyzer = scan.SourceAnalyzer()
-        self._assert_import_from_equal_py38(analyzer, code)
-
-    @pytest.mark.skipif(PY38_PLUS, reason="Test Python <3.8 ast nodes.")
-    @pytest.mark.parametrize(
-        "code, expec_end_lineno",
-        [
-            pytest.param("from x import y\n", 1, id="single line"),
-            pytest.param(
-                ("from x import y, \\\n" "    z\n"),
-                2,
-                id="multi line, backslash",
-            ),
-            pytest.param(
-                ("from x import (\n" "    y\n" ")\n"),
-                3,
-                id="multi line, parentheses",
-            ),
-        ],
-    )
-    def test_get_py38_import_from_node_py37_minus(self, code, expec_end_lineno):
-        analyzer = scan.SourceAnalyzer(code.splitlines(True))
-        self._assert_import_from_equal_py38(analyzer, code, expec_end_lineno)
-
-    @pytest.mark.skipif(
-        PY38_PLUS, reason="Required to determine end_lineno for Python <3.8."
-    )
-    @pytest.mark.parametrize(
-        "line, expec",
-        [
-            pytest.param("from x import (\n", True, id="parentheses"),
-            pytest.param("from x import y \\\n", False, id="backslash"),
-            pytest.param("from x import y\n", None, id="single line"),
-        ],
-    )
-    def test_is_parentheses(self, line, expec):
-        assert scan.SourceAnalyzer._is_parentheses(line) == expec
-
-    @pytest.mark.skipif(
-        PY38_PLUS, reason="Required to determine end_lineno for Python <3.8."
-    )
-    @pytest.mark.parametrize(
-        "code, lineno, is_parentheses, expec_end_lineno",
-        [
-            pytest.param(
-                ("from x import (\n" "    y,\n" "    z,\n" ")\n" "print()\n"),
-                1,
-                True,
-                4,
-                id="parentheses",
-            ),
-            pytest.param(
-                ("from x import y \\\n" "    z" "print()\n"),
-                1,
-                False,
-                2,
-                id="backslash",
-            ),
-        ],
-    )
-    def test_get_end_lineno(self, code, lineno, is_parentheses, expec_end_lineno):
-        analyzer = scan.SourceAnalyzer(code.splitlines(True))
-        end_lineno = analyzer._get_end_lineno(lineno, is_parentheses)
-        assert end_lineno == expec_end_lineno
+        self._assert_import_from_equal(analyzer, code)
 
     @pytest.mark.parametrize(
         "code, expec",
@@ -1342,7 +1204,6 @@ class TestScanFunctions(AnalyzerTestCase):
                 assert tc == type_comment
             raise sysu.Pass()
 
-    @pytest.mark.skipif(not PY38_PLUS, reason="Python >=3.8 type comment support.")
     @pytest.mark.parametrize(
         "code, mode, expec_err_type, type_comment",
         [
@@ -1394,27 +1255,5 @@ class TestScanFunctions(AnalyzerTestCase):
             ),
         ],
     )
-    def test_parse_ast_py38_plus(self, code, mode, expec_err_type, type_comment):
+    def test_parse_ast(self, code, mode, expec_err_type, type_comment):
         self._assert_ast_equal(code, mode, expec_err_type, type_comment)
-
-    @pytest.mark.skipif(PY38_PLUS, reason="No Python >=3.8 type comment support.")
-    @pytest.mark.parametrize(
-        "code, mode, expec_err_type",
-        [
-            pytest.param("print()\n", "exec", sysu.Pass, id="normal code"),
-            pytest.param(
-                "@print(SyntaxError)\n",
-                "exec",
-                UnparsableFile,
-                id="syntax error",
-            ),
-            pytest.param(
-                b"\x00print('Hello')",
-                "exec",
-                UnparsableFile,
-                id="contain null bytes",
-            ),
-        ],
-    )
-    def test_parse_ast_py37_minus(self, code, mode, expec_err_type):
-        self._assert_ast_equal(code, mode, expec_err_type)

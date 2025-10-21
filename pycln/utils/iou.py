@@ -5,7 +5,6 @@ import os
 import sys
 import tokenize
 from pathlib import Path
-from typing import List, Tuple
 
 from ._exceptions import (
     InitFileDoesNotExistError,
@@ -28,7 +27,7 @@ Encoding = str
 NewLine = str
 
 
-def read_stdin() -> Tuple[FileContent, Encoding, NewLine]:
+def read_stdin() -> tuple[FileContent, Encoding, NewLine]:
     """Read the content of STDIN with encoding and new line type detection.
 
     :returns: decoded source code, file encoding, and a newline.
@@ -57,7 +56,7 @@ def read_stdin() -> Tuple[FileContent, Encoding, NewLine]:
 
 def safe_read(
     path: Path, permissions: tuple = (os.R_OK, os.W_OK)
-) -> Tuple[FileContent, Encoding, NewLine]:
+) -> tuple[FileContent, Encoding, NewLine]:
     """Read file content with encoding and new line type detection.
 
     :param path: `.py` file path.
@@ -97,7 +96,7 @@ def safe_read(
         raise UnparsableFile(path, err) from err
 
 
-def safe_write(path: Path, fixed_lines: List[str], encoding: str, newline: str) -> None:
+def safe_write(path: Path, fixed_lines: list[str], encoding: str, newline: str) -> None:
     """Write file content based on given `encoding`.
 
     :param path: `.py` file path.

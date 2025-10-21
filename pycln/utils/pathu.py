@@ -3,9 +3,11 @@
 import os
 import sys
 import sysconfig
+from collections.abc import Generator
 from functools import lru_cache
 from pathlib import Path
-from typing import Generator, Optional, Pattern, Set, Tuple
+from re import Pattern
+from typing import Optional
 
 from pathspec import PathSpec
 
@@ -68,8 +70,8 @@ def yield_sources(
     :returns: generator of `.py` and `.pyi` files paths.
     """
 
-    dirs: Set[Path] = set()
-    files: Set[Path] = set()
+    dirs: set[Path] = set()
+    files: set[Path] = set()
 
     is_included, is_excluded = regexu.is_included, regexu.is_excluded
 
@@ -128,12 +130,12 @@ def yield_sources(
 
 
 @lru_cache
-def get_standard_lib_paths() -> Set[Path]:
+def get_standard_lib_paths() -> set[Path]:
     """Get paths to Python standard library modules.
 
     :returns: set of paths to Python standard library modules.
     """
-    paths: Set[Path] = set()
+    paths: set[Path] = set()
 
     for lib_path in PYTHON_STDLIB_PATHS:
         for path in os.listdir(lib_path):
@@ -150,13 +152,13 @@ def get_standard_lib_paths() -> Set[Path]:
 
 
 @lru_cache
-def get_standard_lib_names() -> Set[str]:
+def get_standard_lib_names() -> set[str]:
     """Returns a set of Python standard library modules names.
 
     :returns: a set of Python standard library modules names.
     """
-    names: Set[str] = set()
-    paths: Set[Path] = get_standard_lib_paths()
+    names: set[str] = set()
+    paths: set[Path] = get_standard_lib_paths()
 
     for path in paths:
         name = str(path.parts[-1])
@@ -173,16 +175,16 @@ def get_standard_lib_names() -> Set[str]:
 
 
 @lru_cache
-def get_third_party_lib_paths() -> Tuple[Set[Path], Set[Path]]:
+def get_third_party_lib_paths() -> tuple[set[Path], set[Path]]:
     """Get paths to third party library modules.
 
     :returns: a tuple of a set of paths of third party library modules
         and a set of paths from `.pth` file(s) content, respectively.
     """
-    paths: Set[Path] = set()
-    pth_paths: Set[Path] = set()
+    paths: set[Path] = set()
+    pth_paths: set[Path] = set()
 
-    packages_paths: Set[str] = set()
+    packages_paths: set[str] = set()
 
     for path in sys.path:
         ppath = Path(path)
@@ -231,7 +233,7 @@ def get_local_import_path(path: Path, module: str) -> Optional[Path]:
     return None
 
 
-def get_local_import_pth_path(pth_paths: Set[Path], module: str) -> Optional[Path]:
+def get_local_import_pth_path(pth_paths: set[Path], module: str) -> Optional[Path]:
     """Find the given local module file.py/__init__.py path base on the
     provided `pth_paths` set.
 
@@ -315,7 +317,7 @@ def get_local_import_from_path(
 
 
 def get_local_import_from_pth_path(
-    pth_paths: Set[Path], module: str, package: str, level: int
+    pth_paths: set[Path], module: str, package: str, level: int
 ) -> Optional[Path]:
     """Find the given local module file.py/__init__.py path base on the
     provided `pth_paths` set.
@@ -338,7 +340,7 @@ def get_local_import_from_pth_path(
 
 
 def get_module_path(
-    paths: Set[Path], module: str, package: str = "", level: int = 0
+    paths: set[Path], module: str, package: str = "", level: int = 0
 ) -> Optional[Path]:
     """Get the `module` path from the given `paths`.
 
