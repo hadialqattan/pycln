@@ -3,7 +3,6 @@
 # pylint: disable=R0201,W0613
 import os
 from pathlib import Path
-from typing import List
 from unittest import mock
 
 import pytest
@@ -230,7 +229,7 @@ class TestIOU:
     )
     def test_safe_write(
         self,
-        fixed_lines: List[str],
+        fixed_lines: list[str],
         expec_code: str,
         expec_newline: str,
         expec_err,

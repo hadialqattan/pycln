@@ -2,9 +2,9 @@
 
 # pylint: disable=R0201,W0613
 import ast
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from typer import Exit
