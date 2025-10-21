@@ -14,6 +14,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - [Use `ast.Constant` for `str` node handling since `ast.Str` was deprecated in Python 3.8 by @chrimaho](https://github.com/hadialqattan/pycln/pull/277)
 
+## Changed
+
+- [Drop Python3.8 by @hadialqattan](https://github.com/hadialqattan/pycln/pull/278)
+
 ## [2.5.0] - 2025-01-06
 
 ### Fixed

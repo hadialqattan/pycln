@@ -9,12 +9,12 @@ keywords = ["formatter", "linter", "quality-assurance", "tools", "cli"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Topic :: Utilities"]
+    "Topic :: Utilities",
+]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "pycln" }, { include = "vendor" }]
@@ -23,7 +23,7 @@ packages = [{ include = "pycln" }, { include = "vendor" }]
 pycln = "pycln.cli:app"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <4"
+python = ">=3.9, <4"
 typer = ">=0.4.1"
 pyyaml = ">=5.3.1"
 pathspec = ">=0.9.0"
@@ -38,7 +38,7 @@ pytest-cov = ">=4,<6"
 pytest-randomly = "^3.4.1"
 oschmod = "^0.3.9"
 hypothesmith = "^0.3.3"
-pre-commit = {version = "^3.0.0", python = ">=3.8"}
+pre-commit = "^4.0.0"
 
 [build-system]
 requires = ["poetry-core"]
