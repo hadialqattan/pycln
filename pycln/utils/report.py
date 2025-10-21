@@ -4,7 +4,7 @@ import ast
 from dataclasses import dataclass
 from difflib import unified_diff
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import typer
 
@@ -71,8 +71,8 @@ class Report:
     @staticmethod
     def colored_unified_diff(
         path: Path,
-        original_lines: List[str],
-        fixed_lines: List[str],
+        original_lines: list[str],
+        fixed_lines: list[str],
     ) -> None:
         """Writeout colored and normalized diff.
 
@@ -101,7 +101,7 @@ class Report:
         typer.echo(diff_str)
 
     @staticmethod
-    def output_stdin_to_stdout(fixed_lines: List[str]) -> None:
+    def output_stdin_to_stdout(fixed_lines: list[str]) -> None:
         """Printout the given fixed lines to STDOUT.
 
         :param fixed_lines: fixed soruce code lines.
@@ -195,7 +195,7 @@ class Report:
         :param path: the changed file path.
         """
         if not any([self.configs.diff, self.configs.silence]):
-            file_report: List[str] = []
+            file_report: list[str] = []
 
             if self._file_removed_imports > 0:
                 removed = "would be removed" if self.configs.check else "was removed"

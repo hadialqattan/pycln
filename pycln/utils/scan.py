@@ -2,19 +2,16 @@
 
 import ast
 import os
-import sys
 from dataclasses import dataclass
 from enum import Enum, unique
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Set, Tuple, TypeVar, Union, cast
+from typing import Any, Callable, TypeVar, Union, cast
 
 from . import _nodes, iou, pathu
 from ._exceptions import ReadPermissionError, UnexpandableImportStar, UnparsableFile
 
 # Constants.
-PY38_PLUS = sys.version_info >= (3, 8)
-PY39_PLUS = sys.version_info >= (3, 9)
 __ALL__ = "__all__"
 NAMES_TO_SKIP = frozenset(
     {
@@ -111,8 +108,8 @@ def recursive(func: FunctionT) -> FunctionT:
 class ImportStats:
     """Import statements statistics."""
 
-    import_: Set[_nodes.Import]
-    from_: Set[_nodes.ImportFrom]
+    import_: set[_nodes.Import]
+    from_: set[_nodes.ImportFrom]
 
     def __iter__(self):
         return iter([self.import_, self.from_])
@@ -123,11 +120,11 @@ class SourceStats:
     """Source code (`ast.Name`, `ast.Attribute`) statistics."""
 
     #: Included on `__iter__`.
-    name_: Set[str]
-    attr_: Set[str]
+    name_: set[str]
+    attr_: set[str]
 
     #: Not included on `__iter__`.
-    names_to_skip: Set[str]
+    names_to_skip: set[str]
 
     def __iter__(self):
         return iter([self.name_, self.attr_])
@@ -141,37 +138,29 @@ class SourceAnalyzer(ast.NodeVisitor):
     >>> with open(source, "r") as sourcef:
     >>>     source_lines = sourcef.readlines()
     >>>     tree = ast.parse("".join(source_lines))
-    >>> analyzer = SourceAnalyzer(source_lines)
+    >>> analyzer = SourceAnalyzer()
     >>> analyzer.visit(tree)
     >>> source_stats, import_stats = analyzer.get_stats()
-
-    :param source_lines: source code as string lines,
-        required only when Python < 3.8.
-    :raises ValueError: when Python < 3.8 and no source code lines provided.
     """
 
-    def __init__(self, source_lines: Optional[List[str]] = None):
-        if not PY38_PLUS and source_lines is None:
-            # Bad class usage.
-            raise ValueError("Please provide source lines for Python < 3.8.")
+    def __init__(self):
         self._has_all = False  # True if the source has an `__all__` dunder.
-        self._lines = source_lines
         self._import_stats = ImportStats(set(), set())
-        self._imports_to_skip: Set[Union[_nodes.Import, _nodes.ImportFrom]] = set()
+        self._imports_to_skip: set[Union[_nodes.Import, _nodes.ImportFrom]] = set()
         self._source_stats = SourceStats(set(), set(), set())
 
     @recursive
     def visit_Import(self, node: ast.Import):
         if node not in self._imports_to_skip:
-            py38_node = self._get_py38_import_node(node)
-            self._import_stats.import_.add(py38_node)
+            import_node = self._get_import_node(node)
+            self._import_stats.import_.add(import_node)
 
     @recursive
     def visit_ImportFrom(self, node: ast.ImportFrom):
         if node not in self._imports_to_skip:
-            py38_node = self._get_py38_import_from_node(node)
-            if not str(py38_node.module).startswith("__"):
-                self._import_stats.from_.add(py38_node)
+            import_from_node = self._get_import_from_node(node)
+            if not str(import_from_node.module).startswith("__"):
+                self._import_stats.from_.add(import_from_node)
 
     @recursive
     def visit_Name(self, node: ast.Name):
@@ -237,11 +226,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             getattr(v.value, "id", "") if hasattr(v, "value") else getattr(v, "id", "")
         )
         if _id in SUBSCRIPT_TYPE_VARIABLE or _id == "typing":
-            if PY39_PLUS:
-                s_val = node.slice
-            else:
-                s_val = node.slice.value
-            for elt in getattr(s_val, "elts", ()) or (s_val,):
+            for elt in getattr(node.slice, "elts", ()) or (node.slice,):
                 if _id == "Callable" and isinstance(elt, ast.List):
                     # See issue: https://github.com/hadialqattan/pycln/issues/208
                     for sub_elt in getattr(elt, "elts", ()):
@@ -330,11 +315,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         #: Issue: https://github.com/hadialqattan/pycln/issues/169
         for base in node.bases:
             if isinstance(base, ast.Subscript):
-                if PY39_PLUS:
-                    s_val = base.slice
-                else:
-                    s_val = base.slice.value
-                for elt in getattr(s_val, "elts", ()) or (s_val,):
+                for elt in getattr(base.slice, "elts", ()) or (base.slice,):
                     self._parse_string(elt)
 
     @recursive
@@ -493,7 +474,7 @@ class SourceAnalyzer(ast.NodeVisitor):
         elif isinstance(node.left, ast.BinOp):
             self._add_concatenated_list_names(node.left)
 
-    def _add_list_names(self, node: List[ast.expr]) -> None:
+    def _add_list_names(self, node: list[ast.expr]) -> None:
         # Safely add list `const/str` names to `self._source_stats.name_`.
         for item in node:
             if isinstance(item, ast.Constant):
@@ -512,32 +493,13 @@ class SourceAnalyzer(ast.NodeVisitor):
             elif is_str_annotation and isinstance(node, ast.Constant):
                 self._parse_string(node, is_str_annotation)
 
-    def _get_py38_import_node(self, node: ast.Import) -> _nodes.Import:
-        # Convert any Python < 3.8 `ast.Import`
-        # to `_nodes.Import` in order to support `end_lineno`.
-        if hasattr(node, "end_lineno"):
-            end_lineno = node.end_lineno
-        else:
-            line = self._lines[node.lineno - 1]
-            multiline = SourceAnalyzer._is_parentheses(line) is not None
-            end_lineno = node.lineno + (1 if multiline else 0)
+    def _get_import_node(self, node: ast.Import) -> _nodes.Import:
+        end_lineno = node.end_lineno
         location = _nodes.NodeLocation((node.lineno, node.col_offset), end_lineno)
         return _nodes.Import(location=location, names=node.names)
 
-    def _get_py38_import_from_node(self, node: ast.ImportFrom) -> _nodes.ImportFrom:
-        # Convert any Python < 3.8 `ast.ImportFrom`
-        # to `_nodes.ImportFrom` in order to support `end_lineno`.
-        if hasattr(node, "end_lineno"):
-            end_lineno = node.end_lineno
-        else:
-            line = self._lines[node.lineno - 1]
-            is_parentheses = SourceAnalyzer._is_parentheses(line)
-            multiline = is_parentheses is not None
-            end_lineno = (
-                node.lineno
-                if not multiline
-                else self._get_end_lineno(node.lineno, is_parentheses)
-            )
+    def _get_import_from_node(self, node: ast.ImportFrom) -> _nodes.ImportFrom:
+        end_lineno = node.end_lineno
         location = _nodes.NodeLocation((node.lineno, node.col_offset), end_lineno)
         return _nodes.ImportFrom(
             location=location,
@@ -546,32 +508,7 @@ class SourceAnalyzer(ast.NodeVisitor):
             level=node.level,
         )
 
-    @staticmethod
-    def _is_parentheses(import_from_line: str) -> Optional[bool]:
-        # Return importFrom multi-line type.
-        # ('(' => True), ('\\' => False) else None.
-        if "(" in import_from_line:
-            return True
-        elif "\\" in import_from_line:
-            return False
-        else:
-            return None
-
-    def _get_end_lineno(self, lineno: int, is_parentheses: bool) -> int:
-        # Get `ast.ImportFrom` `end_lineno` of the given `lineno`.
-        lines_len = len(self._lines)
-        for end_lineno in range(lineno, lines_len):
-            if is_parentheses:
-                if ")" in self._lines[end_lineno]:
-                    end_lineno += 1
-                    break
-            else:
-                if "\\" not in self._lines[end_lineno]:
-                    end_lineno += 1
-                    break
-        return end_lineno
-
-    def get_stats(self) -> Tuple[SourceStats, ImportStats]:
+    def get_stats(self) -> tuple[SourceStats, ImportStats]:
         """Get source analyzer results.
 
         :returns: tuple of `SourceStats` and `ImportStats`.
@@ -601,8 +538,8 @@ class ImportablesAnalyzer(ast.NodeVisitor):
     """
 
     def __init__(self, path: Path):
-        self._not_importables: Set[Union[ast.Name, str]] = set()
-        self._importables: Set[str] = set()
+        self._not_importables: set[Union[ast.Name, str]] = set()
+        self._importables: set[str] = set()
         self._has_all = False  # True if the source has an `__all__` dunder.
         self._path = path
 
@@ -736,7 +673,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
         elif isinstance(node.left, ast.BinOp):
             self._add_concatenated_list_names(node.left)
 
-    def _add_list_names(self, node: List[ast.expr]) -> None:
+    def _add_list_names(self, node: list[ast.expr]) -> None:
         # Safely add list `const/str` names to `self._importables`.
         for item in node:
             if isinstance(item, ast.Constant):
@@ -754,7 +691,7 @@ class ImportablesAnalyzer(ast.NodeVisitor):
                 for target in node_.targets:
                     self._not_importables.add(cast(ast.Name, target))
 
-    def get_stats(self) -> Set[str]:
+    def get_stats(self) -> set[str]:
         if self._path.name == "__init__.py":
             for path in os.listdir(self._path.parent):
                 file_path = self._path.parent.joinpath(path)
@@ -805,7 +742,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
     """
 
     def __init__(self):
-        self._not_side_effects: Set[ast.Call] = set()
+        self._not_side_effects: set[ast.Call] = set()
         self._has_side_effects = HasSideEffects.NO
 
     @recursive
@@ -848,7 +785,7 @@ class SideEffectsAnalyzer(ast.NodeVisitor):
             self._has_side_effects = SideEffectsAnalyzer._check_names(node.names)
 
     @staticmethod
-    def _check_names(names: List[ast.alias]) -> HasSideEffects:
+    def _check_names(names: list[ast.alias]) -> HasSideEffects:
         # Check if imported names has side effects or not.
         for alias in names:
             # All standard lib modules doesn't has side effects
@@ -898,7 +835,7 @@ def expand_import_star(
     """
     mpath = pathu.get_import_from_path(path, "*", node.module, node.level)
 
-    importables: Set[str] = set()
+    importables: set[str] = set()
 
     try:
         if mpath:
@@ -950,12 +887,6 @@ def parse_ast(source_code: str, path: Path = Path(""), mode: str = "exec") -> as
         or the source contains null bytes.
     """
     try:
-        if PY38_PLUS:
-            # Include type_comments when Python >=3.8.
-            # For more information https://www.python.org/dev/peps/pep-0526/ .
-            tree = ast.parse(source_code, mode=mode, type_comments=True)
-        else:
-            tree = ast.parse(source_code, mode=mode)
-        return tree
+        return ast.parse(source_code, mode=mode, type_comments=True)
     except (SyntaxError, IndentationError, ValueError) as err:
         raise UnparsableFile(path, err) from err

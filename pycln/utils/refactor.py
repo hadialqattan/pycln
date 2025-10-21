@@ -3,8 +3,9 @@
 import ast
 import os
 import sys
+from collections.abc import Iterable
 from importlib import import_module
-from typing import Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import Optional, Union, cast
 
 from .. import ISWIN
 from . import iou, pathu, regexu, scan
@@ -104,7 +105,7 @@ class Refactor:
         self._is_init_without_all = False
 
     @staticmethod
-    def remove_useless_passes(source_lines: List[str]) -> List[str]:
+    def remove_useless_passes(source_lines: list[str]) -> list[str]:
         """Remove any useless `pass`.
 
         :param source_lines: source code lines.
@@ -112,7 +113,7 @@ class Refactor:
         """
 
         def remove_from_children(
-            parent: ast.AST, children: Iterable, body_len: int, wl: Set[ast.AST]
+            parent: ast.AST, children: Iterable, body_len: int, wl: set[ast.AST]
         ):
             #: Remove any `ast.Pass` node
             #: that is both useless and not in the `wl` (white list).
@@ -141,7 +142,7 @@ class Refactor:
             body = getattr(parent, "body", None)
             if body and hasattr(body, "__len__"):
                 body_len = len(body)
-                white_list: Set[ast.AST] = set()
+                white_list: set[ast.AST] = set()
 
                 if hasattr(parent, "orelse"):
                     orelse = getattr(parent, "orelse")
@@ -203,19 +204,19 @@ class Refactor:
 
         # Parse and analyze the `source_code` AST.
         tree = scan.parse_ast(source_code, self._path)
-        original_lines = source_code.splitlines(True)
-        stats = self._analyze(tree, original_lines)
+        stats = self._analyze(tree)
         if not stats:
             return source_code
         self._source_stats, self._import_stats = stats
 
         # Refactor the `source_code`.
+        original_lines = source_code.splitlines(True)
         return self._refactor(original_lines)
 
     def _output(
         self,
-        fixed_lines: List[str],
-        original_lines: List[str],
+        fixed_lines: list[str],
+        original_lines: list[str],
         encoding: str,
         newline: str,
     ) -> None:
@@ -244,17 +245,14 @@ class Refactor:
                     else:
                         iou.safe_write(self._path, fixed_lines, encoding, newline)
 
-    def _analyze(
-        self, tree: ast.AST, original_lines: List[str]
-    ) -> Tuple[scan.SourceStats, scan.ImportStats]:
+    def _analyze(self, tree: ast.AST) -> tuple[scan.SourceStats, scan.ImportStats]:
         """Analyze the given `tree`.
 
         :param tree: a parsed `ast.AST`.
-        :param original_lines: code lines requiered for Python < 3.8.
         :returns: tuple of `ImportStats`, `SourceStats` and set of names to skip.
         """
         try:
-            analyzer = scan.SourceAnalyzer(original_lines)
+            analyzer = scan.SourceAnalyzer()
             analyzer.visit(tree)
             source_stats, import_stats = analyzer.get_stats()
 
@@ -273,7 +271,7 @@ class Refactor:
             self.reporter.failure(str(err), self._path)
             return None
 
-    def _refactor(self, original_lines: List[str]) -> str:
+    def _refactor(self, original_lines: list[str]) -> str:
         """Remove all unused imports from given `original_lines`.
 
         :param original_lines: unmodified lines.
@@ -341,14 +339,14 @@ class Refactor:
 
     def _get_used_names(
         self, node: Union[Import, ImportFrom], is_star: bool
-    ) -> Set[str]:
+    ) -> set[str]:
         """Get set of used names base on given `node` and `self._source_stats`.
 
         :param node: import node to names check.
         :param is_star: is '*' import node.
         :returns: set of used names.
         """
-        used_names: Set[str] = set()
+        used_names: set[str] = set()
         for alias in node.names:
             if self._should_remove(
                 node, alias, is_star
@@ -362,10 +360,10 @@ class Refactor:
     def _transform(
         self,
         location: NodeLocation,
-        used_names: Set[str],
-        original_lines: List[str],
-        updated_lines: List[str],
-    ) -> List[str]:
+        used_names: set[str],
+        original_lines: list[str],
+        updated_lines: list[str],
+    ) -> list[str]:
         """Rebuild and replace the import without any unused part.
 
         :param location: `node.location`.
@@ -397,7 +395,7 @@ class Refactor:
 
     def _expand_import_star(
         self, node: ImportFrom
-    ) -> Tuple[ImportFrom, Optional[bool]]:
+    ) -> tuple[ImportFrom, Optional[bool]]:
         """Expand import star statement, `scan.expand_import_star` abstraction.
 
         :param node: `ImportFrom` that has a '*' as `alias.name`.
@@ -548,10 +546,10 @@ class Refactor:
 
     @staticmethod
     def _insert(
-        rebuilt_import: List[str],
-        updated_lines: List[str],
+        rebuilt_import: list[str],
+        updated_lines: list[str],
         location: NodeLocation,
-    ) -> List[str]:
+    ) -> list[str]:
         """Insert (replace) rebuilt import statement into `updated_lines`.
 
         :param rebuilt_import: an import statement ot insert.

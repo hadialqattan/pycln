@@ -1,7 +1,8 @@
 """Pycln CLI implementation."""
 
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator, List, Optional
+from typing import Optional
 
 import typer
 
@@ -14,14 +15,14 @@ app = typer.Typer(name=__name__, add_completion=True)
 
 @app.command(context_settings=dict(help_option_names=["-h", "--help"]))
 def main(  # pylint: disable=R0913,R0914
-    paths: List[Path] = typer.Argument(None, help="Directories or files paths."),
+    paths: list[Path] = typer.Argument(None, help="Directories or files paths."),
     config: Optional[Path] = typer.Option(
         None,
         "--config",
         show_default=False,
         help="Read configuration from a file.",
     ),
-    skip_imports: List[str] = typer.Option(
+    skip_imports: list[str] = typer.Option(
         [],
         "--skip-imports",
         show_default=False,
@@ -186,7 +187,7 @@ def main(  # pylint: disable=R0913,R0914
     session_maker = refactor.Refactor(configs, reporter)
     for path in configs.paths:
         if path == iou.STDIN_NOTATION:
-            sources: List[Path] = [iou.STDIN_FILE]
+            sources: list[Path] = [iou.STDIN_FILE]
         else:
             gitignore = regexu.get_gitignore(
                 path if path.is_dir() else path.parent, configs.no_gitignore

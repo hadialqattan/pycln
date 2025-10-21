@@ -2,7 +2,7 @@
 
 import ast
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ class NodeLocation:
     :param end: tuple of end line.
     """
 
-    def __init__(self, start: Tuple[int, int], end: int):
+    def __init__(self, start: tuple[int, int], end: int):
         self.start = NodePosition(*start)
         self.end = NodePosition(end)
 
@@ -53,7 +53,7 @@ class BaseImport:
     location: NodeLocation
 
     #: `ast.Import.names`.
-    names: List[ast.alias]
+    names: list[ast.alias]
 
 
 @dataclass

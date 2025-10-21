@@ -1,7 +1,7 @@
 """Pycln CST transforming utility."""
 
 from pathlib import Path
-from typing import List, Optional, Set, TypeVar, Union, cast
+from typing import Optional, TypeVar, Union, cast
 
 import libcst as cst
 
@@ -23,7 +23,7 @@ class ImportTransformer(cst.CSTTransformer):
     :param location: `NodeLocation`.
     """
 
-    def __init__(self, used_names: Set[str], location: NodeLocation):
+    def __init__(self, used_names: set[str], location: NodeLocation):
         if not used_names:
             # Bad class usage.
             raise ValueError("'used_names' parameter can't be empty set.")
@@ -43,7 +43,7 @@ class ImportTransformer(cst.CSTTransformer):
         :returns: refactored node.
         """
         is_multiline = len(self._used_names) > 3
-        used_aliases: List[cst.ImportAlias] = []
+        used_aliases: list[cst.ImportAlias] = []
         for name in self._used_names:
             # Skip any dotted name in order
             # to avoid names collision.
@@ -71,7 +71,7 @@ class ImportTransformer(cst.CSTTransformer):
         :param updated_node: `cst.Import` or `cst.ImportFrom` node to refactor.
         :returns: refactored node.
         """
-        used_aliases: List[cst.ImportAlias] = []
+        used_aliases: list[cst.ImportAlias] = []
         for alias in updated_node.names:
             if self._get_alias_name(alias.name) in self._used_names:
                 used_aliases.append(alias)
@@ -154,7 +154,7 @@ class ImportTransformer(cst.CSTTransformer):
     def _stylize(
         self,
         node: ImportT,
-        used_aliases: List[cst.ImportAlias],
+        used_aliases: list[cst.ImportAlias],
         force_multiline: bool = False,
     ) -> ImportT:
         # (Preserving `node` style).
@@ -173,10 +173,10 @@ class ImportTransformer(cst.CSTTransformer):
 
 def rebuild_import(
     import_stmnt: str,
-    used_names: Set[str],
+    used_names: set[str],
     path: Path,
     location: NodeLocation,
-) -> List[str]:
+) -> list[str]:
     """Rebuild the given `import_stmnt` based on `used_names` using `LibCST`.
 
     :param import_stmnt: source code of the import statement.
@@ -203,7 +203,7 @@ def rebuild_import(
     indentation = " " * (location.start.col or 0)
 
     # Remove unused aliases.
-    fixed_lines: List[str] = []
+    fixed_lines: list[str] = []
     if used_names:
         transformer = ImportTransformer(used_names, location)
         cst_tree = cst.parse_module(stripped_stmnt)  # May raise cst.ParserSyntaxError.
