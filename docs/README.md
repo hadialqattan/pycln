@@ -1270,7 +1270,7 @@ finally:
 
   ```yaml
   - repo: https://github.com/hadialqattan/pycln
-    rev: v2.5.0 # Possible releases: https://github.com/hadialqattan/pycln/releases
+    rev: v2.6.0 # Possible releases: https://github.com/hadialqattan/pycln/releases
     hooks:
       - id: pycln
         args: [--config=pyproject.toml]
