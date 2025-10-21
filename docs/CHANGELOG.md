@@ -12,7 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- [Use `ast.Constant` for `str` node handling since `ast.Str` was deprecated in Python 3.8 by @chrimaho](https://github.com/hadialqattan/pycln/pull/277)
+- [Use `ast.Constant` for `str` node handling since `ast.Str` was removed in Python 3.14 by @chrimaho](https://github.com/hadialqattan/pycln/pull/277)
 
 ## Changed
 
