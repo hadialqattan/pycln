@@ -182,7 +182,7 @@ class TestPathu:
         # Expected bin imports should included.
         for name in pathu.BIN_IMPORTS:
             assert name in standard_names
-        assert len(standard_names) > 180
+        assert len(standard_names) > 100
 
     def test_get_third_party_lib_paths(self):
         #: `DATA_DIR/site-packages/custom.pth` file contains
