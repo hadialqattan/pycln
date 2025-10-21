@@ -18,6 +18,7 @@
 <!-- - First Last ([@username](https://github.com/username)) <example@email.com> -->
 
 - Alex Waygood ([@AlexWaygood](https://github.com/AlexWaygood)) <Alex.Waygood@gmail.com>
+- Chris Mahoney ([@chrimaho](https://github.com/chrimaho)) <unknown@unknown.unknown>
 - Per Fagrell ([@perfa](https://github.com/perfa)) <per.fagrell@gmail.com>
 - Perchun Pak ([@PerchunPak](https://github.com/PerchunPak)) <perchunpak@gmail.com>
 - Pierre Mourlanne ([@pmourlanne](https://github.com/pmourlanne)) <pmourlanne@gmail.com>
