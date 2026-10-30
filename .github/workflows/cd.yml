@@ -32,11 +32,13 @@ jobs:
     name: Create Release
     needs: ci_succeed
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Get version from tag
         id: tag_name
         run: |
-          echo ::set-output name=current_version::${GITHUB_REF#refs/tags/v}
+          echo "current_version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - name: Checkout code
@@ -50,18 +52,18 @@ jobs:
           path: ./docs/CHANGELOG.md
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+        # This pulls from the "Get Changelog Entry" step above,
+        # referencing it's ID to get its outputs object.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          # This pulls from the "Get Changelog Entry" step above,
-          # referencing it's ID to get its outputs object.
-          tag_name: v${{ steps.changelog_reader.outputs.version }}
-          release_name: v${{ steps.changelog_reader.outputs.version }}
-          body: ${{ steps.changelog_reader.outputs.changes }}
-          prerelease: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
-          draft: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.changelog_reader.outputs.version }}
+          NOTES: ${{ steps.changelog_reader.outputs.changes }}
+          PRERELEASE: ${{ steps.changelog_reader.outputs.status == 'prereleased' }}
+          DRAFT: ${{ steps.changelog_reader.outputs.status == 'unreleased' }}
+        run: |
+          gh release create "v$VERSION" --title "v$VERSION" --notes "$NOTES" \
+            --prerelease="$PRERELEASE" --draft="$DRAFT"
+        shell: bash
 
   publish:
     name: Build & Publish
