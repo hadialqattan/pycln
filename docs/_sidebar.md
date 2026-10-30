@@ -1,4 +1,4 @@
-- [**Home**]()
+- [**Home**](<>)
 - [**Contributing**](CONTRIBUTING)
 - [**Security**](SECURITY)
 - [**Changelog**](CHANGELOG)
