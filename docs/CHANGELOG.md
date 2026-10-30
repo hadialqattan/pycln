@@ -223,7 +223,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- [Include `vendor/` directory in the final distribution avoiding `No module named 'vendor'` error by @hadialqattan]()
+- [Include `vendor/` directory in the final distribution avoiding `No module named 'vendor'` error by @hadialqattan](<>)
 
 ## [1.3.0] - 2022-04-16 (a broken release, goto v1.3.1)
 
