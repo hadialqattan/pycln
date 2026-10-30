@@ -10,6 +10,15 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-10-31
+
+### Changed
+
+- [Fix CI pre-commit failure and replace retired runner images by @hadialqattan](https://github.com/hadialqattan/pycln/pull/294)
+- [Drop deprecated `set-output` and archived `actions/create-release` from CD by @hadialqattan](https://github.com/hadialqattan/pycln/pull/295)
+- [Bump pathspec from 0.12.1 to 1.1.1 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/288)
+- [Bump typer from 0.20.0 to 0.23.2 by @dependabot[bot]](https://github.com/hadialqattan/pycln/pull/287)
+
 ## [2.6.0] - 2025-10-21
 
 ### Fixed
