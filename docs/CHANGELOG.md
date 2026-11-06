@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- [Remove an unused sub-package import when another used import binds the package by @anqorithm](https://github.com/hadialqattan/pycln/pull/301)
+
 ## [2.6.1] - 2026-10-31
 
 ### Changed

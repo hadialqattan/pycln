@@ -811,6 +811,16 @@ import os.path  # marked as used.
 print(os.getpid())
 ```
 
+When another used import already imports the package, the sub-package import is not
+needed:
+
+```python
+import xml.dom  # marked as used.
+import xml.sax  # marked as unused.
+
+print(xml.dom.Node)
+```
+
 ### Import With Importlib
 
 > Not supported, also not on the

@@ -946,6 +946,37 @@ class TestRefactor:
         assert val == expec_val
 
     @pytest.mark.parametrize(
+        "other_name, other_asname, expec_val",
+        [
+            pytest.param("x.a", None, False, id="root imported by a used import"),
+            pytest.param("x", None, False, id="root imported directly"),
+            pytest.param("x.c", None, True, id="other import is unused"),
+            pytest.param("x.a", "xa", True, id="other import has an alias"),
+            pytest.param("y.a", None, True, id="other import of another module"),
+        ],
+    )
+    def test_is_partially_used_with_another_import(
+        self, other_name, other_asname, expec_val
+    ):
+        #: >>> import x.a  # `other_name`
+        #: >>> import x.b  # checked
+        #: >>> x.a.value
+        alias = ast.alias(name="x.b", asname=None)
+        other = ast.alias(name=other_name, asname=other_asname)
+        self.session_maker._import_stats = ImportStats(
+            {
+                Import(NodeLocation((1, 0), 1), [other]),
+                Import(NodeLocation((2, 0), 2), [alias]),
+            },
+            set(),
+        )
+        self.session_maker._source_stats = SourceStats(
+            {"x", "y", "xa"}, {"a", "value"}, set()
+        )
+        val = self.session_maker._is_partially_used(alias, False)
+        assert val == expec_val
+
+    @pytest.mark.parametrize(
         "_has_used_return, _has_side_effects_return, all_, name, expec_val",
         [
             pytest.param(True, None, None, "not-matter", False, id="used"),
