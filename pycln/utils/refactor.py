@@ -436,7 +436,33 @@ class Refactor:
             possible_used_name = ""
             for name in names:
                 possible_used_name += ("." if possible_used_name else "") + name
-                if self._has_used(possible_used_name, is_star):
+                if self._has_used(
+                    possible_used_name, is_star
+                ) and not self._is_imported_by_another_used_import(
+                    alias, possible_used_name
+                ):
+                    return True
+        return False
+
+    def _is_imported_by_another_used_import(self, alias: ast.alias, name: str) -> bool:
+        """Determine if another used `import` statement already imports `name`.
+
+        >>> import a.b
+        >>> import a.c  # unused: `a` is already imported by `import a.b`.
+        >>> a.b.x
+
+        :param alias: the `ast.alias` node being checked.
+        :param name: a module name, such as `a` or `a.b`.
+        :returns: whether another used import binds `name`.
+        """
+        for node in self._import_stats.import_:
+            for other in node.names:
+                if (
+                    other is not alias
+                    and not other.asname
+                    and (other.name == name or other.name.startswith(f"{name}."))
+                    and self._has_used(other.name, False)
+                ):
                     return True
         return False
 
