@@ -162,6 +162,20 @@ class TestConfig:
         with sysu.std_redirect(sysu.STD.ERR):
             config.Config(paths=paths, skip_imports=DEFAULTS["skip_imports"])
 
+    @mock.patch(MOCK % "Config._check_regex")
+    @mock.patch(MOCK % "Config._parse_skip_imports")
+    @mock.patch(MOCK % "Config._check_skip_imports")
+    def test_check_path_warns_about_missing_paths(
+        self, csi, psi, cr, capsys
+    ):
+        missing = Path("not_exists_warn_me")
+        configs = config.Config(
+            paths=[Path(__file__), missing],
+            skip_imports=DEFAULTS["skip_imports"],
+        )
+        assert configs.paths == [Path(__file__)]
+        assert "not_exists_warn_me" in capsys.readouterr().err
+
     @pytest.mark.parametrize(
         "skip_imports, expec_err",
         [

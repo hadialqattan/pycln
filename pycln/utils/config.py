@@ -75,6 +75,11 @@ class Config:
                 if not (path.is_dir() or path.is_file()):
                     if path == iou.STDIN_NOTATION:
                         continue
+                    typer.secho(
+                        f"Path {str(path)!r} does not exist; skipping it.",
+                        bold=True,
+                        err=True,
+                    )
                     self.paths.remove(path)
 
         if not self.paths:
